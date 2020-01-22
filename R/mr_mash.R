@@ -18,8 +18,8 @@
 #' \item{mu1}{a PxR matrix of posterior means for the regression coeffcients}
 #' \item{S1}{a RxRxP array of posterior covariances for the regression coeffcients}
 #' \item{mu1}{a PxK matrix of posterior assignment probabilities to the mixture components}
-#' \item{intercept} an R-vector with the estimated intercepts
-#' \item{ELBO} the Evidence Lower Bound at convergence  
+#' \item{intercept}{an R-vector with the estimated intercepts}
+#' \item{ELBO}{the Evidence Lower Bound at convergence} 
 #' 
 #' @export
 mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol(Y)), 
