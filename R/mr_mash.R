@@ -1,11 +1,27 @@
-# Bayesian multivariate multiple regression with mixture-of-normals prior
-# (mixture weights w0 and covariance matrices S0) --> mr.mash
-#
-# The outputs are: the posterior assignment probabilities
-# (w1), the posterior mean of the coefficients given that all the
-# coefficients are not nonzero (mu1), and the posterior covariance of
-# the coefficients given that all the coefficients are not zero (S1)
-# the intercept (intercept), and the Evidence Lower Bound (ELBO).
+#' @title  Multiple Regression with Multivariate Adaptive Shrinkage.
+#' @details Performs multivariate multiple regression with mixture-of-normals prior.
+#' 
+#' @param Y an NxR matrix of responses.
+#' @param X an NxP matrix of covariates.
+#' @param V an RxR residual covariance matrix.
+#' @param S0 a list of length K containing the desired RxR prior covariance matrices 
+#' on the regression coefficients.
+#' @param w0 a K-vector with prior mixture weights, each associated with the 
+#' respective covariance matrix in \code{S0}.   
+#' @param mu_init a PxR matrix of initial estimates for the regression coefficients.
+#' @param tol convergence tolerance.
+#' @param max_iter maximum number of iterations for the optimization algorithm.
+#' @param update_w0 if TRUE, prior weights are updated.
+#' @param compute_ELBO if TRUE, ELBO is computed.
+#' 
+#' @return a mr.mash fit, which is a list with some or all of the following elements\cr
+#' \item{mu1}{a PxR matrix of posterior means for the regression coeffcients}
+#' \item{S1}{a RxRxP array of posterior covariances for the regression coeffcients}
+#' \item{mu1}{a PxK matrix of posterior assignment probabilities to the mixture components}
+#' \item{intercept} an R-vector with the estimated intercepts
+#' \item{ELBO} the Evidence Lower Bound at convergence  
+#' 
+#' @export
 mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol(Y)), 
                     tol=1e-8, max_iter=1e5, update_w0=T, compute_ELBO=T) {
   ###Center Y and X
