@@ -17,7 +17,7 @@
 #' @return a mr.mash fit, which is a list with some or all of the following elements\cr
 #' \item{mu1}{a PxR matrix of posterior means for the regression coeffcients}
 #' \item{S1}{a RxRxP array of posterior covariances for the regression coeffcients}
-#' \item{mu1}{a PxK matrix of posterior assignment probabilities to the mixture components}
+#' \item{w1}{a PxK matrix of posterior assignment probabilities to the mixture components}
 #' \item{intercept}{an R-vector with the estimated intercepts}
 #' \item{ELBO}{the Evidence Lower Bound at convergence} 
 #' 
