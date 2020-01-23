@@ -131,6 +131,8 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
 
 # Bayesian multivariate regression with mixture-of-normals prior
 # (mixture weights w0 and covariance matrices S0) using MASH
+# TO DO: Move MashInitializer$new outside the function when using in mr.mash
+# because it only needs to be done once!                
 #
 # The outputs are: the log-Bayes factor (logbf), the posterior assignment probabilities
 # (w1), the posterior mean of the coefficients given that all the
