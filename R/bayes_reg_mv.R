@@ -56,7 +56,7 @@ bayes_mvr_ridge <- function (x, Y, V, S0) {
 bayes_mvr_spike_slab <- function (x, Y, V, S0, p0) {
   
   # Compute the least-squares estimate and its covariance.
-  f <- bayes_ridge_mvr(x, Y, V, S0)
+  f <- bayes_mvr_ridge(x, Y, V, S0)
   
   # Compute the posterior probability that the coefficient is nonzero.
   p1 <- sigmoid(log(p0/(1 - p0)) + f$logbf)
@@ -138,7 +138,7 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
 # (w1), the posterior mean of the coefficients given that all the
 # coefficients are not nonzero (mu1), and the posterior covariance of
 # the coefficients given that all the coefficients are not zero (S1).
-bayes_mvr_mash <- function(x, Y, V, w0, s0){
+bayes_mvr_mash <- function(x, Y, V, w0, S0){
   data <- mmbr::DenseData$new(x, Y)
   data$standardize(F, F)
   mash_init <- mmbr::MashInitializer$new(S0, grid=1, prior_weights=w0, null_weight=0, top_mixtures=-1)
