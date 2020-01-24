@@ -27,8 +27,10 @@ tr <- function(x){
 }
 
 ###Function to simulate from MN distribution
+#
+#' @importFrom MBSP matrix.normal
+#' 
 sim_mvr <- function (X, B, V) {
-  if (!require("MBSP")){install.packages("MBSP")}
   
   # Get the number of samples (n) and conditions (m).
   n <- nrow(X)
@@ -37,7 +39,7 @@ sim_mvr <- function (X, B, V) {
   # Simulate the responses, Y.
   M <- X%*%B
   U <- diag(n)
-  Y <- MBSP::matrix.normal(M, U, V)
+  Y <- matrix.normal(M, U, V)
   
   # Output the simulated responses.
   return(Y)

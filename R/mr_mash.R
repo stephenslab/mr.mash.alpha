@@ -20,7 +20,7 @@
 #' \item{w1}{a PxK matrix of posterior assignment probabilities to the mixture components}
 #' \item{intercept}{an R-vector with the estimated intercepts}
 #' \item{ELBO}{the Evidence Lower Bound at convergence} 
-#' 
+#'
 #' @export
 mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol(Y)), 
                     tol=1e-8, max_iter=1e5, update_w0=T, compute_ELBO=T) {
