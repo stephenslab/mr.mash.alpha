@@ -2,3 +2,5 @@
 
 export(mr.mash)
 importFrom(MBSP,matrix.normal)
+importFrom(Rcpp,evalCpp)
+useDynLib(mr.mash.alpha)

@@ -2,10 +2,10 @@
 # also known as the logistic link function. It is the inverse of
 # logit(x).
 sigmoid <- function (x) {
-      if (x > -500)
-              y <- 1/(1 + exp(-x))
+  if (x > -500)
+    y <- 1/(1 + exp(-x))
   else
-          y <- 0
+    y <- 0
   return(y)
 }
 
@@ -21,10 +21,16 @@ dot <- function (x,y)
   sum(x*y)
 
 ###Compute the trace of a square matrix
-tr <- function(x){
-  tt <- sum(diag(x))
-  return(tt)
-}
+tr <- function(x)
+  sum(diag(x))
+
+# Should be the same as mvtnorm::dmvnorm(x,mu,S,log = TRUE)
+#
+#' @importFrom Rcpp evalCpp
+#' @useDynLib mr.mash.alpha
+#' 
+dmvnorm <- function (x, mu, S)
+  dmvnorm_rcpp(x,mu,S)
 
 ###Function to simulate from MN distribution
 #
