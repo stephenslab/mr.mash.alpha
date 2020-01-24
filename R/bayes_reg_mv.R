@@ -2,8 +2,8 @@
 #
 # The outputs are: b, the least-squares estimate of the regression
 # coefficients; S, the covariance of b; mu1, the posterior mean of the
-# regression coefficients; S1, the posterior covariance of the regression coefficients;
-# logbf, the log-Bayes factor.
+# regression coefficients; S1, the posterior covariance of the
+# regression coefficients; logbf, the log-Bayes factor.
 bayes_mvr_ridge <- function (x, Y, V, S0) {
   
   # Compute the least-squares estimate and its covariance.
@@ -56,7 +56,7 @@ bayes_mvr_ridge <- function (x, Y, V, S0) {
 bayes_mvr_spike_slab <- function (x, Y, V, S0, p0) {
   
   # Compute the least-squares estimate and its covariance.
-  f <- bayes_ridge_mvr(x, Y, V, S0)
+  f <- bayes_mvr_ridge(x, Y, V, S0)
   
   # Compute the posterior probability that the coefficient is nonzero.
   p1 <- sigmoid(log(p0/(1 - p0)) + f$logbf)
@@ -127,8 +127,6 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
   return(list(logbf = logbf_mix,w1 = w1,mu1 = mu1_mix,S1 = S1_mix))
 }
 
-               
-
 # Bayesian multivariate regression with mixture-of-normals prior
 # (mixture weights w0 and covariance matrices S0) using MASH
 # TO DO: Move MashInitializer$new outside the function when using in mr.mash
@@ -139,7 +137,7 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
 # coefficients given that all the coefficients are not nonzero (mu1),
 # and the posterior covariance of the coefficients given that all the
 # coefficients are not zero (S1).
-bayes_mvr_mash <- function(x, Y, V, w0, s0){
+bayes_mvr_mash <- function(x, Y, V, w0, S0){
   data <- mmbr:::DenseData$new(x, Y)
   data$standardize(F, F)
   mash_init <- mmbr:::MashInitializer$new(S0, grid=1, prior_weights=w0, null_weight=0, top_mixtures=-1)
