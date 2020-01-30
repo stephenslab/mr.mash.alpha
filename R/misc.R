@@ -84,7 +84,7 @@ compute_ELBO_fun <- function(rbar, V, Vinv, var_part_ERSS, neg_KL){
 }
 
 ###Update variational parameters, expected residuals, and ELBO components
-inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, compute_ELBO=T){
+inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0){
   ###Create variables to store quantities
   R <- ncol(rbar)
   p <- ncol(X)
@@ -93,7 +93,7 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, compute_ELBO=T){
   S1    <- array(0, c(R, R, p))
   w1    <- matrix(0, nrow=p, ncol=K)
   
-  if(compute_ELBO){
+  if(!is.null(Vinv)){
     ##Initialize ELBO parameters
     var_part_ERSS <- 0
     neg_KL <- 0
@@ -114,7 +114,7 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, compute_ELBO=T){
     w1[j, ]          <- bfit$w1
     
     #Compute ELBO params
-    if(compute_ELBO){
+    if(!is.null(Vinv)){
       xtx <- sum(X[, j]^2)
       var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx)
       mu1_mat <- matrix(bfit$mu1, ncol=1)
@@ -127,7 +127,7 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, compute_ELBO=T){
   }
   
   ###Return output
-  if(compute_ELBO){
+  if(!is.null(Vinv)){
     return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL))
   } else {
     return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1))
