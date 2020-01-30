@@ -107,7 +107,7 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     
     ##Update w0 if requested
     if(update_w0){
-      w0 <- colSums(w1_t)/p
+      w0 <- update_weights(w1_t)
     }
     
     ##Compute distance in mu1 between two successive iterations

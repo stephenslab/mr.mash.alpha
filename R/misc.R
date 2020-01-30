@@ -65,3 +65,10 @@ compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid){
   
   return(U)
 }
+
+###Update mixture weights
+update_weights <- function(x){
+  w <- colSums(x)
+  w <- w/sum(w)
+  return(w)
+}
