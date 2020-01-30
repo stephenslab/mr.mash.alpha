@@ -39,8 +39,6 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
   R       <- ncol(Y)
   K       <- length(S0)
   mu1_t   <- mu_init 
-  S1_t    <- array(0, c(R, R, p))
-  w1_t    <- matrix(0, nrow=p, ncol=K)
   err     <- matrix(Inf, nrow=p, ncol=R)
   t       <- 0
   if(compute_ELBO){
@@ -74,8 +72,8 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     ##Save current estimates.
     mu1_tminus1 <- mu1_t
     
-    updates <- inner_loop(X=X, rbar=rbar, mu=mu_t, V=V, Vinv=Vinv, w0=w0, S0=S0, compute_ELBO=T)
-    mu_t    <- updates$mu1
+    updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, compute_ELBO=T)
+    mu1_t   <- updates$mu1
     S1_t    <- updates$S1
     w1_t    <- updates$w1
     rbar    <- updates$rbar
