@@ -89,10 +89,16 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, compute_ELBO=T){
   R <- ncol(rbar)
   p <- ncol(X)
   K <- length(S0)
-  mu1    <- mu
+  mu1   <- mu
   S1    <- array(0, c(R, R, p))
   w1    <- matrix(0, nrow=p, ncol=K)
   
+  if(compute_ELBO){
+    ##Initialize ELBO parameters
+    var_part_ERSS <- 0
+    neg_KL <- 0
+  }
+
   ##Loop through the variables
   for(j in 1:p){
     

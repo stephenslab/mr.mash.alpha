@@ -48,9 +48,6 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
   ###Repeat the following until convergence
   cat("iter beta_max.diff ELBO_diff ELBO\n")
   while(any(err>tol)){
-    ##Initialize ELBO parameters
-    var_part_ERSS <- 0
-    neg_KL <- 0
     
     if(compute_ELBO){
       ##Set last value of ELBO as ELBO0
