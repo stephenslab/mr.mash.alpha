@@ -138,11 +138,12 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
 # and the posterior covariance of the coefficients given that all the
 # coefficients are not zero (S1).
 bayes_mvr_mash <- function(x, Y, V, w0, S0){
+  if(!is.matrix(x)){x <- matrix(x, ncol=1)}
   data <- mmbr:::DenseData$new(x, Y)
   data$standardize(F, F)
   mash_init <- mmbr:::MashInitializer$new(S0, grid=1, prior_weights=w0, null_weight=0, top_mixtures=-1)
   B <- mmbr:::MashRegression$new(1, V, mash_init)
   B$fit(data, save_var=T)
 
-  return(mu1=B$posterior_b1, S1=B$posterior_variance, w1=B$mixture_posterior_weights, logbf=B$lbf)
+  return(list(mu1=B$posterior_b1, S1=B$posterior_variance, w1=drop(B$mixture_posterior_weights[, -1]), logbf=B$lbf))
 }
