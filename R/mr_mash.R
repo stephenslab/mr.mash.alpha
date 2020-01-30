@@ -74,36 +74,11 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     ##Save current estimates.
     mu1_tminus1 <- mu1_t
     
-    ##Loop through the variables
-    for(j in 1:p){
-      
-      #Remove j-th effect from expected residuals 
-      rbar_j <- rbar + outer(X[, j], mu1_t[j, ])
-      
-      #Run Bayesian multivariate simple linear regression with mixture-of-normals prior
-      bfit <- bayes_mvr_mix(X[, j], rbar_j, V, w0, S0)
-      
-      #Update variational parameters
-      mu1_t[j, ]           <- bfit$mu1
-      S1_t[, , j]          <- bfit$S1
-      w1_t[j, ]            <- bfit$w1
-      
-      if(compute_ELBO){
-        #Compute ELBO components
-        # var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*(sum(X[, j]^2)))
-        # neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(Vinv%*%t(rbar_j)%*%matrix(X[, j], ncol=1)%*%matrix(bfit$mu1, nrow=1, byrow=T))+
-        #                                        tr(Vinv%*%(bfit$S1+tcrossprod(matrix(bfit$mu1, ncol=1))))*(sum(X[, j]^2))))
-        xtx <- sum(X[, j]^2)
-        mu1_mat <- matrix(bfit$mu1, ncol=1)
-      
-        var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx)
-        neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(tcrossprod(Vinv, rbar_j)%*%tcrossprod(matrix(X[, j], ncol=1), mu1_mat))+
-                                               tr(Vinv%*%(bfit$S1+tcrossprod(mu1_mat)))*(xtx)))
-      }
-      
-      #Update expected residuals
-      rbar <- rbar_j - outer(X[, j], mu1_t[j, ])
-    }
+    updates <- inner_loop(X=X, rbar=rbar, mu=mu_t, V=V, Vinv=Vinv, w0=w0, S0=S0, compute_ELBO=T)
+    mu_t    <- updates$mu1
+    S1_t    <- updates$S1
+    w1_t    <- updates$w1
+    rbar    <- updates$rbar
     
     ##Update w0 if requested
     if(update_w0){
@@ -115,9 +90,10 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     
     if(compute_ELBO){
       ##Compute ELBO
-      ERSS <- tr(Vinv%*%(crossprod(rbar))) + var_part_ERSS
-      ELBO <- -log(n)/2 -log(n*R)/2 -n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 0.5*ERSS + neg_KL
-    
+      var_part_ERSS <- updates$var_part_ERSS
+      neg_KL <- updates$neg_KL
+      ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL)
+
       ##Print out useful info
       cat(sprintf("%4d %0.2e %0.2e %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
     } else {

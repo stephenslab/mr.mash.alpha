@@ -72,3 +72,58 @@ update_weights <- function(x){
   w <- w/sum(w)
   return(w)
 }
+
+##Compute ELBO from intermediate components
+compute_ELBO_fun <- function(rbar, V, Vinv, var_part_ERSS, neg_KL){
+  n <- nrow(rbar)
+  R <- ncol(rbar)
+  ERSS <- tr(Vinv%*%(crossprod(rbar))) + var_part_ERSS
+  ELBO <- -log(n)/2 -log(n*R)/2 -n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 0.5*ERSS + neg_KL
+  
+  return(ELBO)
+}
+
+###Update variational parameters, expected residuals, and ELBO components
+inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, compute_ELBO=T){
+  ###Create variables to store quantities
+  R <- ncol(rbar)
+  p <- ncol(X)
+  K <- length(S0)
+  mu1    <- mu
+  S1    <- array(0, c(R, R, p))
+  w1    <- matrix(0, nrow=p, ncol=K)
+  
+  ##Loop through the variables
+  for(j in 1:p){
+    
+    #Remove j-th effect from expected residuals 
+    rbar_j <- rbar + outer(X[, j], mu1[j, ])
+    
+    #Run Bayesian SLR
+    bfit <- bayes_mvr_mix(X[, j], rbar_j, V, w0, S0)
+    
+    #Update variational parameters
+    mu1[j, ]         <- bfit$mu1
+    S1[, , j]        <- bfit$S1
+    w1[j, ]          <- bfit$w1
+    
+    #Compute ELBO params
+    if(compute_ELBO){
+      xtx <- sum(X[, j]^2)
+      var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx)
+      mu1_mat <- matrix(bfit$mu1, ncol=1)
+      neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(tcrossprod(Vinv, rbar_j)%*%tcrossprod(matrix(X[, j], ncol=1), mu1_mat))+
+                                             tr(Vinv%*%(bfit$S1+tcrossprod(mu1_mat)))*(xtx)))
+    }
+    
+    #Update expected residuals
+    rbar <- rbar_j - outer(X[, j], mu1[j, ])
+  }
+  
+  ###Return output
+  if(compute_ELBO){
+    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL))
+  } else {
+    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1))
+  }
+}
