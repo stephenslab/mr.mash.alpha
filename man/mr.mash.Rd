@@ -4,9 +4,18 @@
 \alias{mr.mash}
 \title{Multiple Regression with Multivariate Adaptive Shrinkage.}
 \usage{
-mr.mash(Y, X, V, S0, w0, mu_init = matrix(0, nrow = ncol(X), ncol =
-  ncol(Y)), tol = 1e-08, max_iter = 1e+05, update_w0 = T,
-  compute_ELBO = T)
+mr.mash(
+  Y,
+  X,
+  V,
+  S0,
+  w0,
+  mu_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)),
+  tol = 1e-08,
+  max_iter = 1e+05,
+  update_w0 = T,
+  compute_ELBO = T
+)
 }
 \arguments{
 \item{Y}{an NxR matrix of responses.}
