@@ -145,5 +145,5 @@ bayes_mvr_mash <- function(x, Y, V, w0, S0){
   B <- mmbr:::MashRegression$new(1, V, mash_init)
   B$fit(data, save_var=T)
 
-  return(list(mu1=B$posterior_b1, S1=drop(B$posterior_variance), w1=drop(B$mixture_posterior_weights[, -1]), logbf=B$lbf))
+  return(list(mu1=drop(B$posterior_b1), S1=drop(B$posterior_variance), w1=drop(B$mixture_posterior_weights[, -1]), logbf=B$lbf))
 }
