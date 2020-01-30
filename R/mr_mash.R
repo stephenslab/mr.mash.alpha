@@ -69,6 +69,7 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     ##Save current estimates.
     mu1_tminus1 <- mu1_t
     
+    ##Update variational parameters, expected residuals, and ELBO components
     updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, compute_ELBO=T)
     mu1_t   <- updates$mu1
     S1_t    <- updates$S1
