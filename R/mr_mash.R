@@ -19,7 +19,48 @@
 #' \item{S1}{a RxRxP array of posterior covariances for the regression coeffcients}
 #' \item{w1}{a PxK matrix of posterior assignment probabilities to the mixture components}
 #' \item{intercept}{an R-vector with the estimated intercepts}
-#' \item{ELBO}{the Evidence Lower Bound at convergence} 
+#' \item{ELBO}{the Evidence Lower Bound at convergence}
+#' 
+#' @examples 
+#' ###Set options
+#' options(stringsAsFactors = F)
+#' ###Set seed
+#' set.seed(123)
+#'
+#' ###Simulate X and Y
+#' ##Set parameters
+#' n  <- 100
+#' p <- 10
+#'
+#' ##Compute residual covariance
+#' V  <- rbind(c(1.0,0.2),
+#'             c(0.2,0.4))
+#'
+#' ##Set true effects
+#' B  <- matrix(c(-2, -2,
+#'                5, 5,
+#'                rep(0, (p-2)*2)), byrow=T, ncol=2)
+#'
+#' ##Simulate X
+#' X <- matrix(rnorm(n*p), nrow=n, ncol=p)
+#' X <- scale(X, center=T, scale=F)
+#'
+#' ##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix and V is the residual covariance  
+#' Y <- mr.mash.alpha:::sim_mvr(X, B, V)
+#'
+#' ###Specify the mixture weights and covariance matrices for the mixture-of-normals prior.
+#' grid <- seq(1, 5)
+#' S0mix <- mr.mash.alpha:::compute_cov_canonical(ncol(Y), singletons=T, hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid)
+#' names(S0mix) <- paste0("S0_", seq(1, length(S0mix)))
+#' zero_mat <- matrix(1e-10, ncol(Y), ncol(Y))
+#' S0mix[[paste0("S0_", length(S0mix)+1)]] <- zero_mat
+#' w0    <- rep(1/(length(S0mix)), length(S0mix))
+#'
+#' ###Estimate residual covariance
+#' V_est <- cov(Y)
+#'
+#' ###Fit mr.mash
+#' fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T)
 #'
 #' @export
 mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol(Y)), 
