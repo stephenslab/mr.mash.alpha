@@ -83,10 +83,7 @@ Y <- mr.mash.alpha:::sim_mvr(X, B, V)
 
 ###Specify the mixture weights and covariance matrices for the mixture-of-normals prior.
 grid <- seq(1, 5)
-S0mix <- mr.mash.alpha:::compute_cov_canonical(ncol(Y), singletons=T, hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid)
-names(S0mix) <- paste0("S0_", seq(1, length(S0mix)))
-zero_mat <- matrix(1e-10, ncol(Y), ncol(Y))
-S0mix[[paste0("S0_", length(S0mix)+1)]] <- zero_mat
+S0mix <- mr.mash.alpha:::compute_cov_canonical(ncol(Y), singletons=T, hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=T)
 w0    <- rep(1/(length(S0mix)), length(S0mix))
 
 ###Estimate residual covariance
