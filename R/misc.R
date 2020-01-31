@@ -52,7 +52,7 @@ sim_mvr <- function (X, B, V) {
 }
 
 ###Function to compute canonical covariance matrices scaled by a grid 
-compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid){
+compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid, zeromat=T){
   S <- mmbr:::create_cov_canonical(ntraits, singletons, hetgrid)
   U <- list()
   t <- 0
@@ -61,6 +61,14 @@ compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid){
       t <- t+1
       U[[t]] <- S[[i]]*grid[j]
     }
+  }
+  
+  if(zeromat){
+    names(U) <- paste0("S0_", seq(1, length(U)))
+    zero_mat <- matrix(0, ncol(Y), ncol(Y))
+    zero_mat[upper.tri(zero_mat)] <- 1e-10
+    zero_mat[lower.tri(zero_mat)] <- 1e-10
+    U[[paste0("S0_", length(U)+1)]] <- zero_mat
   }
   
   return(U)
