@@ -26,12 +26,7 @@ test_that("bayes_mvr_mix and bayes_mvr_mash return the same results", {
 
   ###Specify the mixture weights and covariance matrices for the mixture-of-normals prior
   grid <- seq(1, 5)
-  S0mix <- compute_cov_canonical(ncol(Y), singletons=T, hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid)
-  names(S0mix) <- paste0("S0_", seq(1, length(S0mix)))
-  zero_mat <- matrix(0, ncol(Y), ncol(Y))
-  zero_mat[upper.tri(zero_mat)] <- 1e-10
-  zero_mat[lower.tri(zero_mat)] <- 1e-10
-  S0mix[[paste0("S0_", length(S0mix)+1)]] <- zero_mat
+  S0mix <- compute_cov_canonical(ncol(Y), singletons=T, hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=T)
 
   w0    <- rep(1/(length(S0mix)), length(S0mix))
 
