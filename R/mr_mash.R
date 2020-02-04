@@ -101,7 +101,9 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
   mu1_t <- ups$mu1_t
   S1_t  <- ups$S1_t
   w1_t  <- ups$w1_t
-  ELBO  <- ups$ELBO
+  if(compute_ELBO){
+    ELBO  <- ups$ELBO
+  }
   
   if(compute_ELBO){
     ##Print out useful info
@@ -135,7 +137,9 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t
-    ELBO  <- ups$ELBO
+    if(compute_ELBO){
+      ELBO  <- ups$ELBO
+    }
     
     ##Compute distance in mu1 between two successive iterations
     err <- abs(mu1_t - mu1_tminus1)
