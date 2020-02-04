@@ -168,7 +168,11 @@ mr_mash_update <- function(Y, X, mu1_t, w1_t, V, Vinv, w0, S0, update_w0, comput
     var_part_ERSS <- updates$var_part_ERSS
     neg_KL <- updates$neg_KL
     ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL)
+    
+    return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO))
+  } else {
+    return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t))
   }
   
-  return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO))
+  
 }
