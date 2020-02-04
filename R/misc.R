@@ -86,7 +86,7 @@ compute_ELBO_fun <- function(rbar, V, Vinv, var_part_ERSS, neg_KL){
   n <- nrow(rbar)
   R <- ncol(rbar)
   ERSS <- tr(Vinv%*%(crossprod(rbar))) + var_part_ERSS
-  ELBO <- -log(n)/2 -log(n*R)/2 -n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 0.5*ERSS + neg_KL
+  ELBO <- -log(n)/2 - (n*R)/2*log(2*pi) - n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 0.5*ERSS + neg_KL
   
   return(ELBO)
 }
