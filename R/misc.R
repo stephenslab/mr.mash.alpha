@@ -143,7 +143,7 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0){
 }
 
 ###Perform one iteration of the outer loop
-mr_mash_update <- function(Y, X, mu1_t, V, Vinv, w0, S0, t, update_w0){
+mr_mash_update <- function(Y, X, mu1_t, V, Vinv, w0, S0, t, update_w0, compute_ELBO){
   ##Compute expected residuals
   rbar <- Y - X%*%mu1_t
   
