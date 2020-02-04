@@ -105,7 +105,7 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     neg_KL <- 0
   }
   
-  ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, t=t)
+  ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, t=t, update_w0=update_w0)
   mu1_t <- ups$mu1_t
   S1_t  <- ups$S1_t
   w1_t  <- ups$w1_t
@@ -141,7 +141,7 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
       neg_KL <- 0
     }
     
-    ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, t=t)
+    ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, t=t, update_w0=update_w0)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t
