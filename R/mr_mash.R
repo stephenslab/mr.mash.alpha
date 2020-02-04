@@ -83,14 +83,46 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     ELBO    <- -Inf
   }
   
-  ###Repeat the following until convergence
+  ###First iteration
   cat("iter beta_max.diff ELBO_diff ELBO\n")
+  ##Save current estimates.
+  mu1_tminus1 <- mu1_t   
+  
+  ##Update iterator
+  t <- t+1
+  
+  ##Exit loop if maximum number of iterations is reached
+  if(t>max_iter){
+    warning("Max number of iterations reached. Try increasing max_iter.")
+    break
+  }
+  
+  if(compute_ELBO){
+    ##Set last value of ELBO as ELBO0
+    ELBO0 <- ELBO
+    ##Initialize ELBO parameters
+    var_part_ERSS <- 0
+    neg_KL <- 0
+  }
+  
+  ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, t=t)
+  mu1_t <- ups$mu1_t
+  S1_t  <- ups$S1_t
+  w1_t  <- ups$w1_t
+  ELBO  <- ups$ELBO
+  
+  if(compute_ELBO){
+    ##Print out useful info
+    cat(sprintf("%4d %0.2e %0.2e %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
+  } else {
+    ##Print out useful info
+    cat(sprintf("%4d %0.2e\n", t, max(err)))
+  }
+  
+  ###Repeat the following until convergence
   while(any(err>tol)){
-    
-    if(compute_ELBO){
-      ##Set last value of ELBO as ELBO0
-      ELBO0 <- ELBO
-    }
+    ##Save current estimates.
+    mu1_tminus1 <- mu1_t   
     
     ##Update iterator
     t <- t+1
@@ -101,37 +133,24 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
       break
     }
     
-    ##Compute expected residuals
-    rbar <- Y - X%*%mu1_t
-    
-    ##Save current estimates.
-    mu1_tminus1 <- mu1_t
-    
-    ##Update variational parameters, expected residuals, and ELBO components
     if(compute_ELBO){
-      updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0) 
-    } else {
-      updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=NULL, w0=w0, S0=S0)
+      ##Set last value of ELBO as ELBO0
+      ELBO0 <- ELBO
+      ##Initialize ELBO parameters
+      var_part_ERSS <- 0
+      neg_KL <- 0
     }
-    mu1_t   <- updates$mu1
-    S1_t    <- updates$S1
-    w1_t    <- updates$w1
-    rbar    <- updates$rbar
     
-    ##Update w0 if requested
-    if(update_w0){
-      w0 <- update_weights(w1_t)
-    }
+    ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, t=t)
+    mu1_t <- ups$mu1_t
+    S1_t  <- ups$S1_t
+    w1_t  <- ups$w1_t
+    ELBO  <- ups$ELBO
     
     ##Compute distance in mu1 between two successive iterations
     err <- abs(mu1_t - mu1_tminus1)
     
     if(compute_ELBO){
-      ##Compute ELBO
-      var_part_ERSS <- updates$var_part_ERSS
-      neg_KL <- updates$neg_KL
-      ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL)
-
       ##Print out useful info
       cat(sprintf("%4d %0.2e %0.2e %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
     } else {
