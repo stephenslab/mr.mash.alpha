@@ -141,3 +141,34 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0){
     return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1))
   }
 }
+
+###Perform one iteration of the outer loop
+mr_mash_update <- function(Y, X, mu1_t, V, Vinv, w0, S0, t){
+  ##Compute expected residuals
+  rbar <- Y - X%*%mu1_t
+  
+  #Update w0 if requested
+  if(update_w0 && t>1){
+    w0 <- update_weights(w1_t)
+  }
+  
+  ##Update variational parameters, expected residuals, and ELBO components
+  if(compute_ELBO){
+    updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0) 
+  } else {
+    updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=NULL, w0=w0, S0=S0)
+  }
+  mu1_t   <- updates$mu1
+  S1_t    <- updates$S1
+  w1_t    <- updates$w1
+  rbar    <- updates$rbar
+  
+  if(compute_ELBO){
+    ##Compute ELBO
+    var_part_ERSS <- updates$var_part_ERSS
+    neg_KL <- updates$neg_KL
+    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL)
+  }
+  
+  return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO))
+}
