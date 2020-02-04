@@ -101,20 +101,21 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
   
   # Compute the posterior mean (mu1_mix) and covariance (S1_mix) of the
   # regression coefficients.
-  # A   <- matrix(0,R,R)
-  # mu1 <- rep(0,R)
-  # for (k in 1:K) {
-  #   wk  <- w1[k]
-  #   muk <- out[[k]]$mu1
-  #   Sk  <- out[[k]]$S1
-  #   mu1 <- mu1 + wk*muk
-  #   A   <- A   + wk*(Sk + tcrossprod(muk))
-  # }
-  # S1 <- A - tcrossprod(mu1)
-  muk <- t(sapply(out, function (x) x$mu1))
-  Sk <- lapply(out, function (x) x$S1)
-  mu1_mix <- colSums(muk*w1)
-  S1_mix <- Reduce("+", lapply(1:K, function(i){w1[i]*(Sk[[i]] + tcrossprod(muk[i, ]))})) - tcrossprod(mu1_mix)
+  A   <- matrix(0,R,R)
+  mu1_mix <- rep(0,R)
+  for (k in 1:K) {
+    wk  <- w1[k]
+    muk <- out[[k]]$mu1
+    Sk  <- out[[k]]$S1
+    mu1_mix <- mu1_mix + wk*muk
+    A   <- A   + wk*(Sk + tcrossprod(muk))
+  }
+  S1_mix <- A - tcrossprod(mu1_mix)
+  ##The following code does not work in the univariate case
+  # muk <- t(sapply(out, function (x) x$mu1))
+  # Sk <- lapply(out, function (x) x$S1)
+  # mu1_mix <- colSums(muk*w1)
+  # S1_mix <- Reduce("+", lapply(1:K, function(i){w1[i]*(Sk[[i]] + tcrossprod(muk[i, ]))})) - tcrossprod(mu1_mix)
   
   # Compute the log-Bayes factor for the mixture as a linear combination of the
   # individual BFs foreach mixture component.
