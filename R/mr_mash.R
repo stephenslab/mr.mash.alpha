@@ -94,12 +94,9 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
   if(compute_ELBO){
     ##Set last value of ELBO as ELBO0
     ELBO0 <- ELBO
-    ##Initialize ELBO parameters
-    var_part_ERSS <- 0
-    neg_KL <- 0
   }
   
-  ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, t=t, 
+  ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, w0=w0, S0=S0, 
                           update_w0=update_w0, compute_ELBO=compute_ELBO)
   mu1_t <- ups$mu1_t
   S1_t  <- ups$S1_t
@@ -131,12 +128,9 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     if(compute_ELBO){
       ##Set last value of ELBO as ELBO0
       ELBO0 <- ELBO
-      ##Initialize ELBO parameters
-      var_part_ERSS <- 0
-      neg_KL <- 0
     }
     
-    ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, t=t, 
+    ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
                             update_w0=update_w0, compute_ELBO=compute_ELBO)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
