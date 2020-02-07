@@ -67,8 +67,9 @@ compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid, zeromat=T)
     }
   }
   
+  names(U) <- paste0("S0_", seq(1, length(U)))
+  
   if(zeromat){
-    names(U) <- paste0("S0_", seq(1, length(U)))
     zero_mat <- matrix(0, ntraits, ntraits)
     zero_mat[upper.tri(zero_mat)] <- 1e-10
     zero_mat[lower.tri(zero_mat)] <- 1e-10
