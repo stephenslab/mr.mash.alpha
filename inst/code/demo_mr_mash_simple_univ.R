@@ -46,14 +46,14 @@ fit <- mr_mash_simple(X,y,1,s0,w0,b0,20)
 plot(b,fit$B,pch = 20,xlab = "true",ylab = "estimated")
 abline(a = 0,b = 1,col = "skyblue",lty = "dotted")
 
-# FIR VARBVSMIX MODEL
+# FIT VARBVSMIX MODEL
 # -------------------
 s0    <- unlist(s0)
 s0[1] <- 0
-out <- varbvsmix(X,NULL,y,s0,1,w0,matrix(0,p,k),matrix(0,p,k),
-                 update.sigma = FALSE,update.sa = FALSE,update.w = FALSE,
-                 maxiter = 20,tol = 0,drop.threshold = 0,verbose = FALSE)
-b   <- with(out,rowSums(alpha * mu))
+out   <- varbvsmix(X,NULL,y,s0,1,w0,matrix(0,p,k),matrix(0,p,k),
+                   update.sigma = FALSE,update.sa = FALSE,update.w = FALSE,
+                   maxiter = 20,tol = 0,drop.threshold = 0,verbose = FALSE)
+b     <- with(out,rowSums(alpha * mu))
 
 # Should be close to zero.
 print(max(abs(fit$B - b)))
