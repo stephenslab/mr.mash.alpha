@@ -1,6 +1,6 @@
-# Small script to illustrate how computation of posteriors quantities
+# Small script to illustrate how computation of posterior quantities
 # and Bayes factors can be made more efficient by pre-computing some
-# things in advance. See also mr_mash_calc.tex.
+# things in advance.
 library(mvtnorm)
 
 # Returns the log-density of the multivariate normal with zero mean
@@ -34,17 +34,20 @@ dat <- list(mu1   = mu1,
             S1    = S1,
             logbf = logbf)
 
-# Pre-calculations (that don't depend on X).
+# Pre-calculations (that don't depend on X). Here, U0 is the prior
+# covariance of the "transformed" data.
 R   <- chol(V)
-P0  <- R %*% solve(S0) %*% t(R)
-out <- eigen(P0)
+U0  <- solve(t(R)) %*% S0 %*% solve(R)
+out <- eigen(U0)
 d   <- out$values
 Q   <- out$vectors
 
 # Same Bayesian calculations as before, but done more "efficiently" by
-# making use of the "pre-calculations".
-S1  <- Q %*% diag(1/(d + xx)) %*% t(Q)
-S1  <- t(R) %*% S1 %*% R
+# making use of the "pre-calculations". Here, U1 is the posterior
+# covariance of the "transformed" data.
+D   <- diag(1/(1 + xx*d))
+U1  <- U0 %*% Q %*% D %*% t(Q)
+S1  <- t(R) %*% U1 %*% R
 mu1 <- drop(S1 %*% solve(S,bhat))
 
 # Compare the two calculations.
