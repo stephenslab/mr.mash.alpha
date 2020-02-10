@@ -1,3 +1,6 @@
+# Small script to illustrate how computation of posteriors quantities
+# and Bayes factors can be made more efficient by pre-computing some
+# things in advance. See also mr_mash_calc.tex.
 library(mvtnorm)
 
 # Returns the log-density of the multivariate normal with zero mean
