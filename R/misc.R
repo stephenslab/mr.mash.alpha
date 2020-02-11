@@ -269,10 +269,10 @@ mr_mash_update_scaled_X <- function(Y, X, mu1_t, w1_t, V, Vinv, w0, S0, S, S1,
   
   ##Update variational parameters, expected residuals, and ELBO components
   if(compute_ELBO){
-    updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, Vinv=Vinv, w0=w0, S0=S0, 
+    updates <- inner_loop_scaled_X(X=X, rbar=rbar, mu=mu1_t, Vinv=Vinv, w0=w0, S0=S0, 
                           S=S, S1=S1, SplusS0_chol=SplusS0_chol, S_chol=S_chol) 
   } else {
-    updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, Vinv=NULL, w0=w0, S0=S0,
+    updates <- inner_loop_scaled_X(X=X, rbar=rbar, mu=mu1_t, Vinv=NULL, w0=w0, S0=S0,
                           S=S, S1=S1, SplusS0_chol=SplusS0_chol, S_chol=S_chol)
   }
   mu1_t   <- updates$mu1
