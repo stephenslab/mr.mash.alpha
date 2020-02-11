@@ -177,7 +177,7 @@ bayes_mvr_mix_scaled_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol) {
   #   out[[k]] <- bayes_mvr_ridge(x,Y,V,S0[[k]])
   # }
   bayes_mvr_ridge_lapply <- function(i){
-    bayes_mvr_ridge(x, Y, S0[[i]], S, S1[[i]], SplusS0_chol[[i]], S_chol)
+    bayes_mvr_ridge_scaled_X(x, Y, S0[[i]], S, S1[[i]], SplusS0_chol[[i]], S_chol)
   }
   out <- lapply(1:K, bayes_mvr_ridge_lapply)
   
