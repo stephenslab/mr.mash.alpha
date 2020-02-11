@@ -1,4 +1,4 @@
-#' @title  Multiple Regression with Multivariate Adaptive Shrinkage.
+#' @title  Multiple Regression with Multivariate Adaptive Shrinkage with scaled X.
 #' @details Performs multivariate multiple regression with mixture-of-normals prior.
 #' 
 #' @param Y an NxR matrix of responses.
