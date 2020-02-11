@@ -257,8 +257,8 @@ inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, 
 }
 
 ###Perform one iteration of the outer loop
-mr_mash_update_scaled_X <- function(Y, X, mu1_t, w1_t, V, Vinv, w0, S0, S=S, S1=S1, 
-                                    SplusS0_chol=SplusS0_chol, S_chol=S_chol, update_w0, compute_ELBO){
+mr_mash_update_scaled_X <- function(Y, X, mu1_t, w1_t, V, Vinv, w0, S0, S, S1, 
+                                    SplusS0_chol, S_chol, update_w0, compute_ELBO){
   ##Compute expected residuals
   rbar <- Y - X%*%mu1_t
   
