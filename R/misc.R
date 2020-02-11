@@ -250,9 +250,9 @@ inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, 
   
   ###Return output
   if(!is.null(Vinv)){
-    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL))
+    return(list(rbar=rbar, mu1=mu1c, S1=S1c, w1=w1c, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL))
   } else {
-    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1))
+    return(list(rbar=rbar, mu1=mu1c, S1=S1c, w1=w1c))
   }
 }
 
