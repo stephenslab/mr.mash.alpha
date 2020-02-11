@@ -225,7 +225,7 @@ inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, 
   for(j in 1:p){
     
     #Remove j-th effect from expected residuals 
-    rbar_j <- rbar + outer(X[, j], mu1[j, ])
+    rbar_j <- rbar + outer(X[, j], mu1c[j, ])
     
     #Run Bayesian SLR
     bfit <- bayes_mvr_mix_scaled_X(X[, j], rbar_j, w0, S0, S, S1, SplusS0_chol, S_chol)
