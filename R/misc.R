@@ -208,6 +208,7 @@ precompute_quants_scaled_X <- function(n, V, S0){
 ###Update variational parameters, expected residuals, and ELBO components with scaled X
 inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, S_chol){
   ###Create variables to store quantities
+  n <- nrow(rbar)
   R <- ncol(rbar)
   p <- ncol(X)
   K <- length(S0)
@@ -237,7 +238,7 @@ inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, 
     
     #Compute ELBO params
     if(!is.null(Vinv)){
-      xtx <- sum(X[, j]^2)
+      xtx <- n-1
       var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx)
       mu1_mat <- matrix(bfit$mu1, ncol=1)
       neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(tcrossprod(Vinv, rbar_j)%*%tcrossprod(matrix(X[, j], ncol=1), mu1_mat))+
