@@ -194,20 +194,24 @@ precompute_quants_scaled_X <- function(n, V, S0){
   S <- V/(n-1)
   S_chol <- R/sqrt(n-1)
   ldetV <- chol2ldet(R)
+  ldetS_chol <- chol2ldet(S_chol)
   
   ###Quantities that depend on S0
   SplusS0_chol <- list()
   S1 <- list()
+  ldetSplusS0_chol <- c()
   for(i in 1:length(S0)){
     SplusS0_chol[[i]] <- chol(S+S0[[i]])
+    ldetSplusS0_chol[i] <- chol2ldet(SplusS0_chol[[i]])
     S1[[i]] <- S0[[i]]%*%backsolve(SplusS0_chol[[i]], forwardsolve(t(SplusS0_chol[[i]]), S))
   }
   
-  return(list(R=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol, ldetV=ldetV))
+  return(list(R=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol, 
+              ldetV=ldetV, ldetS_chol=ldetS_chol, ldetSplusS0_chol=ldetSplusS0_chol))
 }
 
 ###Update variational parameters, expected residuals, and ELBO components with scaled X
-inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, S_chol){
+inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol){
   ###Create variables to store quantities
   n <- nrow(rbar)
   R <- ncol(rbar)
@@ -230,7 +234,7 @@ inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, 
     rbar_j <- rbar + outer(X[, j], mu1c[j, ])
     
     #Run Bayesian SLR
-    bfit <- bayes_mvr_mix_scaled_X(X[, j], rbar_j, w0, S0, S, S1, SplusS0_chol, S_chol)
+    bfit <- bayes_mvr_mix_scaled_X(X[, j], rbar_j, w0, S0, S, S1, SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol)
     
     #Update variational parameters
     mu1c[j, ]         <- bfit$mu1
@@ -260,7 +264,8 @@ inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, 
 
 ###Perform one iteration of the outer loop with scaled X
 mr_mash_update_scaled_X <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, S, S1, 
-                                    SplusS0_chol, S_chol, update_w0, compute_ELBO){
+                                    SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol, 
+                                    update_w0, compute_ELBO){
   ##Compute expected residuals
   rbar <- Y - X%*%mu1_t
   
@@ -272,10 +277,12 @@ mr_mash_update_scaled_X <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, S
   ##Update variational parameters, expected residuals, and ELBO components
   if(compute_ELBO){
     updates <- inner_loop_scaled_X(X=X, rbar=rbar, mu=mu1_t, Vinv=Vinv, w0=w0, S0=S0, 
-                          S=S, S1=S1, SplusS0_chol=SplusS0_chol, S_chol=S_chol) 
+                          S=S, S1=S1, SplusS0_chol=SplusS0_chol, S_chol=S_chol, 
+                          ldetSplusS0_chol=ldetSplusS0_chol, ldetS_chol=ldetS_chol) 
   } else {
     updates <- inner_loop_scaled_X(X=X, rbar=rbar, mu=mu1_t, Vinv=NULL, w0=w0, S0=S0,
-                          S=S, S1=S1, SplusS0_chol=SplusS0_chol, S_chol=S_chol)
+                          S=S, S1=S1, SplusS0_chol=SplusS0_chol, S_chol=S_chol,
+                          ldetSplusS0_chol=ldetSplusS0_chol, ldetS_chol=ldetS_chol)
   }
   mu1_t   <- updates$mu1
   S1_t    <- updates$S1

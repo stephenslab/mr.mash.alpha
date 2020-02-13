@@ -101,6 +101,7 @@ mr.mash.scaled.X <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), 
   
   ups   <- mr_mash_update_scaled_X(Y=Y, X=X, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=comps$ldetV, w0=w0, S0=S0, 
                                    S=comps$S, S1=comps$S1, SplusS0_chol=comps$SplusS0_chol, S_chol=comps$S_chol,
+                                   ldetSplusS0_chol=comps$ldetSplusS0_chol, ldetS_chol=comps$ldetS_chol, 
                                    update_w0=update_w0, compute_ELBO=compute_ELBO)
   mu1_t <- ups$mu1_t
   S1_t  <- ups$S1_t
@@ -138,6 +139,7 @@ mr.mash.scaled.X <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), 
     
     ups   <- mr_mash_update_scaled_X(Y=Y, X=X, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=comps$ldetV w0=w0, S0=S0, 
                                      S=comps$S, S1=comps$S1, SplusS0_chol=comps$SplusS0_chol, S_chol=comps$S_chol,
+                                     ldetSplusS0_chol=comps$ldetSplusS0_chol, ldetS_chol=comps$ldetS_chol,
                                      update_w0=update_w0, compute_ELBO=compute_ELBO)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t

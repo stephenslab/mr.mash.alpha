@@ -46,14 +46,14 @@ bayes_mvr_ridge <- function (x, Y, V, S0) {
 # coefficients; S, the covariance of b; mu1, the posterior mean of the
 # regression coefficients; S1, the posterior covariance of the
 # regression coefficients; logbf, the log-Bayes factor.
-bayes_mvr_ridge_scaled_X <- function (x, Y, S0, S, S1, SplusS0_chol, S_chol) {
+bayes_mvr_ridge_scaled_X <- function (x, Y, S0, S, S1, SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol) {
   
   # Compute the least-squares estimate.
   n <- nrow(Y)
   b <- drop(x %*% Y)/(n-1)
   
   # Compute the log-Bayes factor.
-  logbf <- (chol2ldet(S_chol) - chol2ldet(SplusS0_chol) +
+  logbf <- (ldetS_chol - ldetSplusS0_chol +
               dot(b,backsolve(S_chol, forwardsolve(t(S_chol), b))) - 
               dot(b,backsolve(SplusS0_chol, forwardsolve(t(SplusS0_chol), b))))/2
   
