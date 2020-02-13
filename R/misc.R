@@ -97,7 +97,7 @@ compute_ELBO_fun <- function(rbar, V, Vinv, ldetV, var_part_ERSS, neg_KL){
 }
 
 ###Update variational parameters, expected residuals, and ELBO components
-inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0){
+inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, xtx, V_chol, U0, d, Q){
   ###Create variables to store quantities
   R <- ncol(rbar)
   p <- ncol(X)
@@ -119,7 +119,7 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0){
     rbar_j <- rbar + outer(X[, j], mu1[j, ])
     
     #Run Bayesian SLR
-    bfit <- bayes_mvr_mix(X[, j], rbar_j, V, w0, S0)
+    bfit <- bayes_mvr_mix_transformed_X(X[, j], rbar_j, V, w0, S0, xtx[j], V_chol, U0, d, Q)
     
     #Update variational parameters
     mu1[j, ]         <- bfit$mu1
@@ -128,11 +128,10 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0){
     
     #Compute ELBO params
     if(!is.null(Vinv)){
-      xtx <- sum(X[, j]^2)
-      var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx)
+      var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx[j])
       mu1_mat <- matrix(bfit$mu1, ncol=1)
       neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(tcrossprod(Vinv, rbar_j)%*%tcrossprod(matrix(X[, j], ncol=1), mu1_mat))+
-                                             tr(Vinv%*%(bfit$S1+tcrossprod(mu1_mat)))*(xtx)))
+                                             tr(Vinv%*%(bfit$S1+tcrossprod(mu1_mat)))*(xtx[j])))
     }
     
     #Update expected residuals
@@ -148,7 +147,8 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0){
 }
 
 ###Perform one iteration of the outer loop
-mr_mash_update <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, update_w0, compute_ELBO){
+mr_mash_update <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, 
+                           xtx, V_chol, U0, d, Q, update_w0, compute_ELBO){
   ##Compute expected residuals
   rbar <- Y - X%*%mu1_t
   
@@ -159,9 +159,9 @@ mr_mash_update <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, update_w0,
   
   ##Update variational parameters, expected residuals, and ELBO components
   if(compute_ELBO){
-    updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0) 
+    updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, xtx=xtx, V_chol=V_chol, U0=U0, d=d, Q=Q) 
   } else {
-    updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=NULL, w0=w0, S0=S0)
+    updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=NULL, w0=w0, S0=S0, xtx=xtx, V_chol=V_chol, U0=U0, d=d, Q=Q)
   }
   mu1_t   <- updates$mu1
   S1_t    <- updates$S1
@@ -306,6 +306,7 @@ precompute_quants_transformed_X <- function(X, V, S0){
   ###Quantities that don't depend on S0
   xtx <- diag(crossprod(X))
   R <- chol(V)
+  ldetV <- chol2ldet(R)
   Rtinv <- solve(t(R))
   Rinv <- solve(R)
   
@@ -320,6 +321,6 @@ precompute_quants_transformed_X <- function(X, V, S0){
     Q[[i]]   <- out$vectors   
   }
   
-  return(list(xtx=xtx, V_chol=R, U0=U0, d=d, Q=Q))
+  return(list(xtx=xtx, V_chol=R, ldetV=ldetV, U0=U0, d=d, Q=Q))
 }
 

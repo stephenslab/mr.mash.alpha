@@ -66,12 +66,6 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
   Y <- scale(Y, center=T, scale=F)
   X <- scale(X, center=T, scale=F)
  
-  if(compute_ELBO){ 
-    ###Compute inverse of V (needed for the ELBO)
-    Vinv <- solve(V)
-    ldetV <- as.numeric(determinant(V, logarithm = TRUE)$modulus)
-  }
-  
   ###Initilize mu1, S1, w1, error, ELBO and iterator
   p       <- ncol(X)
   n       <- nrow(X)
@@ -82,6 +76,14 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
   t       <- 0
   if(compute_ELBO){
     ELBO    <- -Inf
+  }
+  
+  ###Precompute quantities
+  comps <- precompute_quants_transformed_X(X, V, S0)
+  
+  if(compute_ELBO){ 
+    ###Compute inverse of V (needed for the ELBO)
+    Vinv <- chol2inv(comps$V_chol)
   }
   
   ###First iteration
@@ -97,7 +99,8 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     ELBO0 <- ELBO
   }
   
-  ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
+  ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=comps$ldetV, w0=w0, S0=S0, 
+                          xtx=comps$xtx, V_chol=comps$V_chol, U0=comps$U0, d=comps$d, Q=comps$Q,
                           update_w0=update_w0, compute_ELBO=compute_ELBO)
   mu1_t <- ups$mu1_t
   S1_t  <- ups$S1_t
@@ -133,7 +136,8 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
       ELBO0 <- ELBO
     }
     
-    ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
+    ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=comps$ldetV, w0=w0, S0=S0, 
+                            xtx=comps$xtx, V_chol=comps$V_chol, U0=comps$U0, d=comps$d, Q=comps$Q,
                             update_w0=update_w0, compute_ELBO=compute_ELBO)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t

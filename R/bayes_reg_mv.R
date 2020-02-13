@@ -84,11 +84,11 @@ bayes_mvr_ridge_transformed_X <- function (x, Y, V, S0, xtx, V_chol, U0, d, Q) {
   
   # Compute the log-Bayes factor.
   S_chol <- V_chol/sqrt(xtx)
-  # SplusS0_chol <- chol(S+S0)
-  # logbf <- (chol2ldet(S_chol) - chol2ldet(SplusS0_chol) +
-  #             dot(b,backsolve(S_chol, forwardsolve(t(S_chol), b))) -
-  #             dot(b,backsolve(SplusS0_chol, forwardsolve(t(SplusS0_chol), b))))/2
-  logbf <- dmvnorm(b, rep(0, times=length(b)), (S+S0)) - dmvnorm(b, rep(0, times=length(b)), S)
+  SplusS0_chol <- chol(S+S0)
+  logbf <- (chol2ldet(S_chol) - chol2ldet(SplusS0_chol) +
+              dot(b,backsolve(S_chol, forwardsolve(t(S_chol), b))) -
+              dot(b,backsolve(SplusS0_chol, forwardsolve(t(SplusS0_chol), b))))/2
+  #logbf <- dmvnorm(b, rep(0, times=length(b)), (S+S0)) - dmvnorm(b, rep(0, times=length(b)), S)
   
   # Compute the posterior mean assuming a multivariate
   # normal prior with zero mean and covariance S0.
