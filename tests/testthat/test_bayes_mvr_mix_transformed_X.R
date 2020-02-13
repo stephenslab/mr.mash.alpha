@@ -30,10 +30,10 @@ test_that("bayes_mvr_mix and bayes_mvr_mix_transformed_X return the same results
   
   w0    <- rep(1/(length(S0mix)), length(S0mix))
   
-  ###Fit my function
+  ###Fit BMR with untransformed X
   fit_mix <- bayes_mvr_mix(X[, 1], Y, V, w0, S0mix)
   
-  ###Fit MASH wrapper
+  ###Fit BMR with transformed X
   comps1 <- precompute_quants_transformed_X(X, V, S0mix)
   fit_mix_transformed <- bayes_mvr_mix_transformed_X(X[, 1], Y, V, w0, S0mix, comps1$xtx[1], comps1$V_chol, comps1$U0, comps1$d, comps1$Q)
   
