@@ -91,8 +91,12 @@ bayes_mvr_ridge_transformed_X <- function (x, Y, V, S0, xtx, V_chol, U0, d, Q) {
   #logbf <- dmvnorm(b, rep(0, times=length(b)), (S+S0)) - dmvnorm(b, rep(0, times=length(b)), S)
   
   # Compute the posterior mean assuming a multivariate
-  # normal prior with zero mean and covariance S0.
-  D <- diag(1/(1 + xtx*d))
+  # normal prior with zero mean and covariance S0 (handling the univariate case).
+  if(length(d)>1){
+    D <- diag(1/(1 + xtx*d))
+  } else {
+    D <- 1/(1 + xtx*d)
+  }
   U1 <- U0 %*% Q %*% tcrossprod(D, Q)
   S1 <- crossprod(V_chol, U1) %*% V_chol
   mu1 <- drop(S1%*%backsolve(S_chol, forwardsolve(t(S_chol), b)))
