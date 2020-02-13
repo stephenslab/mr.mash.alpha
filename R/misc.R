@@ -301,3 +301,25 @@ mr_mash_update_scaled_X <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, S
   }
 }
 
+###Compute quantities needed when using transformed X
+precompute_quants_transformed_X <- function(X, V, S0){
+  ###Quantities that don't depend on S0
+  xtx <- diag(crossprod(X))
+  R <- chol(V)
+  Rtinv <- solve(t(R))
+  Rinv <- solve(R)
+  
+  ###Quantities that depend on S0
+  U0 <- list()
+  d <- list()
+  Q <- list()
+  for(i in 1:length(S0)){
+    U0[[i]]  <- Rtinv %*% S0[[i]] %*% Rinv
+    out <- eigen(U0[[i]])
+    d[[i]]   <- out$values
+    Q[[i]]   <- out$vectors   
+  }
+  
+  return(list(xtx=xtx, V_chol=R, U0=U0, d=d, Q=Q))
+}
+
