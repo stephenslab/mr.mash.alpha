@@ -87,11 +87,11 @@ update_weights <- function(x){
 }
 
 ##Compute ELBO from intermediate components
-compute_ELBO_fun <- function(rbar, V, Vinv, var_part_ERSS, neg_KL){
+compute_ELBO_fun <- function(rbar, V, Vinv, ldetV, var_part_ERSS, neg_KL){
   n <- nrow(rbar)
   R <- ncol(rbar)
   ERSS <- tr(Vinv%*%(crossprod(rbar))) + var_part_ERSS
-  ELBO <- -log(n)/2 - (n*R)/2*log(2*pi) - n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 0.5*ERSS + neg_KL
+  ELBO <- -log(n)/2 - (n*R)/2*log(2*pi) - n/2 * ldetV - 0.5*ERSS + neg_KL
   
   return(ELBO)
 }
@@ -148,7 +148,7 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0){
 }
 
 ###Perform one iteration of the outer loop
-mr_mash_update <- function(Y, X, mu1_t, w1_t, V, Vinv, w0, S0, update_w0, compute_ELBO){
+mr_mash_update <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, update_w0, compute_ELBO){
   ##Compute expected residuals
   rbar <- Y - X%*%mu1_t
   
@@ -172,7 +172,7 @@ mr_mash_update <- function(Y, X, mu1_t, w1_t, V, Vinv, w0, S0, update_w0, comput
     ##Compute ELBO
     var_part_ERSS <- updates$var_part_ERSS
     neg_KL <- updates$neg_KL
-    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL)
+    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL)
     
     return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO))
   } else {
@@ -193,6 +193,7 @@ precompute_quants_scaled_X <- function(n, V, S0){
   R <- chol(V)
   S <- V/(n-1)
   S_chol <- R/sqrt(n-1)
+  ldetV <- chol2ldet(R)
   
   ###Quantities that depend on S0
   SplusS0_chol <- list()
@@ -202,7 +203,7 @@ precompute_quants_scaled_X <- function(n, V, S0){
     S1[[i]] <- S0[[i]]%*%backsolve(SplusS0_chol[[i]], forwardsolve(t(SplusS0_chol[[i]]), S))
   }
   
-  return(list(R=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))
+  return(list(R=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol, ldetV=ldetV))
 }
 
 ###Update variational parameters, expected residuals, and ELBO components with scaled X
@@ -257,8 +258,8 @@ inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, 
   }
 }
 
-###Perform one iteration of the outer loop
-mr_mash_update_scaled_X <- function(Y, X, mu1_t, w1_t, V, Vinv, w0, S0, S, S1, 
+###Perform one iteration of the outer loop with scaled X
+mr_mash_update_scaled_X <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, S, S1, 
                                     SplusS0_chol, S_chol, update_w0, compute_ELBO){
   ##Compute expected residuals
   rbar <- Y - X%*%mu1_t
@@ -285,7 +286,7 @@ mr_mash_update_scaled_X <- function(Y, X, mu1_t, w1_t, V, Vinv, w0, S0, S, S1,
     ##Compute ELBO
     var_part_ERSS <- updates$var_part_ERSS
     neg_KL <- updates$neg_KL
-    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL)
+    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL)
     
     return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO))
   } else {
