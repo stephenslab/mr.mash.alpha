@@ -206,7 +206,7 @@ precompute_quants_scaled_X <- function(n, V, S0){
     S1[[i]] <- S0[[i]]%*%backsolve(SplusS0_chol[[i]], forwardsolve(t(SplusS0_chol[[i]]), S))
   }
   
-  return(list(R=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol, 
+  return(list(V_chol=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol, 
               ldetV=ldetV, ldetS_chol=ldetS_chol, ldetSplusS0_chol=ldetSplusS0_chol))
 }
 

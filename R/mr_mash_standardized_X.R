@@ -83,7 +83,7 @@ mr.mash.scaled.X <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), 
   
   if(compute_ELBO){ 
     ###Compute inverse of V (needed for the ELBO)
-    Vinv <- chol2inv(comps$R)
+    Vinv <- chol2inv(comps$V_chol)
   }
   
   ###First iteration
