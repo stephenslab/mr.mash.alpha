@@ -34,7 +34,7 @@ test_that("Current implementation and old implementation of mr.mash return the s
   V_est <- cov(Y)
   
   ###Fit with current implementation
-  fit_current <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, scale_X=F)
+  fit_current <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, scale_X=F, verbose=F)
   
   ###Load old fit
   fit_old <- readRDS("../../inst/mr_mash_slow_implement_fit.rds")
