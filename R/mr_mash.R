@@ -13,6 +13,7 @@
 #' @param max_iter maximum number of iterations for the optimization algorithm.
 #' @param update_w0 if TRUE, prior weights are updated.
 #' @param compute_ELBO if TRUE, ELBO is computed.
+#' @param scale_X if TRUE, X is centered and scaled. Scaling X allows a faster algorithm.
 #' 
 #' @return a mr.mash fit, which is a list with some or all of the following elements\cr
 #' \item{mu1}{a PxR matrix of posterior means for the regression coeffcients}
@@ -57,14 +58,18 @@
 #' V_est <- cov(Y)
 #'
 #' ###Fit mr.mash
-#' fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T)
+#' fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, scale_X=T)
 #'
 #' @export
 mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol(Y)), 
-                    tol=1e-8, max_iter=1e5, update_w0=T, compute_ELBO=T) {
-  ###Center Y and X
+                    tol=1e-8, max_iter=1e5, update_w0=T, compute_ELBO=T, scale_X=T) {
+  ###Center Y and either center and/or scale X
   Y <- scale(Y, center=T, scale=F)
-  X <- scale(X, center=T, scale=F)
+  if(scale_X){
+    X <- scale(X, center=T, scale=T)
+  } else {
+    X <- scale(X, center=T, scale=F)
+  }
  
   ###Initilize mu1, S1, w1, error, ELBO and iterator
   p       <- ncol(X)
@@ -79,7 +84,11 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
   }
   
   ###Precompute quantities
-  comps <- precompute_quants_transformed_X(X, V, S0)
+  if(scale_X){
+    comps <- precompute_quants_scaled_X(n, V, S0)
+  } else {
+    comps <- precompute_quants_transformed_X(X, V, S0) 
+  }
   
   if(compute_ELBO){ 
     ###Compute inverse of V (needed for the ELBO)
@@ -99,9 +108,17 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     ELBO0 <- ELBO
   }
   
-  ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=comps$ldetV, w0=w0, S0=S0, 
-                          xtx=comps$xtx, V_chol=comps$V_chol, U0=comps$U0, d=comps$d, Q=comps$Q,
-                          update_w0=update_w0, compute_ELBO=compute_ELBO)
+  ###Update variational parameters
+  if(scale_X){
+    ups   <- mr_mash_update_scaled_X(Y=Y, X=X, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=comps$ldetV, w0=w0, S0=S0, 
+                                     S=comps$S, S1=comps$S1, SplusS0_chol=comps$SplusS0_chol, S_chol=comps$S_chol,
+                                     ldetSplusS0_chol=comps$ldetSplusS0_chol, ldetS_chol=comps$ldetS_chol, 
+                                     update_w0=update_w0, compute_ELBO=compute_ELBO)
+  } else {
+    ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=comps$ldetV, w0=w0, S0=S0, 
+                            xtx=comps$xtx, V_chol=comps$V_chol, U0=comps$U0, d=comps$d, Q=comps$Q,
+                            update_w0=update_w0, compute_ELBO=compute_ELBO)  
+  }
   mu1_t <- ups$mu1_t
   S1_t  <- ups$S1_t
   w1_t  <- ups$w1_t
@@ -136,9 +153,17 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
       ELBO0 <- ELBO
     }
     
-    ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=comps$ldetV, w0=w0, S0=S0, 
-                            xtx=comps$xtx, V_chol=comps$V_chol, U0=comps$U0, d=comps$d, Q=comps$Q,
-                            update_w0=update_w0, compute_ELBO=compute_ELBO)
+    ###Update model parameters and variational parameters
+    if(scale_X){
+      ups   <- mr_mash_update_scaled_X(Y=Y, X=X, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=comps$ldetV, w0=w0, S0=S0, 
+                                       S=comps$S, S1=comps$S1, SplusS0_chol=comps$SplusS0_chol, S_chol=comps$S_chol,
+                                       ldetSplusS0_chol=comps$ldetSplusS0_chol, ldetS_chol=comps$ldetS_chol,
+                                       update_w0=update_w0, compute_ELBO=compute_ELBO)
+    } else {
+      ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=comps$ldetV, w0=w0, S0=S0, 
+                              xtx=comps$xtx, V_chol=comps$V_chol, U0=comps$U0, d=comps$d, Q=comps$Q,
+                              update_w0=update_w0, compute_ELBO=compute_ELBO)
+    }
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t
@@ -155,6 +180,15 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     } else {
       ##Print out useful info
       cat(sprintf("%4d %0.2e\n", t, max(err)))
+    }
+  }
+  
+  if(scale_X){
+    ###Rescale posterior means and covariance of coefficients
+    SX <- matrix(rep(attr(X, 'scaled:scale'), each=ncol(mu1_t)), ncol=ncol(mu1_t), byrow=T)
+    mu1_t <- mu1_t/SX
+    for(j in 1:dim(S1_t)[3]){
+      S1_t[, , j] <- S1_t[, , j]/((attr(X, 'scaled:scale')[j])^2)
     }
   }
   
