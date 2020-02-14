@@ -39,14 +39,14 @@ test_that("mr.mash and varbvsmix return the same results with univariate Y", {
   V_est <- cov(Y)
   
   ###Fit mr.mash
-  fit_mr.mash <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, scale_X=F)
+  fit_mr.mash <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, scale_X=F, verbose=F)
   
   ###Fit varbvsmix
   fit_varbvsmix <- varbvs::varbvsmix(X,NULL,Y,sigma = as.numeric(V_est),w = w0,
                                      sa = grid/as.numeric(V_est),
                                      update.sigma = FALSE,update.w = T,
                                      drop.threshold = 0,tol = 1e-8,
-                                     verbose = T)
+                                     verbose = F)
   mu1_varbvsmix <- rowSums(with(fit_varbvsmix,alpha * mu))
   betavarmix <- function (p, mu, s){
     rowSums(p*(s + mu^2)) - rowSums(p*mu)^2  
