@@ -13,7 +13,9 @@
 #' @param max_iter maximum number of iterations for the optimization algorithm.
 #' @param update_w0 if TRUE, prior weights are updated.
 #' @param compute_ELBO if TRUE, ELBO is computed.
-#' @param scale_X if TRUE, X is centered and scaled. Scaling X allows a faster algorithm.
+#' @param scale_X if TRUE, X is centered and scaled. Scaling X allows a faster algorithm,
+#' but the prior has a different interpretation.
+#' @param verbose if TRUE, some information is printed to screen at each iteration.
 #' 
 #' @return a mr.mash fit, which is a list with some or all of the following elements\cr
 #' \item{mu1}{a PxR matrix of posterior means for the regression coeffcients}
@@ -62,7 +64,8 @@
 #'
 #' @export
 mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol(Y)), 
-                    tol=1e-8, max_iter=1e5, update_w0=T, compute_ELBO=T, scale_X=T) {
+                    tol=1e-8, max_iter=1e5, update_w0=T, compute_ELBO=T, scale_X=T,
+                    verbose=T) {
   ###Center Y and either center and/or scale X
   Y <- scale(Y, center=T, scale=F)
   if(scale_X){
@@ -96,7 +99,9 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
   }
   
   ###First iteration
-  cat("iter beta_max.diff ELBO_diff ELBO\n")
+  if(verbose){
+    cat("iter beta_max.diff ELBO_diff ELBO\n")
+  }
   ##Save current estimates.
   mu1_tminus1 <- mu1_t   
   
@@ -126,12 +131,14 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     ELBO  <- ups$ELBO
   }
   
-  if(compute_ELBO){
-    ##Print out useful info
-    cat(sprintf("%4d %0.2e %0.2e %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
-  } else {
-    ##Print out useful info
-    cat(sprintf("%4d %0.2e\n", t, max(err)))
+  if(verbose){
+    if(compute_ELBO){
+      ##Print out useful info
+      cat(sprintf("%4d %0.2e %0.2e %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
+    } else {
+      ##Print out useful info
+      cat(sprintf("%4d %0.2e\n", t, max(err)))
+    }
   }
   
   ###Repeat the following until convergence
@@ -174,12 +181,14 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     ##Compute distance in mu1 between two successive iterations
     err <- abs(mu1_t - mu1_tminus1)
     
-    if(compute_ELBO){
-      ##Print out useful info
-      cat(sprintf("%4d %0.2e %0.2e %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
-    } else {
-      ##Print out useful info
-      cat(sprintf("%4d %0.2e\n", t, max(err)))
+    if(verbose){
+      if(compute_ELBO){
+        ##Print out useful info
+        cat(sprintf("%4d %0.2e %0.2e %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
+      } else {
+        ##Print out useful info
+        cat(sprintf("%4d %0.2e\n", t, max(err)))
+      }
     }
   }
   

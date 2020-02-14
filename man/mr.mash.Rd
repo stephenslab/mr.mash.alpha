@@ -15,7 +15,8 @@ mr.mash(
   max_iter = 1e+05,
   update_w0 = T,
   compute_ELBO = T,
-  scale_X = T
+  scale_X = T,
+  verbose = T
 )
 }
 \arguments{
@@ -41,7 +42,10 @@ respective covariance matrix in \code{S0}.}
 
 \item{compute_ELBO}{if TRUE, ELBO is computed.}
 
-\item{scale_X}{if TRUE, X is centered and scaled. Scaling X allows a faster algorithm.}
+\item{scale_X}{if TRUE, X is centered and scaled. Scaling X allows a faster algorithm,
+but the prior has a different interpretation.}
+
+\item{verbose}{if TRUE, some information is printed to screen at each iteration.}
 }
 \value{
 a mr.mash fit, which is a list with some or all of the following elements\cr
