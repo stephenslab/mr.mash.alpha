@@ -14,7 +14,8 @@ mr.mash(
   tol = 1e-08,
   max_iter = 1e+05,
   update_w0 = T,
-  compute_ELBO = T
+  compute_ELBO = T,
+  scale_X = T
 )
 }
 \arguments{
@@ -39,6 +40,8 @@ respective covariance matrix in \code{S0}.}
 \item{update_w0}{if TRUE, prior weights are updated.}
 
 \item{compute_ELBO}{if TRUE, ELBO is computed.}
+
+\item{scale_X}{if TRUE, X is centered and scaled. Scaling X allows a faster algorithm.}
 }
 \value{
 a mr.mash fit, which is a list with some or all of the following elements\cr
@@ -90,6 +93,6 @@ w0    <- rep(1/(length(S0mix)), length(S0mix))
 V_est <- cov(Y)
 
 ###Fit mr.mash
-fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T)
+fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, scale_X=T)
 
 }
