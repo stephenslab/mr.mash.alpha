@@ -132,7 +132,11 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
   
   ###First iteration
   if(verbose){
-    cat("iter beta_max.diff ELBO_diff ELBO\n")
+    if(compute_ELBO){
+      cat(" iter    mu1_max.diff     ELBO_diff               ELBO\n")
+    } else {
+      cat(" iter    mu1_max.diff\n")
+    }
   }
   ##Save current estimates.
   mu1_tminus1 <- mu1_t   
@@ -159,10 +163,10 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
   if(verbose){
     if(compute_ELBO){
       ##Print out useful info
-      cat(sprintf("%4d %0.2e %0.2e %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
+      cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
     } else {
       ##Print out useful info
-      cat(sprintf("%4d %0.2e\n", t, max(err)))
+      cat(sprintf("%4d      %9.2e\n", t, max(err)))
     }
   }
   
@@ -202,10 +206,10 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
     if(verbose){
       if(compute_ELBO){
         ##Print out useful info
-        cat(sprintf("%4d %0.2e %0.2e %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
+        cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
       } else {
         ##Print out useful info
-        cat(sprintf("%4d %0.2e\n", t, max(err)))
+        cat(sprintf("%4d      %9.2e\n", t, max(err)))
       }
     }
   }
