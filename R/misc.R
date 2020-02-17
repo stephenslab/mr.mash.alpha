@@ -125,8 +125,8 @@ precompute_quants_scaled_X <- function(n, V, S0){
               ldetS_chol=ldetS_chol, ldetSplusS0_chol=ldetSplusS0_chol))
 }
 
-###Compute quantities needed when using transformed X
-precompute_quants_transformed_X <- function(X, V, S0){
+###Compute quantities needed when using centered X
+precompute_quants_centered_X <- function(X, V, S0){
   ###Quantities that don't depend on S0
   xtx <- diag(crossprod(X))
   R <- chol(V)

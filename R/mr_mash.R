@@ -118,7 +118,7 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
   if(standardize){
     comps <- precompute_quants_scaled_X(n, V, S0)
   } else {
-    comps <- precompute_quants_transformed_X(X, V, S0) 
+    comps <- precompute_quants_centered_X(X, V, S0) 
   }
   
   if(compute_ELBO){ 

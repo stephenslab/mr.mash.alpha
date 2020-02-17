@@ -21,7 +21,7 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, xtx, V_chol, U0, d, Q){
     rbar_j <- rbar + outer(X[, j], mu1[j, ])
     
     #Run Bayesian SLR
-    bfit <- bayes_mvr_mix_transformed_X(X[, j], rbar_j, V, w0, S0, xtx[j], V_chol, U0, d, Q)
+    bfit <- bayes_mvr_mix_centered_X(X[, j], rbar_j, V, w0, S0, xtx[j], V_chol, U0, d, Q)
     
     #Update variational parameters
     mu1[j, ]         <- bfit$mu1
@@ -195,7 +195,7 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
                                      precomp_quants$SplusS0_chol, precomp_quants$S_chol, 
                                      precomp_quants$ldetSplusS0_chol, precomp_quants$ldetS_chol)      
     } else {
-      bfit <- bayes_mvr_mix_transformed_X(X[, j], rbar_j, V, w0, S0, precomp_quants$xtx[j], 
+      bfit <- bayes_mvr_mix_centered_X(X[, j], rbar_j, V, w0, S0, precomp_quants$xtx[j], 
                                           precomp_quants$V_chol, precomp_quants$U0, precomp_quants$d, 
                                           precomp_quants$Q)
     }

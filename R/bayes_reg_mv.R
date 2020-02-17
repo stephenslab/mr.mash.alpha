@@ -76,7 +76,7 @@ bayes_mvr_ridge_scaled_X <- function (x, Y, S0, S, S1, SplusS0_chol, S_chol, lde
 # coefficients; S, the covariance of b; mu1, the posterior mean of the
 # regression coefficients; S1, the posterior covariance of the
 # regression coefficients; logbf, the log-Bayes factor.
-bayes_mvr_ridge_transformed_X <- function (x, Y, V, S0, xtx, V_chol, U0, d, Q) {
+bayes_mvr_ridge_centered_X <- function (x, Y, V, S0, xtx, V_chol, U0, d, Q) {
   
   # Compute the least-squares estimate and covariance.
   b <- drop(x %*% Y)/xtx
@@ -265,7 +265,7 @@ bayes_mvr_mix_scaled_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol, l
 # (w1), the posterior mean of the coefficients given that all the
 # coefficients are not nonzero (mu1), and the posterior covariance of
 # the coefficients given that all the coefficients are not zero (S1).
-bayes_mvr_mix_transformed_X <- function (x, Y, V, w0, S0, xtx, V_chol, U0, d, Q) {
+bayes_mvr_mix_centered_X <- function (x, Y, V, w0, S0, xtx, V_chol, U0, d, Q) {
   
   # Get the number of variables (n) and the number of mixture
   # components (k).
@@ -276,10 +276,10 @@ bayes_mvr_mix_transformed_X <- function (x, Y, V, w0, S0, xtx, V_chol, U0, d, Q)
   # each mixture component.
   # out <- vector("list",K)
   # for (k in 1:K){
-  #   out[[k]] <- bayes_mvr_ridge_transformed_X(x, Y, V, S0[[k]], xtx, V_chol, U0[[k]], d[[k]], Q[[k]])
+  #   out[[k]] <- bayes_mvr_ridge_centered_X(x, Y, V, S0[[k]], xtx, V_chol, U0[[k]], d[[k]], Q[[k]])
   # }
   bayes_mvr_ridge_lapply <- function(i){
-    bayes_mvr_ridge_transformed_X(x, Y, V, S0[[i]], xtx, V_chol, U0[[i]], d[[i]], Q[[i]])
+    bayes_mvr_ridge_centered_X(x, Y, V, S0[[i]], xtx, V_chol, U0[[i]], d[[i]], Q[[i]])
   }
   out <- lapply(1:K, bayes_mvr_ridge_lapply)
   
