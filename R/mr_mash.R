@@ -89,7 +89,7 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
   if(!is.vector(w0)){
     stop("w0 must be a vector.")
   }
-  if(length(S0!=length(w0))){
+  if(length(S0)!=length(w0)){
     stop("S0 and w0 must have the same length")
   }
   
