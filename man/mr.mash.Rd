@@ -10,29 +10,29 @@ mr.mash(
   V,
   S0,
   w0,
-  mu_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)),
+  mu_init = NULL,
   tol = 1e-08,
   max_iter = 1e+05,
   update_w0 = T,
   compute_ELBO = T,
-  scale_X = T,
+  standardize = T,
   verbose = T
 )
 }
 \arguments{
-\item{Y}{an NxR matrix of responses.}
+\item{Y}{an n x r matrix of responses.}
 
-\item{X}{an NxP matrix of covariates.}
+\item{X}{an n x p matrix of covariates.}
 
-\item{V}{an RxR residual covariance matrix.}
+\item{V}{an r x r residual covariance matrix.}
 
-\item{S0}{a list of length K containing the desired RxR prior covariance matrices 
+\item{S0}{a list of length K containing the desired r x r prior covariance matrices 
 on the regression coefficients.}
 
 \item{w0}{a K-vector with prior mixture weights, each associated with the 
 respective covariance matrix in \code{S0}.}
 
-\item{mu_init}{a PxR matrix of initial estimates for the regression coefficients.}
+\item{mu_init}{a p x r matrix of initial estimates for the regression coefficients.}
 
 \item{tol}{convergence tolerance.}
 
@@ -42,17 +42,18 @@ respective covariance matrix in \code{S0}.}
 
 \item{compute_ELBO}{if TRUE, ELBO is computed.}
 
-\item{scale_X}{if TRUE, X is centered and scaled. Scaling X allows a faster algorithm,
-but the prior has a different interpretation.}
+\item{standardize}{if TRUE, X is standardized using the sample means and standard deviations. 
+Standardizing X allows a faster implementation, but the prior has a different interpretation.
+Coefficients and covariances are returned on the original scale.}
 
 \item{verbose}{if TRUE, some information is printed to screen at each iteration.}
 }
 \value{
 a mr.mash fit, which is a list with some or all of the following elements\cr
-\item{mu1}{a PxR matrix of posterior means for the regression coeffcients}
-\item{S1}{a RxRxP array of posterior covariances for the regression coeffcients}
-\item{w1}{a PxK matrix of posterior assignment probabilities to the mixture components}
-\item{intercept}{an R-vector with the estimated intercepts}
+\item{mu1}{a p x r matrix of posterior means for the regression coeffcients.}
+\item{S1}{a r x r x p array of posterior covariances for the regression coeffcients.}
+\item{w1}{a p x K matrix of posterior assignment probabilities to the mixture components.}
+\item{intercept}{an r-vector with the estimated intercepts.}
 \item{ELBO}{the Evidence Lower Bound at convergence}
 }
 \description{
@@ -97,6 +98,6 @@ w0    <- rep(1/(length(S0mix)), length(S0mix))
 V_est <- cov(Y)
 
 ###Fit mr.mash
-fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, scale_X=T)
+fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, standardize=T)
 
 }
