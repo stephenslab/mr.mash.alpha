@@ -37,7 +37,7 @@ test_that("mr.mash with standardize=T and old mr.mash.scaled.X return the same r
   fit_current <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, standardize=T, verbose=F)
   
   ###Load old fit
-  fit_old <- readRDS("../../inst/mr.mash.scaled.X_fit.rds")
+  fit_old <- readRDS("mr.mash.scaled.X_fit.rds")
   
   ###Tests
   expect_equal(fit_current$mu1, fit_old$mu1, tolerance = 1e-10, scale = 1)

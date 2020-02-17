@@ -37,7 +37,7 @@ test_that("Current implementation and old implementation of mr.mash return the s
   fit_current <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, standardize=F, verbose=F)
   
   ###Load old fit
-  fit_old <- readRDS("../../inst/mr_mash_slow_implement_fit.rds")
+  fit_old <- readRDS("mr_mash_slow_implement_fit.rds")
   
   ###Tests
   expect_equal(fit_current$mu1, fit_old$mu1, tolerance = 1e-10, scale = 1)

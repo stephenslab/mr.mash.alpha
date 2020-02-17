@@ -234,7 +234,6 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
   ###Compute intercept
   Ybar <- attr(Y, 'scaled:center')
   Xbar <- matrix(rep(attr(X, 'scaled:center'), each=ncol(mu1_t)), ncol=ncol(mu1_t), byrow=T)
-  browser()
   intercept <- Ybar - colSums(Xbar * mu1_t)
   
   if(compute_ELBO){
