@@ -230,10 +230,11 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
       S1_t[, , j] <- S1_t[, , j]/((attr(X, 'scaled:scale')[j])^2)
     }
   }
-  
+
   ###Compute intercept
   Ybar <- attr(Y, 'scaled:center')
   Xbar <- matrix(rep(attr(X, 'scaled:center'), each=ncol(mu1_t)), ncol=ncol(mu1_t), byrow=T)
+  browser()
   intercept <- Ybar - colSums(Xbar * mu1_t)
   
   if(compute_ELBO){
