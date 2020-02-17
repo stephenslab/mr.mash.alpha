@@ -12,7 +12,7 @@ mr.mash.scaled.X(
   w0,
   mu_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)),
   tol = 1e-08,
-  max_iter = 1e+05,
+  max_iter = 100000,
   update_w0 = T,
   compute_ELBO = T
 )
