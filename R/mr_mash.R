@@ -91,9 +91,6 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
     stop("S0 and w0 must have the same length")
   }
 
-  Y0 <- Y
-  X0 <- X
-  
   ###Center Y and either center and/or scale X
   Y <- scale(Y, center=T, scale=F)
   if(standardize){
