@@ -186,6 +186,8 @@ bayes_mvr_mix_simple <- function (x, Y, V, w0, S0) {
 
 # Return the log-density of the multivariate normal with zero mean
 # and covarirance S at x.
+#
+#' @importFrom mvtnorm dmvnorm
 ldmvnorm <- function (x, S)
   mvtnorm::dmvnorm(x,sigma = S,log = TRUE)
 
