@@ -60,11 +60,7 @@ mr_mash_update <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0,
   }
   
   ##Update variational parameters, expected residuals, and ELBO components
-  if(compute_ELBO){
-    updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, xtx=xtx, V_chol=V_chol, U0=U0, d=d, Q=Q) 
-  } else {
-    updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=NULL, w0=w0, S0=S0, xtx=xtx, V_chol=V_chol, U0=U0, d=d, Q=Q)
-  }
+  updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, xtx=xtx, V_chol=V_chol, U0=U0, d=d, Q=Q) 
   mu1_t   <- updates$mu1
   S1_t    <- updates$S1
   w1_t    <- updates$w1
@@ -147,15 +143,10 @@ mr_mash_update_scaled_X <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, S
   }
   
   ##Update variational parameters, expected residuals, and ELBO components
-  if(compute_ELBO){
-    updates <- inner_loop_scaled_X(X=X, rbar=rbar, mu=mu1_t, Vinv=Vinv, w0=w0, S0=S0, 
-                                   S=S, S1=S1, SplusS0_chol=SplusS0_chol, S_chol=S_chol, 
-                                   ldetSplusS0_chol=ldetSplusS0_chol, ldetS_chol=ldetS_chol) 
-  } else {
-    updates <- inner_loop_scaled_X(X=X, rbar=rbar, mu=mu1_t, Vinv=NULL, w0=w0, S0=S0,
-                                   S=S, S1=S1, SplusS0_chol=SplusS0_chol, S_chol=S_chol,
-                                   ldetSplusS0_chol=ldetSplusS0_chol, ldetS_chol=ldetS_chol)
-  }
+  updates <- inner_loop_scaled_X(X=X, rbar=rbar, mu=mu1_t, Vinv=Vinv, w0=w0, S0=S0, 
+                                 S=S, S1=S1, SplusS0_chol=SplusS0_chol, S_chol=S_chol, 
+                                 ldetSplusS0_chol=ldetSplusS0_chol, ldetS_chol=ldetS_chol) 
+
   mu1_t   <- updates$mu1
   S1_t    <- updates$S1
   w1_t    <- updates$w1

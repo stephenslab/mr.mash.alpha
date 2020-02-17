@@ -109,7 +109,6 @@ precompute_quants_scaled_X <- function(n, V, S0){
   R <- chol(V)
   S <- V/(n-1)
   S_chol <- R/sqrt(n-1)
-  ldetV <- chol2ldet(R)
   ldetS_chol <- chol2ldet(S_chol)
   
   ###Quantities that depend on S0
@@ -123,7 +122,7 @@ precompute_quants_scaled_X <- function(n, V, S0){
   }
   
   return(list(V_chol=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol, 
-              ldetV=ldetV, ldetS_chol=ldetS_chol, ldetSplusS0_chol=ldetSplusS0_chol))
+              ldetS_chol=ldetS_chol, ldetSplusS0_chol=ldetSplusS0_chol))
 }
 
 ###Compute quantities needed when using transformed X
@@ -131,7 +130,6 @@ precompute_quants_transformed_X <- function(X, V, S0){
   ###Quantities that don't depend on S0
   xtx <- diag(crossprod(X))
   R <- chol(V)
-  ldetV <- chol2ldet(R)
   Rtinv <- solve(t(R))
   Rinv <- solve(R)
   
@@ -146,5 +144,5 @@ precompute_quants_transformed_X <- function(X, V, S0){
     Q[[i]]   <- out$vectors   
   }
   
-  return(list(xtx=xtx, V_chol=R, ldetV=ldetV, U0=U0, d=d, Q=Q))
+  return(list(xtx=xtx, V_chol=R, U0=U0, d=d, Q=Q))
 }
