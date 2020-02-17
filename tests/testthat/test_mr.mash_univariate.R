@@ -39,7 +39,7 @@ test_that("mr.mash and varbvsmix return the same results with univariate Y", {
   V_est <- cov(Y)
   
   ###Fit mr.mash
-  fit_mr.mash <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, scale_X=F, verbose=F)
+  fit_mr.mash <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, standardize=F, verbose=F)
   
   ###Fit varbvsmix
   fit_varbvsmix <- varbvs::varbvsmix(X,NULL,Y,sigma = as.numeric(V_est),w = w0,
