@@ -63,18 +63,47 @@
 #' fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, scale_X=T)
 #'
 #' @export
-mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol(Y)), 
-                    tol=1e-8, max_iter=1e5, update_w0=T, compute_ELBO=T, scale_X=T,
+mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL, 
+                    tol=1e-8, max_iter=1e5, update_w0=T, compute_ELBO=T, standardize=T,
                     verbose=T) {
+  ###Check that the inputs are in the correct format
+  if(!is.matrix(Y)){
+    stop("Y must be a matrix.")
+  }
+  if(!is.matrix(X)){
+    stop("X must be a matrix.")
+  }
+  if (any(is.na(Y))) {
+    stop("Y must not contain missing values.")
+  }
+  if (any(is.na(X))) {
+    stop("X must not contain missing values.")
+  }
+  if(!is.matrix(V) && (isSymmetric(V))){
+    stop("V must be a symmetric matrix.")
+  }
+  if(!is.list(S0)){
+    stop("S0 must be a list.")
+  }
+  if(!is.vector(w0)){
+    stop("w0 must be a vector.")
+  }
+  if(length(S0!=length(w0))){
+    stop("S0 and w0 must have the same length")
+  }
+  
   ###Center Y and either center and/or scale X
   Y <- scale(Y, center=T, scale=F)
-  if(scale_X){
+  if(standardize){
     X <- scale(X, center=T, scale=T)
   } else {
     X <- scale(X, center=T, scale=F)
   }
  
   ###Initilize mu1, S1, w1, error, ELBO and iterator
+  if(is.null(mu_init)){
+    mu_init <- matrix(0, nrow=ncol(X), ncol=ncol(Y))
+  }
   p       <- ncol(X)
   n       <- nrow(X)
   R       <- ncol(Y)
@@ -87,7 +116,7 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
   }
   
   ###Precompute quantities
-  if(scale_X){
+  if(standardize){
     comps <- precompute_quants_scaled_X(n, V, S0)
   } else {
     comps <- precompute_quants_transformed_X(X, V, S0) 
@@ -114,7 +143,7 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
   }
   
   ###Update variational parameters
-  if(scale_X){
+  if(standardize){
     ups   <- mr_mash_update_scaled_X(Y=Y, X=X, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=comps$ldetV, w0=w0, S0=S0, 
                                      S=comps$S, S1=comps$S1, SplusS0_chol=comps$SplusS0_chol, S_chol=comps$S_chol,
                                      ldetSplusS0_chol=comps$ldetSplusS0_chol, ldetS_chol=comps$ldetS_chol, 
@@ -161,7 +190,7 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     }
     
     ###Update model parameters and variational parameters
-    if(scale_X){
+    if(standardize){
       ups   <- mr_mash_update_scaled_X(Y=Y, X=X, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=comps$ldetV, w0=w0, S0=S0, 
                                        S=comps$S, S1=comps$S1, SplusS0_chol=comps$SplusS0_chol, S_chol=comps$S_chol,
                                        ldetSplusS0_chol=comps$ldetSplusS0_chol, ldetS_chol=comps$ldetS_chol,
@@ -192,7 +221,7 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init = matrix(0, nrow=ncol(X), ncol=ncol
     }
   }
   
-  if(scale_X){
+  if(standardize){
     ###Rescale posterior means and covariance of coefficients
     SX <- matrix(rep(attr(X, 'scaled:scale'), each=ncol(mu1_t)), ncol=ncol(mu1_t), byrow=T)
     mu1_t <- mu1_t/SX
