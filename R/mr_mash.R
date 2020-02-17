@@ -146,16 +146,9 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
   }
   
   ###Update variational parameters
-  if(standardize){
-    ups   <- mr_mash_update_scaled_X(Y=Y, X=X, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
-                                     S=comps$S, S1=comps$S1, SplusS0_chol=comps$SplusS0_chol, S_chol=comps$S_chol,
-                                     ldetSplusS0_chol=comps$ldetSplusS0_chol, ldetS_chol=comps$ldetS_chol, 
-                                     update_w0=update_w0, compute_ELBO=compute_ELBO)
-  } else {
-    ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
-                            xtx=comps$xtx, V_chol=comps$V_chol, U0=comps$U0, d=comps$d, Q=comps$Q,
-                            update_w0=update_w0, compute_ELBO=compute_ELBO)  
-  }
+  ups   <- mr_mash_update_general(Y=Y, X=X, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
+                                  precomp_quants=comps, update_w0=update_w0, compute_ELBO=compute_ELBO,
+                                  standardize=standardize)
   mu1_t <- ups$mu1_t
   S1_t  <- ups$S1_t
   w1_t  <- ups$w1_t
@@ -193,16 +186,9 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
     }
     
     ###Update model parameters and variational parameters
-    if(standardize){
-      ups   <- mr_mash_update_scaled_X(Y=Y, X=X, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
-                                       S=comps$S, S1=comps$S1, SplusS0_chol=comps$SplusS0_chol, S_chol=comps$S_chol,
-                                       ldetSplusS0_chol=comps$ldetSplusS0_chol, ldetS_chol=comps$ldetS_chol,
-                                       update_w0=update_w0, compute_ELBO=compute_ELBO)
-    } else {
-      ups   <- mr_mash_update(Y=Y, X=X, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
-                              xtx=comps$xtx, V_chol=comps$V_chol, U0=comps$U0, d=comps$d, Q=comps$Q,
-                              update_w0=update_w0, compute_ELBO=compute_ELBO)
-    }
+    ups   <- mr_mash_update_general(Y=Y, X=X, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
+                                    precomp_quants=comps, update_w0=update_w0, compute_ELBO=compute_ELBO,
+                                    standardize=standardize)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t
