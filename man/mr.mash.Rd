@@ -12,7 +12,7 @@ mr.mash(
   w0,
   mu_init = NULL,
   tol = 1e-08,
-  max_iter = 100000,
+  max_iter = 1e+05,
   update_w0 = T,
   compute_ELBO = T,
   standardize = T,
