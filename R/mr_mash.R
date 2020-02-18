@@ -163,16 +163,20 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
     ELBO  <- ups$ELBO
   }
   
-  if(verbose){
-    if(compute_ELBO){
+  if(compute_ELBO){
+    if(verbose){
       ##Print out useful info
       cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
-      progress <- rbind(progress, c(t, max(err), ELBO - ELBO0, ELBO))
-    } else {
+    }
+    ##Update progress data.frame 
+    progress <- rbind(progress, c(t, max(err), ELBO - ELBO0, ELBO))
+  } else {
+    if(verbose){
       ##Print out useful info
       cat(sprintf("%4d      %9.2e\n", t, max(err)))
-      progress <- rbind(progress, c(t, max(err)))
     }
+    ##Update progress data.frame 
+    progress <- rbind(progress, c(t, max(err)))
   }
   
   ###Repeat the following until convergence
@@ -208,16 +212,20 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
     ##Compute distance in mu1 between two successive iterations
     err <- abs(mu1_t - mu1_tminus1)
     
-    if(verbose){
-      if(compute_ELBO){
+    if(compute_ELBO){
+      if(verbose){
         ##Print out useful info
         cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
-        progress <- rbind(progress, c(t, max(err), ELBO - ELBO0, ELBO))
-      } else {
+      }
+      ##Update progress data.frame 
+      progress <- rbind(progress, c(t, max(err), ELBO - ELBO0, ELBO))
+    } else {
+      if(verbose){
         ##Print out useful info
         cat(sprintf("%4d      %9.2e\n", t, max(err)))
-        progress <- rbind(progress, c(t, max(err)))
       }
+      ##Update progress data.frame 
+      progress <- rbind(progress, c(t, max(err)))
     }
   }
   
