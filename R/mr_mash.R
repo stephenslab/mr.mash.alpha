@@ -23,6 +23,7 @@
 #' \item{S1}{a r x r x p array of posterior covariances for the regression coeffcients.}
 #' \item{w1}{a p x K matrix of posterior assignment probabilities to the mixture components.}
 #' \item{intercept}{an r-vector with the estimated intercepts.}
+#' \item{fitted}{an n x r matrix of fitted values.}
 #' \item{ELBO}{the Evidence Lower Bound at convergence.}
 #' \item{progress}{A data.frame including information regarding convergence criteria at each iteration.}
 #' 
@@ -220,6 +221,11 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
     }
   }
   
+  ###Compute fitted values
+  fitted_vals <- X%*%mu1_t + matrix(rep(attr(Y,"scaled:center"), each=nrow(Y)), ncol=ncol(Y))
+  attr(fitted_vals, "scaled:center") <- NULL
+  attr(fitted_vals, "scaled:scale") <- NULL
+
   if(standardize){
     ###Rescale posterior means and covariance of coefficients
     SX <- matrix(rep(attr(X, 'scaled:scale'), each=ncol(mu1_t)), ncol=ncol(mu1_t), byrow=T)
@@ -237,14 +243,18 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
     colnames(progress) <- c("iter", "mu1_max.diff", "ELBO_diff", "ELBO")
     
     ###Return the posterior assignment probabilities (w1), the posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), the intercept (intercept), the Evidence Lower Bound (ELBO), and the progress
-    ###data frame (progress).    
-    return(list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept, ELBO=ELBO, progress=progress))
+    ###covariance of the coefficients (S1), the intercept (intercept), the fitted values (fitted), the Evidence Lower Bound (ELBO), 
+    ###and the progress data frame (progress).
+    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept, fitted=fitted_vals, ELBO=ELBO, progress=progress)
   } else {
     colnames(progress) <- c("iter", "mu1_max.diff")
     
     ###Return the posterior assignment probabilities (w1), the posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), the intercept (intercept), and the progress data frame (progress).    
-    return(list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept, progress=progress))
+    ###covariance of the coefficients (S1), the intercept (intercept), the fitted values (fitted), and the progress data frame (progress).    
+    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept, fitted=fitted_vals, progress=progress)
   }
+  
+  class(out) <- c("mr.mash", "list")
+  
+  return(out)
 }
