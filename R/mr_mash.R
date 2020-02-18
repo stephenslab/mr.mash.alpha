@@ -23,7 +23,8 @@
 #' \item{S1}{a r x r x p array of posterior covariances for the regression coeffcients.}
 #' \item{w1}{a p x K matrix of posterior assignment probabilities to the mixture components.}
 #' \item{intercept}{an r-vector with the estimated intercepts.}
-#' \item{ELBO}{the Evidence Lower Bound at convergence}
+#' \item{ELBO}{the Evidence Lower Bound at convergence.}
+#' \item{progress}{A data.frame including information regarding convergence criteria at each iteration.}
 #' 
 #' @examples 
 #' ###Set seed
@@ -99,17 +100,18 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
     X <- scale(X, center=T, scale=F)
   }
  
-  ###Initilize mu1, S1, w1, error, ELBO and iterator
+  ###Initilize mu1, S1, w1, error, ELBO, iterator, and progress
   if(is.null(mu_init)){
     mu_init <- matrix(0, nrow=ncol(X), ncol=ncol(Y))
   }
-  p       <- ncol(X)
-  n       <- nrow(X)
-  R       <- ncol(Y)
-  K       <- length(S0)
-  mu1_t   <- mu_init 
-  err     <- matrix(Inf, nrow=p, ncol=R)
-  t       <- 0
+  p        <- ncol(X)
+  n        <- nrow(X)
+  R        <- ncol(Y)
+  K        <- length(S0)
+  mu1_t    <- mu_init 
+  err      <- matrix(Inf, nrow=p, ncol=R)
+  t        <- 0
+  progress <- data.frame() 
   if(compute_ELBO){
     ELBO    <- -Inf
   }
@@ -164,9 +166,11 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
     if(compute_ELBO){
       ##Print out useful info
       cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
+      progress <- rbind(progress, c(t, max(err), ELBO - ELBO0, ELBO))
     } else {
       ##Print out useful info
       cat(sprintf("%4d      %9.2e\n", t, max(err)))
+      progress <- rbind(progress, c(t, max(err)))
     }
   }
   
@@ -207,9 +211,11 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
       if(compute_ELBO){
         ##Print out useful info
         cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
+        progress <- rbind(progress, c(t, max(err), ELBO - ELBO0, ELBO))
       } else {
         ##Print out useful info
         cat(sprintf("%4d      %9.2e\n", t, max(err)))
+        progress <- rbind(progress, c(t, max(err)))
       }
     }
   }
@@ -228,12 +234,17 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
   intercept <- drop(intercept)
   
   if(compute_ELBO){
+    colnames(progress) <- c("iter", "mu1_max.diff", "ELBO_diff", "ELBO")
+    
     ###Return the posterior assignment probabilities (w1), the posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), the intercept (intercept), and the Evidence Lower Bound (ELBO).    
-    return(list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept, ELBO=ELBO))
+    ###covariance of the coefficients (S1), the intercept (intercept), the Evidence Lower Bound (ELBO), and the progress
+    ###data frame (progress).    
+    return(list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept, ELBO=ELBO, progress=progress))
   } else {
+    colnames(progress) <- c("iter", "mu1_max.diff")
+    
     ###Return the posterior assignment probabilities (w1), the posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), and the intercept (intercept).    
-    return(list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept))
+    ###covariance of the coefficients (S1), the intercept (intercept), and the progress data frame (progress).    
+    return(list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept, progress=progress))
   }
 }
