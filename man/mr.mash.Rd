@@ -54,6 +54,7 @@ a mr.mash fit, which is a list with some or all of the following elements\cr
 \item{S1}{a r x r x p array of posterior covariances for the regression coeffcients.}
 \item{w1}{a p x K matrix of posterior assignment probabilities to the mixture components.}
 \item{intercept}{an r-vector with the estimated intercepts.}
+\item{fitted}{an n x r matrix of fitted values.}
 \item{ELBO}{the Evidence Lower Bound at convergence.}
 \item{progress}{A data.frame including information regarding convergence criteria at each iteration.}
 }
