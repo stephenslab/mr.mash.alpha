@@ -15,7 +15,7 @@ predict.mr.mash <- function(object, newx){
     stop("Input argument object must be an instance of class \"mr.mash\".")
   }
   
-  Yhat <- matrix(rep(object$intercept, each=nrow(X)), ncol=ncol(object$mu1)) + newx%*%object$mu1
+  Yhat <- matrix(rep(object$intercept, each=nrow(newx)), ncol=ncol(object$mu1)) + newx%*%object$mu1
   
   return(Yhat)
 }
