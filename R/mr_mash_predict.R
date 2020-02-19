@@ -12,7 +12,7 @@ predict.mr.mash <- function(object, newx){
   if (any(is.na(newx))) {
     stop("X must not contain missing values.")
   }
-  if(!is(object,"mr.mash")){
+  if(!inherits(object,"mr.mash")){
     stop("Input argument object must be an instance of class \"mr.mash\".")
   }
   
