@@ -37,7 +37,7 @@ test_that("mr.mash outputted fitted values vs predicted values with the same X a
   fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, standardize=T, verbose=F)
   
   ###Predict values with tha same X 
-  Yhat <- predict.mr.mash(fit, X)
+  Yhat <- predict(fit, X)
   
   ###Tests
   expect_equal(fit$fitted, Yhat, tolerance = 1e-10, scale = 1)
