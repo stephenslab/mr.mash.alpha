@@ -74,8 +74,8 @@
 #' 
 #' @export
 mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL, 
-                    tol=1e-8, max_iter=1e5, update_w0=T, compute_ELBO=T, standardize=T,
-                    verbose=T) {
+                    tol=1e-8, max_iter=1e5, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE,
+                    verbose=TRUE) {
   ###Check that the inputs are in the correct format
   if(!is.matrix(Y)){
     stop("Y must be a matrix.")
@@ -103,11 +103,11 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
   }
 
   ###Center Y and either center and/or scale X
-  Y <- scale(Y, center=T, scale=F)
+  Y <- scale(Y, center=TRUE, scale=FALSE)
   if(standardize){
-    X <- scale(X, center=T, scale=T)
+    X <- scale(X, center=TRUE, scale=TRUE)
   } else {
-    X <- scale(X, center=T, scale=F)
+    X <- scale(X, center=TRUE, scale=FALSE)
   }
  
   ###Initilize mu1, S1, w1, error, ELBO, iterator, and progress
@@ -245,7 +245,7 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
 
   if(standardize){
     ###Rescale posterior means and covariance of coefficients
-    SX <- matrix(rep(attr(X, 'scaled:scale'), each=ncol(mu1_t)), ncol=ncol(mu1_t), byrow=T)
+    SX <- matrix(rep(attr(X, 'scaled:scale'), each=ncol(mu1_t)), ncol=ncol(mu1_t), byrow=TRUE)
     mu1_t <- mu1_t/SX
     for(j in 1:dim(S1_t)[3]){
       S1_t[, , j] <- S1_t[, , j]/((attr(X, 'scaled:scale')[j])^2)

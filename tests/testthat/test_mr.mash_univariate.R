@@ -2,7 +2,7 @@ context("Test mr.mash with univariate Y")
 
 test_that("mr.mash and varbvsmix return the same results with univariate Y", {
   ###Set options
-  options(stringsAsFactors = F)
+  options(stringsAsFactors = FALSE)
   
   ###Set seed
   set.seed(123)
@@ -16,11 +16,11 @@ test_that("mr.mash and varbvsmix return the same results with univariate Y", {
   V  <- matrix(1.4, ncol=1, nrow=1)
   
   ##Set true effects
-  B  <- matrix(c(-2, 5, rep(0, (p-2))), byrow=T, ncol=1)
+  B  <- matrix(c(-2, 5, rep(0, (p-2))), byrow=TRUE, ncol=1)
   
   ##Simulate X
   X <- matrix(rnorm(n*p), nrow=n, ncol=p)
-  X <- scale(X, center=T, scale=F)
+  X <- scale(X, center=TRUE, scale=FALSE)
   
   ##Simulate Y
   Y <- X%*%B + rnorm(n=n, sd=sqrt(as.numeric(V)))
@@ -39,14 +39,14 @@ test_that("mr.mash and varbvsmix return the same results with univariate Y", {
   V_est <- cov(Y)
   
   ###Fit mr.mash
-  fit_mr.mash <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T, standardize=F, verbose=F)
+  fit_mr.mash <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE)
   
   ###Fit varbvsmix
   fit_varbvsmix <- varbvs::varbvsmix(X,NULL,Y,sigma = as.numeric(V_est),w = w0,
                                      sa = grid/as.numeric(V_est),
-                                     update.sigma = FALSE,update.w = T,
+                                     update.sigma = FALSE,update.w = TRUE,
                                      drop.threshold = 0,tol = 1e-8,
-                                     verbose = F)
+                                     verbose = FALSE)
   mu1_varbvsmix <- rowSums(with(fit_varbvsmix,alpha * mu))
   betavarmix <- function (p, mu, s){
     rowSums(p*(s + mu^2)) - rowSums(p*mu)^2  
