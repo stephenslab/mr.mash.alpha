@@ -13,7 +13,7 @@
 #' @param max_iter maximum number of iterations for the optimization algorithm.
 #' @param update_w0 if TRUE, prior weights are updated.
 #' @param compute_ELBO if TRUE, ELBO is computed.
-#' @param standardize if TRUE, X is standardized using the sample means and standard deviations. 
+#' @param standardize if TRUE, X is standardized using the sample means and sample standard deviations. 
 #' Standardizing X allows a faster implementation, but the prior has a different interpretation.
 #' Coefficients and covariances are returned on the original scale.
 #' @param verbose if TRUE, some information is printed to screen at each iteration.
