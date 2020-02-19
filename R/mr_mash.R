@@ -69,7 +69,7 @@
 #'
 #' # Predict the multivariate outcomes using the fitted model.
 #' Yest <- predict(fit,X)
-#' plot(Yest,Y,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
+#' plot(Yest,Y,pch = 20,col = "darkblue",xlab = "true",ylab = "predicted")
 #' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 #' 
 #' @export
