@@ -3,7 +3,6 @@
 S3method(predict,mr.mash)
 export(mr.mash)
 export(mr.mash.scaled.X)
-export(predict.mr.mash)
 importFrom(MBSP,matrix.normal)
 importFrom(Rcpp,evalCpp)
 importFrom(mvtnorm,dmvnorm)

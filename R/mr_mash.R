@@ -63,6 +63,15 @@
 #' ###Fit mr.mash
 #' fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE)
 #'
+#' # Compare the "fitted" values of Y against the true Y.
+#' plot(fit$fitted,Y,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
+#' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
+#'
+#' # Predict the multivariate outcomes using the fitted model.
+#' Yest <- predict(fit,X)
+#' plot(Yest,Y,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
+#' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
+#' 
 #' @export
 mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL, 
                     tol=1e-8, max_iter=1e5, update_w0=T, compute_ELBO=T, standardize=T,
