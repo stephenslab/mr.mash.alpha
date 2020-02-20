@@ -212,10 +212,10 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
       } else {
         xtx <- precomp_quants$xtx[j]
       }
-      var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx)
-      mu1_mat <- matrix(bfit$mu1, ncol=1)
-      neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(tcrossprod(Vinv, rbar_j)%*%tcrossprod(matrix(X[, j], ncol=1), mu1_mat))+
-                                             tr(Vinv%*%(bfit$S1+tcrossprod(mu1_mat)))*xtx))
+      
+      ELBO_parts <- compute_ELBO_terms(var_part_ERSS, neg_KL, X[, j], rbar_j, bfit, xtx, Vinv)
+      var_part_ERSS <- ELBO_parts$var_part_ERSS
+      neg_KL <- ELBO_parts$neg_KL
     }
     
     #Update expected residuals
