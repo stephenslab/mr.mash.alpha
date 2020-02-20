@@ -88,10 +88,15 @@ update_weights <- function(x){
 
 ###Compute intermediate components of the ELBO
 compute_ELBO_terms <- function(var_part_ERSS, neg_KL, x_j, rbar_j, bfit, xtx, Vinv){
-  var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx)
   mu1_mat <- matrix(bfit$mu1, ncol=1)
-  neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(tcrossprod(Vinv, rbar_j)%*%tcrossprod(matrix(x_j, ncol=1), mu1_mat))+
-                                         tr(Vinv%*%(bfit$S1+tcrossprod(mu1_mat)))*xtx))
+  # var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx)
+  # neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(tcrossprod(Vinv, rbar_j)%*%tcrossprod(matrix(x_j, ncol=1), mu1_mat))+
+  #                                        tr(Vinv%*%(bfit$S1+tcrossprod(mu1_mat)))*xtx))
+  ##Equivalent to the above but more efficient
+  var_part_ERSS <- var_part_ERSS + (sum(Vinv*bfit$S1)*xtx)
+  neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*sum(tcrossprod(Vinv, rbar_j)*t(tcrossprod(matrix(x_j, ncol=1), mu1_mat)))+
+                                         sum(Vinv*(bfit$S1+tcrossprod(mu1_mat)))*xtx))
+  
   
   return(list(var_part_ERSS=var_part_ERSS, neg_KL=neg_KL))
 }
