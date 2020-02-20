@@ -56,7 +56,7 @@ sim_mvr <- function (X, B, V) {
 }
 
 ###Function to compute canonical covariance matrices scaled by a grid 
-compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid, zeromat=T){
+compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid, zeromat=TRUE){
   S <- mmbr:::create_cov_canonical(ntraits, singletons, hetgrid)
   U <- list()
   t <- 0
@@ -86,98 +86,78 @@ update_weights <- function(x){
   return(w)
 }
 
-##Compute ELBO from intermediate components
-compute_ELBO_fun <- function(rbar, V, Vinv, var_part_ERSS, neg_KL){
+###Compute intermediate components of the ELBO
+compute_ELBO_terms <- function(var_part_ERSS, neg_KL, x_j, rbar_j, bfit, xtx, Vinv){
+  mu1_mat <- matrix(bfit$mu1, ncol=1)
+  # var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx)
+  # neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(tcrossprod(Vinv, rbar_j)%*%tcrossprod(matrix(x_j, ncol=1), mu1_mat))+
+  #                                        tr(Vinv%*%(bfit$S1+tcrossprod(mu1_mat)))*xtx))
+  ##Equivalent to the above but more efficient
+  var_part_ERSS <- var_part_ERSS + (sum(Vinv*bfit$S1)*xtx)
+  neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*sum(tcrossprod(Vinv, rbar_j)*t(tcrossprod(matrix(x_j, ncol=1), mu1_mat)))+
+                                         sum(Vinv*(bfit$S1+tcrossprod(mu1_mat)))*xtx))
+  
+  
+  return(list(var_part_ERSS=var_part_ERSS, neg_KL=neg_KL))
+}
+
+###Compute ELBO from intermediate components
+compute_ELBO_fun <- function(rbar, V, Vinv, ldetV, var_part_ERSS, neg_KL){
   n <- nrow(rbar)
   R <- ncol(rbar)
   ERSS <- tr(Vinv%*%(crossprod(rbar))) + var_part_ERSS
-  ELBO <- -log(n)/2 - (n*R)/2*log(2*pi) - n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 0.5*ERSS + neg_KL
+  ELBO <- -log(n)/2 - (n*R)/2*log(2*pi) - n/2 * ldetV - 0.5*ERSS + neg_KL
   
   return(ELBO)
 }
 
-###Update variational parameters, expected residuals, and ELBO components
-inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0){
-  ###Create variables to store quantities
-  R <- ncol(rbar)
-  p <- ncol(X)
-  K <- length(S0)
-  mu1   <- mu
-  S1    <- array(0, c(R, R, p))
-  w1    <- matrix(0, nrow=p, ncol=K)
+###Compute log-determinant from Cholesky decomposition
+chol2ldet <- function(R){
+  logdet <- log(prod(diag(R)))*2
   
-  if(!is.null(Vinv)){
-    ##Initialize ELBO parameters
-    var_part_ERSS <- 0
-    neg_KL <- 0
-  }
-
-  ##Loop through the variables
-  for(j in 1:p){
-    
-    #Remove j-th effect from expected residuals 
-    rbar_j <- rbar + outer(X[, j], mu1[j, ])
-    
-    #Run Bayesian SLR
-    bfit <- bayes_mvr_mix(X[, j], rbar_j, V, w0, S0)
-    
-    #Update variational parameters
-    mu1[j, ]         <- bfit$mu1
-    S1[, , j]        <- bfit$S1
-    w1[j, ]          <- bfit$w1
-    
-    #Compute ELBO params
-    if(!is.null(Vinv)){
-      xtx <- sum(X[, j]^2)
-      var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx)
-      mu1_mat <- matrix(bfit$mu1, ncol=1)
-      neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(tcrossprod(Vinv, rbar_j)%*%tcrossprod(matrix(X[, j], ncol=1), mu1_mat))+
-                                             tr(Vinv%*%(bfit$S1+tcrossprod(mu1_mat)))*(xtx)))
-    }
-    
-    #Update expected residuals
-    rbar <- rbar_j - outer(X[, j], mu1[j, ])
-  }
-  
-  ###Return output
-  if(!is.null(Vinv)){
-    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL))
-  } else {
-    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1))
-  }
+  return(logdet)
 }
 
-###Perform one iteration of the outer loop
-mr_mash_update <- function(Y, X, mu1_t, w1_t, V, Vinv, w0, S0, update_w0, compute_ELBO){
-  ##Compute expected residuals
-  rbar <- Y - X%*%mu1_t
+###Compute quantities needed when using scaled X
+precompute_quants_scaled_X <- function(n, V, S0){
+  ###Quantities that don't depend on S0
+  R <- chol(V)
+  S <- V/(n-1)
+  S_chol <- R/sqrt(n-1)
+  ldetS_chol <- chol2ldet(S_chol)
   
-  #Update w0 if requested
-  if(update_w0 && !is.null(w1_t)){
-    w0 <- update_weights(w1_t)
+  ###Quantities that depend on S0
+  SplusS0_chol <- list()
+  S1 <- list()
+  ldetSplusS0_chol <- c()
+  for(i in 1:length(S0)){
+    SplusS0_chol[[i]] <- chol(S+S0[[i]])
+    ldetSplusS0_chol[i] <- chol2ldet(SplusS0_chol[[i]])
+    S1[[i]] <- S0[[i]]%*%backsolve(SplusS0_chol[[i]], forwardsolve(t(SplusS0_chol[[i]]), S))
   }
   
-  ##Update variational parameters, expected residuals, and ELBO components
-  if(compute_ELBO){
-    updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0) 
-  } else {
-    updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=NULL, w0=w0, S0=S0)
+  return(list(V_chol=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol, 
+              ldetS_chol=ldetS_chol, ldetSplusS0_chol=ldetSplusS0_chol))
+}
+
+###Compute quantities needed when using centered X
+precompute_quants_centered_X <- function(X, V, S0){
+  ###Quantities that don't depend on S0
+  xtx <- diag(crossprod(X))
+  R <- chol(V)
+  Rtinv <- solve(t(R))
+  Rinv <- solve(R)
+  
+  ###Quantities that depend on S0
+  U0 <- list()
+  d <- list()
+  Q <- list()
+  for(i in 1:length(S0)){
+    U0[[i]]  <- Rtinv %*% S0[[i]] %*% Rinv
+    out <- eigen(U0[[i]])
+    d[[i]]   <- out$values
+    Q[[i]]   <- out$vectors   
   }
-  mu1_t   <- updates$mu1
-  S1_t    <- updates$S1
-  w1_t    <- updates$w1
-  rbar    <- updates$rbar
   
-  if(compute_ELBO){
-    ##Compute ELBO
-    var_part_ERSS <- updates$var_part_ERSS
-    neg_KL <- updates$neg_KL
-    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL)
-    
-    return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO))
-  } else {
-    return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t))
-  }
-  
-  
+  return(list(xtx=xtx, V_chol=R, U0=U0, d=d, Q=Q))
 }

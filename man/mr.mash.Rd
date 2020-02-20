@@ -10,27 +10,29 @@ mr.mash(
   V,
   S0,
   w0,
-  mu_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)),
+  mu_init = NULL,
   tol = 1e-08,
   max_iter = 1e+05,
-  update_w0 = T,
-  compute_ELBO = T
+  update_w0 = TRUE,
+  compute_ELBO = TRUE,
+  standardize = TRUE,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{Y}{an NxR matrix of responses.}
+\item{Y}{an n x r matrix of responses.}
 
-\item{X}{an NxP matrix of covariates.}
+\item{X}{an n x p matrix of covariates.}
 
-\item{V}{an RxR residual covariance matrix.}
+\item{V}{an r x r residual covariance matrix.}
 
-\item{S0}{a list of length K containing the desired RxR prior covariance matrices 
+\item{S0}{a list of length K containing the desired r x r prior covariance matrices 
 on the regression coefficients.}
 
 \item{w0}{a K-vector with prior mixture weights, each associated with the 
 respective covariance matrix in \code{S0}.}
 
-\item{mu_init}{a PxR matrix of initial estimates for the regression coefficients.}
+\item{mu_init}{a p x r matrix of initial estimates for the regression coefficients.}
 
 \item{tol}{convergence tolerance.}
 
@@ -39,14 +41,22 @@ respective covariance matrix in \code{S0}.}
 \item{update_w0}{if TRUE, prior weights are updated.}
 
 \item{compute_ELBO}{if TRUE, ELBO is computed.}
+
+\item{standardize}{if TRUE, X is standardized using the sample means and sample standard deviations. 
+Standardizing X allows a faster implementation, but the prior has a different interpretation.
+Coefficients and covariances are returned on the original scale.}
+
+\item{verbose}{if TRUE, some information is printed to screen at each iteration.}
 }
 \value{
 a mr.mash fit, which is a list with some or all of the following elements\cr
-\item{mu1}{a PxR matrix of posterior means for the regression coeffcients}
-\item{S1}{a RxRxP array of posterior covariances for the regression coeffcients}
-\item{w1}{a PxK matrix of posterior assignment probabilities to the mixture components}
-\item{intercept}{an R-vector with the estimated intercepts}
-\item{ELBO}{the Evidence Lower Bound at convergence}
+\item{mu1}{a p x r matrix of posterior means for the regression coeffcients.}
+\item{S1}{a r x r x p array of posterior covariances for the regression coeffcients.}
+\item{w1}{a p x K matrix of posterior assignment probabilities to the mixture components.}
+\item{intercept}{an r-vector with the estimated intercepts.}
+\item{fitted}{an n x r matrix of fitted values.}
+\item{ELBO}{the Evidence Lower Bound at convergence.}
+\item{progress}{A data.frame including information regarding convergence criteria at each iteration.}
 }
 \description{
 Multiple Regression with Multivariate Adaptive Shrinkage.
@@ -55,8 +65,6 @@ Multiple Regression with Multivariate Adaptive Shrinkage.
 Performs multivariate multiple regression with mixture-of-normals prior.
 }
 \examples{
-###Set options
-options(stringsAsFactors = F)
 ###Set seed
 set.seed(123)
 
@@ -72,24 +80,33 @@ V  <- rbind(c(1.0,0.2),
 ##Set true effects
 B  <- matrix(c(-2, -2,
                5, 5,
-               rep(0, (p-2)*2)), byrow=T, ncol=2)
+               rep(0, (p-2)*2)), byrow=TRUE, ncol=2)
 
 ##Simulate X
 X <- matrix(rnorm(n*p), nrow=n, ncol=p)
-X <- scale(X, center=T, scale=F)
+X <- scale(X, center=TRUE, scale=FALSE)
 
 ##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix and V is the residual covariance  
 Y <- mr.mash.alpha:::sim_mvr(X, B, V)
 
 ###Specify the mixture weights and covariance matrices for the mixture-of-normals prior.
 grid <- seq(1, 5)
-S0mix <- mr.mash.alpha:::compute_cov_canonical(ncol(Y), singletons=T, hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=T)
+S0mix <- mr.mash.alpha:::compute_cov_canonical(ncol(Y), singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=TRUE)
 w0    <- rep(1/(length(S0mix)), length(S0mix))
 
 ###Estimate residual covariance
 V_est <- cov(Y)
 
 ###Fit mr.mash
-fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=T, compute_ELBO=T)
+fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE)
+
+# Compare the "fitted" values of Y against the true Y.
+plot(fit$fitted,Y,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
+abline(a = 0,b = 1,col = "magenta",lty = "dotted")
+
+# Predict the multivariate outcomes using the fitted model.
+Yest <- predict(fit,X)
+plot(Yest,Y,pch = 20,col = "darkblue",xlab = "true",ylab = "predicted")
+abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 
 }
