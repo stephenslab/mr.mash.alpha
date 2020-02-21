@@ -56,20 +56,26 @@
 #' grid <- seq(1, 5)
 #' S0mix <- mr.mash.alpha:::compute_cov_canonical(ncol(Y), singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=TRUE)
 #' w0    <- rep(1/(length(S0mix)), length(S0mix))
+#' 
+#' ###Split the data in training and test sets
+#' Ytrain <- Y[-c(1:10), ]
+#' Xtrain <- X[-c(1:10), ]
+#' Ytest <- Y[c(1:10), ]
+#' Xtest <- X[c(1:10), ]
 #'
 #' ###Estimate residual covariance
-#' V_est <- cov(Y)
+#' V_est <- cov(Ytrain)
 #'
 #' ###Fit mr.mash
-#' fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE)
+#' fit <- mr.mash(Ytrain, Xtrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE)
 #'
-#' # Compare the "fitted" values of Y against the true Y.
-#' plot(fit$fitted,Y,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
+#' # Compare the "fitted" values of Y against the true Y in the training set.
+#' plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
 #' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 #'
-#' # Predict the multivariate outcomes using the fitted model.
-#' Yest <- predict(fit,X)
-#' plot(Yest,Y,pch = 20,col = "darkblue",xlab = "true",ylab = "predicted")
+#' # Predict the multivariate outcomes in the test set using the fitted model.
+#' Ytest_est <- predict(fit,Xtest)
+#' plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",ylab = "predicted")
 #' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 #' 
 #' @export
