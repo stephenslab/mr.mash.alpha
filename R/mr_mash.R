@@ -76,6 +76,10 @@
 mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL, 
                     tol=1e-8, max_iter=1e5, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE,
                     verbose=TRUE) {
+
+  tic <- Sys.time()
+  cat("Processing the inputs... ")
+  
   ###Check that the inputs are in the correct format
   if(!is.matrix(Y)){
     stop("Y must be a matrix.")
@@ -142,13 +146,18 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
     ldetV <- NULL
   }
   
+  cat("Done!\n")
+  
   ###First iteration
   if(verbose){
+    cat("Fitting the VEM algorithm... \n")
     if(compute_ELBO){
       cat(" iter    mu1_max.diff     ELBO_diff               ELBO\n")
     } else {
       cat(" iter    mu1_max.diff\n")
     }
+  } else {
+    cat("Fitting the VEM algorithm... ")
   }
   ##Save current estimates.
   mu1_tminus1 <- mu1_t   
@@ -238,6 +247,9 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
     }
   }
   
+  cat("Done!\n")
+  cat("Processing the output... ")
+  
   ###Compute fitted values
   fitted_vals <- X%*%mu1_t + matrix(rep(attr(Y,"scaled:center"), each=nrow(Y)), ncol=ncol(Y))
   attr(fitted_vals, "scaled:center") <- NULL
@@ -272,6 +284,10 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
   }
   
   class(out) <- c("mr.mash", "list")
+  
+  cat("Done!\n")
+  toc <- Sys.time()
+  cat("mr.mash successfully executed in", difftime(toc,tic, units="mins"), "minutes!\n")
   
   return(out)
 }
