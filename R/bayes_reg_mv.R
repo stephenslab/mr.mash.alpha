@@ -42,15 +42,9 @@ bayes_mvr_ridge <- function (x, Y, V, S0) {
 
 # Bayesian multivariate regression with Normal prior with scaled X
 #
-# The outputs are: b, the least-squares estimate of the regression
-# coefficients; S, the covariance of b; mu1, the posterior mean of the
-# regression coefficients; S1, the posterior covariance of the
+# The outputs are: mu1, the posterior mean of the
 # regression coefficients; logbf, the log-Bayes factor.
-bayes_mvr_ridge_scaled_X <- function (x, Y, S0, S, S1, SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol) {
-  
-  # Compute the least-squares estimate.
-  n <- nrow(Y)
-  b <- drop(x %*% Y)/(n-1)
+bayes_mvr_ridge_scaled_X <- function (x, Y, b, S0, S, S1, SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol) {
   
   # Compute the log-Bayes factor.
   logbf <- (ldetS_chol - ldetSplusS0_chol +
@@ -61,9 +55,9 @@ bayes_mvr_ridge_scaled_X <- function (x, Y, S0, S, S1, SplusS0_chol, S_chol, lde
   # normal prior with zero mean and covariance S0.
   mu1 <- drop(S1%*%backsolve(S_chol, forwardsolve(t(S_chol), b)))
   
-  # Return the least-squares estimate (b), the posterior mean
+  # Return the posterior mean
   # (mu1), and the log-Bayes factor (logbf)
-  return(list(b = b, mu1 = mu1, logbf = logbf))
+  return(list(mu1 = mu1, logbf = logbf))
 }
 
 
@@ -72,18 +66,12 @@ bayes_mvr_ridge_scaled_X <- function (x, Y, S0, S, S1, SplusS0_chol, S_chol, lde
 # to understand the derivation] that allows to precompute some
 # quantities
 #
-# The outputs are: b, the least-squares estimate of the regression
-# coefficients; S, the covariance of b; mu1, the posterior mean of the
+# The outputs are: mu1, the posterior mean of the
 # regression coefficients; S1, the posterior covariance of the
 # regression coefficients; logbf, the log-Bayes factor.
-bayes_mvr_ridge_centered_X <- function (x, Y, V, S0, xtx, V_chol, U0, d, Q) {
-  
-  # Compute the least-squares estimate and covariance.
-  b <- drop(x %*% Y)/xtx
-  S <- V/xtx
+bayes_mvr_ridge_centered_X <- function (x, Y, V, b, S, S0, xtx, V_chol, S_chol, U0, d, Q) {
   
   # Compute the log-Bayes factor.
-  S_chol <- V_chol/sqrt(xtx)
   SplusS0_chol <- chol(S+S0)
   logbf <- (chol2ldet(S_chol) - chol2ldet(SplusS0_chol) +
               dot(b,backsolve(S_chol, forwardsolve(t(S_chol), b))) -
@@ -101,9 +89,9 @@ bayes_mvr_ridge_centered_X <- function (x, Y, V, S0, xtx, V_chol, U0, d, Q) {
   S1 <- crossprod(V_chol, U1) %*% V_chol
   mu1 <- drop(S1%*%backsolve(S_chol, forwardsolve(t(S_chol), b)))
   
-  # Return the least-squares estimate and covariance (b, S), the posterior mean and covariance
+  # Return the posterior mean and covariance
   # (mu1, S1), and the log-Bayes factor (logbf)
-  return(list(b = b, S=S, mu1 = mu1, S1=S1, logbf=logbf))
+  return(list(mu1 = mu1, S1=S1, logbf=logbf))
 }
 
 
@@ -206,10 +194,15 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
 # the coefficients given that all the coefficients are not zero (S1).
 bayes_mvr_mix_scaled_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol) {
   
-  # Get the number of variables (n) and the number of mixture
-  # components (k).
+  
+  # Get the number of conditions (R), the number of mixture
+  # components (K), and the number of samples (n).
   R <- ncol(Y)
   K <- length(S0)
+  n <- nrow(Y)
+  
+  # Compute the least-squares estimate.
+  b <- drop(x %*% Y)/(n-1)
   
   # Compute the Bayes factors and posterior statistics separately for
   # each mixture component.
@@ -218,7 +211,7 @@ bayes_mvr_mix_scaled_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol, l
   #   out[[k]] <- bayes_mvr_ridge_scaled_X(x, Y, S0[[k]], S, S1[[k]], SplusS0_chol[[k]], S_chol, ldetSplusS0_chol[k], ldetS_chol)
   # }
   bayes_mvr_ridge_lapply <- function(i){
-    bayes_mvr_ridge_scaled_X(x, Y, S0[[i]], S, S1[[i]], SplusS0_chol[[i]], S_chol, ldetSplusS0_chol[i], ldetS_chol)
+    bayes_mvr_ridge_scaled_X(x, Y, b, S0[[i]], S, S1[[i]], SplusS0_chol[[i]], S_chol, ldetSplusS0_chol[i], ldetS_chol)
   }
   out <- lapply(1:K, bayes_mvr_ridge_lapply)
   
@@ -272,6 +265,13 @@ bayes_mvr_mix_centered_X <- function (x, Y, V, w0, S0, xtx, V_chol, U0, d, Q) {
   R <- ncol(Y)
   K <- length(S0)
   
+  # Compute the least-squares estimate and covariance.
+  b <- drop(x %*% Y)/xtx
+  S <- V/xtx
+  
+  # Compute quantities needed for bayes_mvr_ridge_centered_X()
+  S_chol <- V_chol/sqrt(xtx)
+  
   # Compute the Bayes factors and posterior statistics separately for
   # each mixture component.
   # out <- vector("list",K)
@@ -279,7 +279,7 @@ bayes_mvr_mix_centered_X <- function (x, Y, V, w0, S0, xtx, V_chol, U0, d, Q) {
   #   out[[k]] <- bayes_mvr_ridge_centered_X(x, Y, V, S0[[k]], xtx, V_chol, U0[[k]], d[[k]], Q[[k]])
   # }
   bayes_mvr_ridge_lapply <- function(i){
-    bayes_mvr_ridge_centered_X(x, Y, V, S0[[i]], xtx, V_chol, U0[[i]], d[[i]], Q[[i]])
+    bayes_mvr_ridge_centered_X(x, Y, V, b, S, S0[[i]], xtx, V_chol, S_chol, U0[[i]], d[[i]], Q[[i]])
   }
   out <- lapply(1:K, bayes_mvr_ridge_lapply)
   
