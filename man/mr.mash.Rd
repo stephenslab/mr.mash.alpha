@@ -14,6 +14,7 @@ mr.mash(
   tol = 1e-08,
   max_iter = 1e+05,
   update_w0 = TRUE,
+  update_w0_method = "EM",
   compute_ELBO = TRUE,
   standardize = TRUE,
   verbose = TRUE
@@ -39,6 +40,8 @@ respective covariance matrix in \code{S0}.}
 \item{max_iter}{maximum number of iterations for the optimization algorithm.}
 
 \item{update_w0}{if TRUE, prior weights are updated.}
+
+\item{update_w0_method}{method to update prior weights. Current options are EM or mixsqp.}
 
 \item{compute_ELBO}{if TRUE, ELBO is computed.}
 
