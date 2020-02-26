@@ -233,17 +233,21 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
 
 ###Perform one iteration of the outer loop with or without scaling X
 mr_mash_update_general <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0,
-                                   precomp_quants, update_w0, compute_ELBO, standardize){
+                                   precomp_quants, update_w0, update_w0_method, 
+                                   compute_ELBO, standardize){
   ##Compute expected residuals
   rbar <- Y - X%*%mu1_t
   
   #Update w0 if requested
   if(update_w0 && !is.null(w1_t)){
-    # w0 <- update_weights(w1_t)
-    w0 <- compute_mixsqp_update(X=X, rbar=rbar, V=V, S0=S0, S=precomp_quants$S, S1=precomp_quants$S1, 
-                                SplusS0_chol=precomp_quants$SplusS0_chol, S_chol=precomp_quants$S_chol, 
-                                ldetSplusS0_chol=precomp_quants$ldetSplusS0_chol, ldetS_chol=precomp_quants$ldetS_chol, 
-                                mu1=mu1_t)$w0
+    if(update_w0_method=="EM"){
+      w0 <- update_weights(w1_t)
+    } else if(update_w0_method=="mixsqp"){
+      w0 <- compute_mixsqp_update(X=X, Y=Y, rbar=rbar, V=V, S0=S0, S=precomp_quants$S, S1=precomp_quants$S1, 
+                                  SplusS0_chol=precomp_quants$SplusS0_chol, S_chol=precomp_quants$S_chol, 
+                                  ldetSplusS0_chol=precomp_quants$ldetSplusS0_chol, ldetS_chol=precomp_quants$ldetS_chol, 
+                                  mu1=mu1_t)$w0
+    }
   }
   
   ##Update variational parameters, expected residuals, and ELBO components

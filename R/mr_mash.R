@@ -12,6 +12,7 @@
 #' @param tol convergence tolerance.
 #' @param max_iter maximum number of iterations for the optimization algorithm.
 #' @param update_w0 if TRUE, prior weights are updated.
+#' @param update_w0_method method to update prior weights. Current options are EM or mixsqp.
 #' @param compute_ELBO if TRUE, ELBO is computed.
 #' @param standardize if TRUE, X is standardized using the sample means and sample standard deviations. 
 #' Standardizing X allows a faster implementation, but the prior has a different interpretation.
@@ -80,8 +81,8 @@
 #' 
 #' @export
 mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL, 
-                    tol=1e-8, max_iter=1e5, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE,
-                    verbose=TRUE) {
+                    tol=1e-8, max_iter=1e5, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
+                    standardize=TRUE, verbose=TRUE) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -178,8 +179,8 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
   
   ###Update variational parameters
   ups   <- mr_mash_update_general(Y=Y, X=X, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
-                                  precomp_quants=comps, update_w0=update_w0, compute_ELBO=compute_ELBO,
-                                  standardize=standardize)
+                                  precomp_quants=comps, update_w0=update_w0, update_w0_method=NULL, 
+                                  compute_ELBO=compute_ELBO, standardize=standardize)
   mu1_t <- ups$mu1_t
   S1_t  <- ups$S1_t
   w1_t  <- ups$w1_t
@@ -224,8 +225,8 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
     
     ###Update model parameters and variational parameters
     ups   <- mr_mash_update_general(Y=Y, X=X, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
-                                    precomp_quants=comps, update_w0=update_w0, compute_ELBO=compute_ELBO,
-                                    standardize=standardize)
+                                    precomp_quants=comps, update_w0=update_w0, update_w0_method=update_w0_method, 
+                                    compute_ELBO=compute_ELBO, standardize=standardize)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t
