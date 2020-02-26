@@ -163,3 +163,40 @@ precompute_quants_centered_X <- function(X, V, S0){
   
   return(list(xtx=xtx, V_chol=R, U0=U0, d=d, Q=Q))
 }
+
+###Update mixture weights with mixsqp
+#' @importFrom mixsqp mixsqp
+#' 
+compute_mixsqp_update <- function (X, rbar, V, S0, S0, S, S1, SplusS0_chol, S_chol, 
+                                   ldetSplusS0_chol, ldetS_chol, mu1) {
+  
+  # Get the number of predictors (p), the number of mixture
+  # components in the prior (k), and the number of samples (n).
+  p <- ncol(X)
+  K <- length(S0)
+  n <- nrow(Y)
+  
+  # Compute the least-squares estimate.
+  b <- drop(x %*% Y)/(n-1)
+  
+  # Compute the p x k matrix of log-likelihoods conditional on each
+  # prior mixture component.
+  L <- matrix(0, p, K)
+  
+  for(j in 1:p){
+    #Remove j-th effect from expected residuals 
+    rbar_j <- rbar + outer(X[, j], mu1[j, ])
+  
+    for(k in 1:K){
+      L[j, k] <- bayes_mvr_ridge_scaled_X(X[, j], rbar_j, b, S0[[k]], S, S1[[k]], SplusS0_chol[[k]], S_chol, 
+                                          ldetSplusS0_chol[i], ldetS_chol)$logbf
+    }
+  }
+  out <- mixsqp(L,log = TRUE,control = list(verbose = FALSE))
+  if (out$status != "converged to optimal solution")
+    warning("mixsqp did not converge to optimal solution")
+  
+  # Return the updated mixture weights ("w0") and the number of
+  # mix-SQP iterations performed.
+  return(list(w0=out$x, numiter=nrow(out$progress)))
+}

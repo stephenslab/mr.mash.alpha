@@ -239,7 +239,11 @@ mr_mash_update_general <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0,
   
   #Update w0 if requested
   if(update_w0 && !is.null(w1_t)){
-    w0 <- update_weights(w1_t)
+    # w0 <- update_weights(w1_t)
+    w0 <- compute_mixsqp_update(X=X, rbar=rbar, V=V, S0=S0, S=precomp_quants$S, S1=precomp_quants$S1, 
+                                SplusS0_chol=precomp_quants$SplusS0_chol, S_chol=precomp_quants$S_chol, 
+                                ldetSplusS0_chol=precomp_quants$ldetSplusS0_chol, ldetS_chol=precomp_quants$ldetS_chol, 
+                                mu1=mu1_t)$w0
   }
   
   ##Update variational parameters, expected residuals, and ELBO components
