@@ -80,7 +80,7 @@ compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid, zeromat=TR
 }
 
 ###Update mixture weights
-update_weights <- function(x){
+update_weights_em <- function(x){
   w <- colSums(x)
   w <- w/sum(w)
   return(w)
@@ -167,8 +167,7 @@ precompute_quants_centered_X <- function(X, V, S0){
 ###Update mixture weights with mixsqp
 #' @importFrom mixsqp mixsqp
 #' 
-compute_mixsqp_update <- function (X, Y, rbar, V, S0, S, S1, SplusS0_chol, S_chol, 
-                                   ldetSplusS0_chol, ldetS_chol, mu1) {
+update_weights_mixsqp <- function (X, Y, rbar, V, S0, mu1, precomp_quants, standardize) {
   
   # Get the number of predictors (p), the number of mixture
   # components in the prior (k), and the number of samples (n).
@@ -180,18 +179,40 @@ compute_mixsqp_update <- function (X, Y, rbar, V, S0, S, S1, SplusS0_chol, S_cho
   # prior mixture component.
   L <- matrix(0, p, K)
   
-  for(j in 1:p){
-    # Compute the least-squares estimate.
-    b <- drop(X[, j] %*% Y)/(n-1)
-    
-    #Remove j-th effect from expected residuals 
-    rbar_j <- rbar + outer(X[, j], mu1[j, ])
-  
-    for(k in 1:K){
-      L[j, k] <- bayes_mvr_ridge_scaled_X(X[, j], rbar_j, b, S0[[k]], S, S1[[k]], SplusS0_chol[[k]], S_chol, 
-                                          ldetSplusS0_chol[k], ldetS_chol)$logbf
+  if(standardize){
+    for(j in 1:p){
+      # Compute the least-squares estimate.
+      b <- drop(X[, j] %*% Y)/(n-1)
+      
+      #Remove j-th effect from expected residuals 
+      rbar_j <- rbar + outer(X[, j], mu1[j, ])
+      
+      for(k in 1:K){
+        L[j, k] <- bayes_mvr_ridge_scaled_X(X[, j], rbar_j, b, precomp_quants$S0[[k]], precomp_quants$S, 
+                                            precomp_quants$S1[[k]], precomp_quants$SplusS0_chol[[k]], precomp_quants$S_chol, 
+                                            precomp_quants$ldetSplusS0_chol[k], precomp_quants$ldetS_chol)$logbf
+      }
+    }
+  } else {
+    for(j in 1:p){
+      # Compute the least-squares estimate and covariance.
+      b <- drop(X[, j] %*% Y)/precomp_quants$xtx[j]
+      S <- V/precomp_quants$xtx[j]
+      
+      # Compute quantities needed for bayes_mvr_ridge_centered_X()
+      S_chol <- precomp_quants$V_chol/sqrt(precomp_quants$xtx[j])
+      
+      #Remove j-th effect from expected residuals 
+      rbar_j <- rbar + outer(X[, j], mu1[j, ])
+      
+      for(k in 1:K){
+        L[j, k] <- bayes_mvr_ridge_centered_X(X[, j], rbar_j, V, b, S, S0[[k]], precomp_quants$xtx[j], 
+                                              precomp_quants$V_chol, S_chol, precomp_quants$U0[[k]], precomp_quants$d[[k]], 
+                                              precomp_quants$Q[[k]])$logbf
+      }
     }
   }
+  
   out <- mixsqp(L,log = TRUE,control = list(verbose = FALSE))
   if (out$status != "converged to optimal solution")
     warning("mixsqp did not converge to optimal solution")
