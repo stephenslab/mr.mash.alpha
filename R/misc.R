@@ -167,7 +167,7 @@ precompute_quants_centered_X <- function(X, V, S0){
 ###Update mixture weights with mixsqp
 #' @importFrom mixsqp mixsqp
 #' 
-compute_mixsqp_update <- function (X, rbar, V, S0, S0, S, S1, SplusS0_chol, S_chol, 
+compute_mixsqp_update <- function (X, Y, rbar, V, S0, S, S1, SplusS0_chol, S_chol, 
                                    ldetSplusS0_chol, ldetS_chol, mu1) {
   
   # Get the number of predictors (p), the number of mixture
@@ -176,20 +176,20 @@ compute_mixsqp_update <- function (X, rbar, V, S0, S0, S, S1, SplusS0_chol, S_ch
   K <- length(S0)
   n <- nrow(Y)
   
-  # Compute the least-squares estimate.
-  b <- drop(x %*% Y)/(n-1)
-  
   # Compute the p x k matrix of log-likelihoods conditional on each
   # prior mixture component.
   L <- matrix(0, p, K)
   
   for(j in 1:p){
+    # Compute the least-squares estimate.
+    b <- drop(X[, j] %*% Y)/(n-1)
+    
     #Remove j-th effect from expected residuals 
     rbar_j <- rbar + outer(X[, j], mu1[j, ])
   
     for(k in 1:K){
       L[j, k] <- bayes_mvr_ridge_scaled_X(X[, j], rbar_j, b, S0[[k]], S, S1[[k]], SplusS0_chol[[k]], S_chol, 
-                                          ldetSplusS0_chol[i], ldetS_chol)$logbf
+                                          ldetSplusS0_chol[k], ldetS_chol)$logbf
     }
   }
   out <- mixsqp(L,log = TRUE,control = list(verbose = FALSE))
