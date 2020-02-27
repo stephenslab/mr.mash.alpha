@@ -36,8 +36,8 @@ dat <- list(mu1   = mu1,
 
 # Pre-calculations (that don't depend on X). Here, U0 is the prior
 # covariance of the "transformed" data.
-R   <- chol(V)
-U0  <- solve(t(R)) %*% S0 %*% solve(R)
+L   <- t(chol(V))
+U0  <- solve(L) %*% S0 %*% t(solve(L))
 out <- eigen(U0)
 d   <- out$values
 Q   <- out$vectors
@@ -47,7 +47,7 @@ Q   <- out$vectors
 # covariance of the "transformed" data.
 D   <- diag(1/(1 + xx*d))
 U1  <- U0 %*% Q %*% D %*% t(Q)
-S1  <- t(R) %*% U1 %*% R
+S1  <- L %*% U1 %*% t(L)
 mu1 <- drop(S1 %*% solve(S,bhat))
 
 # Compare the two calculations.
