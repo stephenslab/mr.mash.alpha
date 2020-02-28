@@ -295,3 +295,19 @@ update_weights_mixsqp <- function (X, Y, mu1_t, V, Vinv, ldetV, w0em, S0,
               numiter = out1$numiter,
               a       = out2$a))
 }
+
+###Compute variance part of the ERSS
+compute_var_part_ERSS <- function(var_part_ERSS, bfit, xtx){
+  var_part_ERSS <- var_part_ERSS + (bfit$S1*xtx)
+  
+  return(var_part_ERSS)
+}
+
+###Update V
+update_V <- function(var_part_ERSS, rbar){
+  ERSS <- crossprod(rbar) + var_part_ERSS
+  n <- nrow(rbar)
+  V <- ERSS/n
+  
+  return(V)
+}
