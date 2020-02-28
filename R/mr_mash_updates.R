@@ -232,7 +232,7 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
 
 
 ###Perform one iteration of the outer loop with or without scaling X
-mr_mash_update_general <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0,
+mr_mash_update_general <- function(X, Y, mu1_t, w1_t, V, Vinv, ldetV, w0, S0,
                                    precomp_quants, update_w0, update_w0_method, 
                                    compute_ELBO, standardize){
   ##Compute expected residuals
@@ -243,8 +243,10 @@ mr_mash_update_general <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0,
     if(update_w0_method=="EM"){
       w0 <- update_weights_em(w1_t)
     } else if(update_w0_method=="mixsqp"){
-      w0 <- update_weights_mixsqp(X=X, Y=Y, rbar=rbar, V=V, S0=S0, mu1=mu1_t, 
-                                  precomp_quants=precomp_quants, standardize=standardize)$w0
+      w0em <- update_weights_em(w1_t)
+      w0 <- update_weights_mixsqp(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0em=w0em, 
+                                  S0=S0, precomp_quants=precomp_quants, standardize=standardize,
+                                  stepsize.reduce = 0.5, stepsize.min = 1e-8)$w0
     }
   }
   

@@ -68,7 +68,7 @@
 #' V_est <- cov(Ytrain)
 #'
 #' ###Fit mr.mash
-#' fit <- mr.mash(Ytrain, Xtrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE)
+#' fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE)
 #'
 #' # Compare the "fitted" values of Y against the true Y in the training set.
 #' plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
@@ -80,7 +80,7 @@
 #' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 #' 
 #' @export
-mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL, 
+mr.mash <- function(X, Y, V, S0, w0, mu_init=NULL, 
                     tol=1e-8, max_iter=1e5, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
                     standardize=TRUE, verbose=TRUE) {
 
@@ -157,14 +157,14 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
   
   ###First iteration
   if(verbose){
-    cat("Fitting the VEM algorithm... \n")
+    cat("Fitting the optimization algorithm... \n")
     if(compute_ELBO){
       cat(" iter    mu1_max.diff     ELBO_diff               ELBO\n")
     } else {
       cat(" iter    mu1_max.diff\n")
     }
   } else {
-    cat("Fitting the VEM algorithm... ")
+    cat("Fitting the optimization algorithm... ")
   }
   ##Save current estimates.
   mu1_tminus1 <- mu1_t   
@@ -178,7 +178,7 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
   }
   
   ###Update variational parameters
-  ups   <- mr_mash_update_general(Y=Y, X=X, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
+  ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
                                   precomp_quants=comps, update_w0=update_w0, update_w0_method=NULL, 
                                   compute_ELBO=compute_ELBO, standardize=standardize)
   mu1_t <- ups$mu1_t
@@ -224,7 +224,7 @@ mr.mash <- function(Y, X, V, S0, w0, mu_init=NULL,
     }
     
     ###Update model parameters and variational parameters
-    ups   <- mr_mash_update_general(Y=Y, X=X, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
+    ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
                                     precomp_quants=comps, update_w0=update_w0, update_w0_method=update_w0_method, 
                                     compute_ELBO=compute_ELBO, standardize=standardize)
     mu1_t <- ups$mu1_t
