@@ -87,27 +87,27 @@ update_weights_em <- function(x){
 }
 
 ###Compute intermediate components of the ELBO
-compute_ELBO_terms <- function(var_part_ERSS, neg_KL, x_j, rbar_j, bfit, xtx, Vinv){
+compute_ELBO_terms <- function(var_part_tr_wERSS, neg_KL, x_j, rbar_j, bfit, xtx, Vinv){
   mu1_mat <- matrix(bfit$mu1, ncol=1)
-  # var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx)
+  # var_part_tr_wERSS <- var_part_tr_wERSS + (tr(Vinv%*%bfit$S1)*xtx)
   # neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(tcrossprod(Vinv, rbar_j)%*%tcrossprod(matrix(x_j, ncol=1), mu1_mat))+
   #                                        tr(Vinv%*%(bfit$S1+tcrossprod(mu1_mat)))*xtx))
   ##Equivalent to the above but more efficient
-  var_part_ERSS <- var_part_ERSS + (sum(Vinv*bfit$S1)*xtx)
+  var_part_tr_wERSS <- var_part_tr_wERSS + (sum(Vinv*bfit$S1)*xtx)
   neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*sum(tcrossprod(Vinv, rbar_j)*t(tcrossprod(matrix(x_j, ncol=1), mu1_mat)))+
                                          sum(Vinv*(bfit$S1+tcrossprod(mu1_mat)))*xtx))
   
   
-  return(list(var_part_ERSS=var_part_ERSS, neg_KL=neg_KL))
+  return(list(var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL))
 }
 
 ###Compute ELBO from intermediate components
-compute_ELBO_fun <- function(rbar, V, Vinv, ldetV, var_part_ERSS, neg_KL){
+compute_ELBO_fun <- function(rbar, V, Vinv, ldetV, var_part_tr_wERSS, neg_KL){
   n <- nrow(rbar)
   R <- ncol(rbar)
-  # ERSS <- tr(Vinv%*%(crossprod(rbar))) + var_part_ERSS
-  ERSS <- sum(Vinv*(crossprod(rbar))) + var_part_ERSS
-  ELBO <- -log(n)/2 - (n*R)/2*log(2*pi) - n/2 * ldetV - 0.5*ERSS + neg_KL
+  # tr_wERSS <- tr(Vinv%*%(crossprod(rbar))) + var_part_tr_wERSS
+  tr_wERSS <- sum(Vinv*(crossprod(rbar))) + var_part_tr_wERSS
+  ELBO <- -log(n)/2 - (n*R)/2*log(2*pi) - n/2 * ldetV - 0.5*tr_wERSS + neg_KL
   
   return(ELBO)
 }
@@ -233,7 +233,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1_t, w0em, w0m
   rbar <- Y - X%*%mu1_t
   updates <- inner_loop_general(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0em, S0=S0, 
                                 precomp_quants=precomp_quants, standardize=standardize) 
-  f <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_ERSS=updates$var_part_ERSS, neg_KL=updates$neg_KL)
+  f <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=updates$var_part_tr_wERSS, neg_KL=updates$neg_KL)
     
   
   # Perform backtracking line search to identify a step size that
@@ -243,7 +243,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1_t, w0em, w0m
     w0new <- a*w0mixsqp + (1 - a)*w0em
     updates <- inner_loop_general(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0new, S0=S0, 
                                   precomp_quants=precomp_quants, standardize=standardize) 
-    fnew <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_ERSS=updates$var_part_ERSS, neg_KL=updates$neg_KL)
+    fnew <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=updates$var_part_tr_wERSS, neg_KL=updates$neg_KL)
     
     # Check whether the new candidate increases the ELBO.
     if (fnew > f)

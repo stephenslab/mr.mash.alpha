@@ -10,7 +10,7 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, xtx, V_chol, U0, d, Q){
   
   if(!is.null(Vinv)){
     ##Initialize ELBO parameters
-    var_part_ERSS <- 0
+    var_part_tr_wERSS <- 0
     neg_KL <- 0
   }
   
@@ -30,7 +30,7 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, xtx, V_chol, U0, d, Q){
     
     #Compute ELBO params
     if(!is.null(Vinv)){
-      var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx[j])
+      var_part_tr_wERSS <- var_part_tr_wERSS + (tr(Vinv%*%bfit$S1)*xtx[j])
       mu1_mat <- matrix(bfit$mu1, ncol=1)
       neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(tcrossprod(Vinv, rbar_j)%*%tcrossprod(matrix(X[, j], ncol=1), mu1_mat))+
                                              tr(Vinv%*%(bfit$S1+tcrossprod(mu1_mat)))*(xtx[j])))
@@ -42,7 +42,7 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, xtx, V_chol, U0, d, Q){
   
   ###Return output
   if(!is.null(Vinv)){
-    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL))
+    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL))
   } else {
     return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1))
   }
@@ -68,9 +68,9 @@ mr_mash_update <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0,
   
   if(compute_ELBO){
     ##Compute ELBO
-    var_part_ERSS <- updates$var_part_ERSS
+    var_part_tr_wERSS <- updates$var_part_tr_wERSS
     neg_KL <- updates$neg_KL
-    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL)
+    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL)
     
     return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO))
   } else {
@@ -91,7 +91,7 @@ inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, 
   
   if(!is.null(Vinv)){
     ##Initialize ELBO parameters
-    var_part_ERSS <- 0
+    var_part_tr_wERSS <- 0
     neg_KL <- 0
   }
   
@@ -112,7 +112,7 @@ inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, 
     #Compute ELBO params
     if(!is.null(Vinv)){
       xtx <- n-1
-      var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx)
+      var_part_tr_wERSS <- var_part_tr_wERSS + (tr(Vinv%*%bfit$S1)*xtx)
       mu1_mat <- matrix(bfit$mu1, ncol=1)
       neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(tcrossprod(Vinv, rbar_j)%*%tcrossprod(matrix(X[, j], ncol=1), mu1_mat))+
                                              tr(Vinv%*%(bfit$S1+tcrossprod(mu1_mat)))*(xtx)))
@@ -124,7 +124,7 @@ inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, 
   
   ###Return output
   if(!is.null(Vinv)){
-    return(list(rbar=rbar, mu1=mu1c, S1=S1c, w1=w1c, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL))
+    return(list(rbar=rbar, mu1=mu1c, S1=S1c, w1=w1c, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL))
   } else {
     return(list(rbar=rbar, mu1=mu1c, S1=S1c, w1=w1c))
   }
@@ -154,9 +154,9 @@ mr_mash_update_scaled_X <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, S
   
   if(compute_ELBO){
     ##Compute ELBO
-    var_part_ERSS <- updates$var_part_ERSS
+    var_part_tr_wERSS <- updates$var_part_tr_wERSS
     neg_KL <- updates$neg_KL
-    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL)
+    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL)
     
     return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO))
   } else {
@@ -179,7 +179,7 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
   
   if(!is.null(Vinv)){
     ##Initialize ELBO parameters
-    var_part_ERSS <- 0
+    var_part_tr_wERSS <- 0
     neg_KL <- 0
   }
   
@@ -213,8 +213,8 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
         xtx <- precomp_quants$xtx[j]
       }
       
-      ELBO_parts <- compute_ELBO_terms(var_part_ERSS, neg_KL, X[, j], rbar_j, bfit, xtx, Vinv)
-      var_part_ERSS <- ELBO_parts$var_part_ERSS
+      ELBO_parts <- compute_ELBO_terms(var_part_tr_wERSS, neg_KL, X[, j], rbar_j, bfit, xtx, Vinv)
+      var_part_tr_wERSS <- ELBO_parts$var_part_tr_wERSS
       neg_KL <- ELBO_parts$neg_KL
     }
     
@@ -224,7 +224,7 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
   
   ###Return output
   if(!is.null(Vinv)){
-    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL))
+    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL))
   } else {
     return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1))
   }
@@ -261,9 +261,9 @@ mr_mash_update_general <- function(X, Y, mu1_t, w1_t, V, Vinv, ldetV, w0, S0,
   
   if(compute_ELBO){
     ##Compute ELBO
-    var_part_ERSS <- updates$var_part_ERSS
+    var_part_tr_wERSS <- updates$var_part_tr_wERSS
     neg_KL <- updates$neg_KL
-    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_ERSS=var_part_ERSS, neg_KL=neg_KL)
+    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL)
     
     return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO))
   } else {
