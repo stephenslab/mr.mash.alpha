@@ -235,8 +235,6 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
 mr_mash_update_general <- function(X, Y, mu1_t, w1_t, V, Vinv, ldetV, w0, S0,
                                    precomp_quants, update_w0, update_w0_method, 
                                    compute_ELBO, standardize){
-  ##Compute expected residuals
-  rbar <- Y - X%*%mu1_t
   
   #Update w0 if requested
   if(update_w0 && !is.null(w1_t)){
@@ -249,6 +247,9 @@ mr_mash_update_general <- function(X, Y, mu1_t, w1_t, V, Vinv, ldetV, w0, S0,
                                   stepsize.reduce = 0.5, stepsize.min = 1e-8)$w0
     }
   }
+  
+  ##Compute expected residuals
+  rbar <- Y - X%*%mu1_t
   
   ##Update variational parameters, expected residuals, and ELBO components
   updates <- inner_loop_general(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
