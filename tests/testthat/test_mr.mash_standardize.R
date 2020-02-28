@@ -34,7 +34,7 @@ test_that("mr.mash with standardize=T and old mr.mash.scaled.X return the same r
   V_est <- cov(Y)
   
   ###Fit with current implementation
-  fit_current <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE, verbose=FALSE)
+  fit_current <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE, verbose=FALSE)
   
   ###Load old fit
   fit_old <- readRDS("mr.mash.scaled.X_fit.rds")

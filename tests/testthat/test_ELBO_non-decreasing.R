@@ -34,8 +34,8 @@ test_that("ELBO does not decrease over iterations", {
   V_est <- cov(Y)
   
   ###Fit with current implementation
-  fit <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE)
-  fit_scaled <- mr.mash(Y, X, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE, verbose=FALSE)
+  fit <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE)
+  fit_scaled <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE, verbose=FALSE)
   
   
   ###Tests
