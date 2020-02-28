@@ -80,7 +80,7 @@
 #' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 #' 
 #' @export
-mr.mash <- function(X, Y, V, S0, w0, mu_init=NULL, 
+mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, 
                     tol=1e-8, max_iter=1e5, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
                     standardize=TRUE, verbose=TRUE) {
 
@@ -100,7 +100,9 @@ mr.mash <- function(X, Y, V, S0, w0, mu_init=NULL,
   if (any(is.na(X))) {
     stop("X must not contain missing values.")
   }
-  if(!is.matrix(V) && (isSymmetric(V))){
+  if(is.null(V)){
+    V <- cov(Y)
+  } else if(!is.matrix(V) && (isSymmetric(V))){
     stop("V must be a symmetric matrix.")
   }
   if(!is.list(S0)){
