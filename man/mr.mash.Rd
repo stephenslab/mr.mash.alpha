@@ -5,8 +5,8 @@
 \title{Multiple Regression with Multivariate Adaptive Shrinkage.}
 \usage{
 mr.mash(
-  Y,
   X,
+  Y,
   V,
   S0,
   w0,
@@ -21,9 +21,9 @@ mr.mash(
 )
 }
 \arguments{
-\item{Y}{an n x r matrix of responses.}
-
 \item{X}{an n x p matrix of covariates.}
+
+\item{Y}{an n x r matrix of responses.}
 
 \item{V}{an r x r residual covariance matrix.}
 
@@ -107,7 +107,7 @@ Xtest <- X[c(1:10), ]
 V_est <- cov(Ytrain)
 
 ###Fit mr.mash
-fit <- mr.mash(Ytrain, Xtrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE)
+fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE)
 
 # Compare the "fitted" values of Y against the true Y in the training set.
 plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
