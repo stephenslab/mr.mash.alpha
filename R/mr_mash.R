@@ -266,7 +266,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
     ###Variational parameters
     ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
                                     precomp_quants=comps, compute_ELBO=compute_ELBO, standardize=standardize,
-                                    update_V)
+                                    update_V=update_V)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t
