@@ -112,7 +112,10 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
     stop("w0 must be a vector.")
   }
   if(length(S0)!=length(w0)){
-    stop("S0 and w0 must have the same length")
+    stop("S0 and w0 must have the same length.")
+  }
+  if(update_w0_method=="mixsqp" && !compute_ELBO){
+    stop("ELBO needs to be computed with update_w0_method=\"mixsqp\".")
   }
 
   ###Center Y and either center and/or scale X

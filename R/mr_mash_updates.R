@@ -256,18 +256,6 @@ mr_mash_update_general <- function(X, Y, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, va
   ##Compute expected residuals
   rbar <- Y - X%*%mu1_t
   
-  ##Update w0 if requested
-  if(update_w0 && !is.null(w1_t)){
-    if(update_w0_method=="EM"){
-      w0 <- update_weights_em(w1_t)
-    } else if(update_w0_method=="mixsqp"){
-      w0em <- update_weights_em(w1_t)
-      w0 <- update_weights_mixsqp(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0em=w0em, 
-                                  S0=S0, precomp_quants=precomp_quants, standardize=standardize,
-                                  stepsize.reduce = 0.5, stepsize.min = 1e-8)$w0
-    }
-  }
-  
   ##Update V if requested
   if(update_V && !is.null(w1_t)){ #Use w1_t to check whether we are in the first iteration (if so, w1_t=NULL)
     V <- update_V(var_part_ERSS, rbar)
@@ -280,6 +268,18 @@ mr_mash_update_general <- function(X, Y, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, va
       Vinv <- chol2inv(precomp_quants$V_chol)
       ldetV <- chol2ldet(precomp_quants$V_chol)
     } 
+  }
+  
+  ##Update w0 if requested
+  if(update_w0 && !is.null(w1_t)){
+    if(update_w0_method=="EM"){
+      w0 <- update_weights_em(w1_t)
+    } else if(update_w0_method=="mixsqp"){
+      w0em <- update_weights_em(w1_t)
+      w0 <- update_weights_mixsqp(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0em=w0em, 
+                                  S0=S0, precomp_quants=precomp_quants, standardize=standardize,
+                                  stepsize.reduce = 0.5, stepsize.min = 1e-8)$w0
+    }
   }
   
   ##Update variational parameters, expected residuals, and ELBO components
