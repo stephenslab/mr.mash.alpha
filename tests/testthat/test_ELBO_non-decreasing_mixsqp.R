@@ -34,11 +34,16 @@ test_that("ELBO does not decrease over iterations with mixsqp weights updates", 
   V_est <- cov(Y)
   
   ###Fit with current implementation
-  fit <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE)
-  fit_scaled <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, standardize=TRUE, verbose=FALSE)
+  fit <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE, update_V=FALSE)
+  fit_scaled <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, standardize=TRUE, verbose=FALSE, update_V=FALSE)
+  fit_V <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE, update_V=TRUE)
+  fit_scaled_V <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, standardize=TRUE, verbose=FALSE, update_V=TRUE)
   
   
   ###Tests
   expect_nondecreasing(fit$progress[, 4], tolerance=1e-10, scale=1)
   expect_nondecreasing(fit_scaled$progress[, 4], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_V$progress[, 4], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_scaled_V$progress[, 4], tolerance=1e-10, scale=1)
+  
 })

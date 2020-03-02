@@ -34,7 +34,7 @@ test_that("mr.mash outputted fitted values vs predicted values with the same X a
   V_est <- cov(Y)
   
   ###Fit the model
-  fit <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE, verbose=FALSE)
+  fit <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE, verbose=FALSE, update_V=FALSE)
   
   ###Predict values with tha same X 
   Yhat <- predict(fit, X)

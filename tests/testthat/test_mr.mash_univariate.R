@@ -39,7 +39,8 @@ test_that("mr.mash and varbvsmix return the same results with univariate Y", {
   V_est <- cov(Y)
   
   ###Fit mr.mash
-  fit_mr.mash <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE)
+  fit_mr.mash <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE, update_V=FALSE)
+  fit_mr.mash_V <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE, update_V=TRUE)
   
   ###Fit varbvsmix
   fit_varbvsmix <- varbvs::varbvsmix(X,NULL,Y,sigma = as.numeric(V_est),w = w0,
@@ -53,9 +54,22 @@ test_that("mr.mash and varbvsmix return the same results with univariate Y", {
   }
   S1_varbvsmix <- betavarmix(fit_varbvsmix$alpha, fit_varbvsmix$mu, fit_varbvsmix$s)
   
+  fit_varbvsmix_V <- varbvs::varbvsmix(X,NULL,Y,sigma = as.numeric(V_est),w = w0,
+                                     sa = grid/as.numeric(V_est),
+                                     update.sigma = TRUE,update.w = TRUE,
+                                     drop.threshold = 0,tol = 1e-8,
+                                     verbose = FALSE)
+  mu1_varbvsmix_V <- rowSums(with(fit_varbvsmix_V,alpha * mu))
+  S1_varbvsmix_V <- betavarmix(fit_varbvsmix_V$alpha, fit_varbvsmix_V$mu, fit_varbvsmix_V$s)
+  
   ###Tests
   expect_equivalent(drop(fit_mr.mash$mu1), mu1_varbvsmix, tolerance = 1e-6, scale = 1)
   expect_equivalent(drop(fit_mr.mash$S1), S1_varbvsmix, tolerance = 1e-6, scale = 1)
   expect_equivalent(fit_mr.mash$w1, fit_varbvsmix$alpha, tolerance = 1e-6, scale = 1)
   expect_equivalent(fit_mr.mash$ELBO, tail(fit_varbvsmix$logZ, 1), tolerance = 1e-6, scale = 1)
+  
+  expect_equivalent(drop(fit_mr.mash_V$mu1), mu1_varbvsmix_V, tolerance = 1e-6, scale = 1)
+  expect_equivalent(drop(fit_mr.mash_V$S1), S1_varbvsmix_V, tolerance = 1e-6, scale = 1)
+  expect_equivalent(fit_mr.mash_V$w1, fit_varbvsmix_V$alpha, tolerance = 1e-6, scale = 1)
+  expect_equivalent(fit_mr.mash_V$ELBO, tail(fit_varbvsmix_V$logZ, 1), tolerance = 1e-6, scale = 1)
 })
