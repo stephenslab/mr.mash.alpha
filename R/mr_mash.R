@@ -274,10 +274,6 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
       ELBO  <- ups$ELBO
     }
     if(update_V){
-      V <- ups$V
-      if(compute_ELBO){
-        Vinv <- ups$Vinv
-      }
       var_part_ERSS <- ups$var_part_ERSS
     }
     
