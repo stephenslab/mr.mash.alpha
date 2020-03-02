@@ -7,17 +7,18 @@
 mr.mash(
   X,
   Y,
-  V,
+  V = NULL,
   S0,
   w0,
   mu_init = NULL,
   tol = 1e-08,
   max_iter = 1e+05,
   update_w0 = TRUE,
-  update_w0_method = "EM",
+  update_w0_method = c("EM", "mixsqp"),
   compute_ELBO = TRUE,
   standardize = TRUE,
-  verbose = TRUE
+  verbose = TRUE,
+  update_V = FALSE
 )
 }
 \arguments{
@@ -50,6 +51,8 @@ Standardizing X allows a faster implementation, but the prior has a different in
 Coefficients and covariances are returned on the original scale.}
 
 \item{verbose}{if TRUE, some information is printed to screen at each iteration.}
+
+\item{update_V}{if TRUE, residual covariance is updated.}
 }
 \value{
 a mr.mash fit, which is a list with some or all of the following elements\cr
@@ -107,7 +110,8 @@ Xtest <- X[c(1:10), ]
 V_est <- cov(Ytrain)
 
 ###Fit mr.mash
-fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE)
+fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", 
+               compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=TRUE)
 
 # Compare the "fitted" values of Y against the true Y in the training set.
 plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
