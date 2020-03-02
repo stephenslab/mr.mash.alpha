@@ -82,7 +82,7 @@
 #' @export
 mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, 
                     tol=1e-8, max_iter=1e5, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
-                    standardize=TRUE, verbose=TRUE) {
+                    standardize=TRUE, verbose=TRUE, update_V=TRUE) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -181,14 +181,18 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
   
   ###Update variational parameters
   ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
-                                  precomp_quants=comps, update_w0=update_w0, update_w0_method=NULL, 
-                                  compute_ELBO=compute_ELBO, standardize=standardize)
+                                  var_part_ERSS=NULL, precomp_quants=comps, update_w0=update_w0, update_w0_method=NULL, 
+                                  compute_ELBO=compute_ELBO, standardize=standardize, update_V=update_V)
   mu1_t <- ups$mu1_t
   S1_t  <- ups$S1_t
   w1_t  <- ups$w1_t
   if(compute_ELBO){
     ELBO  <- ups$ELBO
   }
+  if(update_V){
+    var_part_ERSS=ups$var_part_ERSS
+  }
+  
   
   if(compute_ELBO){
     if(verbose){
@@ -225,15 +229,27 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
       ELBO0 <- ELBO
     }
     
+    if(!update_V){
+      var_part_ERSS <- NULL
+    }
+    
     ###Update model parameters and variational parameters
     ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
-                                    precomp_quants=comps, update_w0=update_w0, update_w0_method=update_w0_method, 
-                                    compute_ELBO=compute_ELBO, standardize=standardize)
+                                    var_part_ERSS=var_part_ERSS, precomp_quants=comps, update_w0=update_w0, 
+                                    update_w0_method=update_w0_method, compute_ELBO=compute_ELBO, standardize=standardize,
+                                    update_V)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t
     if(compute_ELBO){
       ELBO  <- ups$ELBO
+    }
+    if(update_V){
+      V <- ups$V
+      if(compute_ELBO){
+        Vinv <- ups$Vinv
+      }
+      var_part_ERSS=ups$var_part_ERSS
     }
     
     ##Compute distance in mu1 between two successive iterations
@@ -277,13 +293,27 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
   intercept <- attr(Y,"scaled:center") - attr(X,"scaled:center") %*% mu1_t
   intercept <- drop(intercept)
   
-  if(compute_ELBO){
+  if(compute_ELBO && update_V){
     colnames(progress) <- c("iter", "mu1_max.diff", "ELBO_diff", "ELBO")
     
     ###Return the posterior assignment probabilities (w1), the posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), the intercept (intercept), the fitted values (fitted), the Evidence Lower Bound (ELBO), 
-    ###and the progress data frame (progress).
+    ###covariance of the coefficients (S1), the residual covariance (V), the intercept (intercept), the fitted values (fitted), 
+    ###the Evidence Lower Bound (ELBO), and the progress data frame (progress).
+    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, intercept=intercept, fitted=fitted_vals, ELBO=ELBO, progress=progress)
+  } else if(compute_ELBO && !update_V){
+    colnames(progress) <- c("iter", "mu1_max.diff", "ELBO_diff", "ELBO")
+    
+    ###Return the posterior assignment probabilities (w1), the posterior mean of the coefficients (mu1), and the posterior
+    ###covariance of the coefficients (S1), the intercept (intercept), the fitted values (fitted), 
+    ###the Evidence Lower Bound (ELBO), and the progress data frame (progress).
     out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept, fitted=fitted_vals, ELBO=ELBO, progress=progress)
+  } else if(!compute_ELBO && update_V){
+    colnames(progress) <- c("iter", "mu1_max.diff")
+    
+    ###Return the posterior assignment probabilities (w1), the posterior mean of the coefficients (mu1), and the posterior
+    ###covariance of the coefficients (S1), the residual covariance (V), the intercept (intercept), the fitted values (fitted), 
+    ###and the progress data frame (progress).    
+    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, intercept=intercept, fitted=fitted_vals, progress=progress)
   } else {
     colnames(progress) <- c("iter", "mu1_max.diff")
     
