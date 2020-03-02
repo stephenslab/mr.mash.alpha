@@ -250,37 +250,10 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
 
 
 ###Perform one iteration of the outer loop with or without scaling X
-mr_mash_update_general <- function(X, Y, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, var_part_ERSS,
-                                   precomp_quants, update_w0, update_w0_method, 
-                                   compute_ELBO, standardize, update_V){
+mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
+                                   precomp_quants, compute_ELBO, standardize, update_V){
   ##Compute expected residuals
   rbar <- Y - X%*%mu1_t
-  
-  ##Update V if requested
-  if(update_V && !is.null(w1_t)){ #Use w1_t to check whether we are in the first iteration (if so, w1_t=NULL)
-    V <- update_V(var_part_ERSS, rbar)
-    if(standardize){
-      precomp_quants <- precompute_quants_scaled_X(nrow(X), V, S0)
-    } else {
-      precomp_quants <- precompute_quants_centered_X(X, V, S0) 
-    }
-    if(compute_ELBO){
-      Vinv <- chol2inv(precomp_quants$V_chol)
-      ldetV <- chol2ldet(precomp_quants$V_chol)
-    } 
-  }
-  
-  ##Update w0 if requested
-  if(update_w0 && !is.null(w1_t)){
-    if(update_w0_method=="EM"){
-      w0 <- update_weights_em(w1_t)
-    } else if(update_w0_method=="mixsqp"){
-      w0em <- update_weights_em(w1_t)
-      w0 <- update_weights_mixsqp(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0em=w0em, 
-                                  S0=S0, precomp_quants=precomp_quants, standardize=standardize,
-                                  stepsize.reduce = 0.5, stepsize.min = 1e-8)$w0
-    }
-  }
   
   ##Update variational parameters, expected residuals, and ELBO components
   updates <- inner_loop_general(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
@@ -298,7 +271,9 @@ mr_mash_update_general <- function(X, Y, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, va
     neg_KL <- updates$neg_KL
     ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL)
     
-    return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, V=V, Vinv=Vinv, ELBO=ELBO, var_part_ERSS=updates$var_part_ERSS))
+    var_part_ERSS <- updates$var_part_ERSS
+    
+    return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO, var_part_ERSS=var_part_ERSS))
   } else if(compute_ELBO && !update_V){
     ##Compute ELBO
     var_part_tr_wERSS <- updates$var_part_tr_wERSS
@@ -307,7 +282,9 @@ mr_mash_update_general <- function(X, Y, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, va
     
     return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO))
   } else if(!compute_ELBO && update_V){
-    return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, V=V, var_part_ERSS=updates$var_part_ERSS))
+    var_part_ERSS <- updates$var_part_ERSS
+    
+    return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, var_part_ERSS=var_part_ERSS))
   } else {
     return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t))
   }

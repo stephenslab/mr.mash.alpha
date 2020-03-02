@@ -13,6 +13,7 @@
 #' @param max_iter maximum number of iterations for the optimization algorithm.
 #' @param update_w0 if TRUE, prior weights are updated.
 #' @param update_w0_method method to update prior weights. Current options are EM or mixsqp.
+#' @param update_V if TRUE, residual covariance is updated.
 #' @param compute_ELBO if TRUE, ELBO is computed.
 #' @param standardize if TRUE, X is standardized using the sample means and sample standard deviations. 
 #' Standardizing X allows a faster implementation, but the prior has a different interpretation.
@@ -68,7 +69,8 @@
 #' V_est <- cov(Ytrain)
 #'
 #' ###Fit mr.mash
-#' fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE)
+#' fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", 
+#'                compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=TRUE)
 #'
 #' # Compare the "fitted" values of Y against the true Y in the training set.
 #' plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
@@ -81,11 +83,14 @@
 #' 
 #' @export
 mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, 
-                    tol=1e-8, max_iter=1e5, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
-                    standardize=TRUE, verbose=TRUE, update_V=TRUE) {
+                    tol=1e-8, max_iter=1e5, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
+                    compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=FALSE) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
+  
+  ###Select method to update the weights (if not specified by user, EM will be used)
+  update_w0_method <- match.arg(update_w0_method)
   
   ###Check that the inputs are in the correct format
   if(!is.matrix(Y)){
@@ -183,9 +188,9 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
   }
   
   ###Update variational parameters
-  ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, w1_t=NULL, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
-                                  var_part_ERSS=NULL, precomp_quants=comps, update_w0=update_w0, update_w0_method=NULL, 
-                                  compute_ELBO=compute_ELBO, standardize=standardize, update_V=update_V)
+  ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
+                                  precomp_quants=comps, compute_ELBO=compute_ELBO, standardize=standardize, 
+                                  update_V=update_V)
   mu1_t <- ups$mu1_t
   S1_t  <- ups$S1_t
   w1_t  <- ups$w1_t
@@ -232,14 +237,35 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
       ELBO0 <- ELBO
     }
     
-    if(!update_V){
-      var_part_ERSS <- NULL
+    ##Update V if requested
+    if(update_V){
+      V <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
+      if(standardize){
+        comps <- precompute_quants_scaled_X(n, V, S0)
+      } else {
+        comps <- precompute_quants_centered_X(X, V, S0) 
+      }
+      if(compute_ELBO){
+        Vinv <- chol2inv(comps$V_chol)
+        ldetV <- chol2ldet(comps$V_chol)
+      } 
     }
     
-    ###Update model parameters and variational parameters
-    ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, w1_t=w1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
-                                    var_part_ERSS=var_part_ERSS, precomp_quants=comps, update_w0=update_w0, 
-                                    update_w0_method=update_w0_method, compute_ELBO=compute_ELBO, standardize=standardize,
+    ##Update w0 if requested
+    if(update_w0){
+      if(update_w0_method=="EM"){
+        w0 <- update_weights_em(w1_t)
+      } else if(update_w0_method=="mixsqp"){
+        w0em <- update_weights_em(w1_t)
+        w0 <- update_weights_mixsqp(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0em=w0em, 
+                                    S0=S0, precomp_quants=comps, standardize=standardize,
+                                    stepsize.reduce = 0.5, stepsize.min = 1e-8)$w0
+      }
+    }
+    
+    ###Variational parameters
+    ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
+                                    precomp_quants=comps, compute_ELBO=compute_ELBO, standardize=standardize,
                                     update_V)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
@@ -252,7 +278,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
       if(compute_ELBO){
         Vinv <- ups$Vinv
       }
-      var_part_ERSS=ups$var_part_ERSS
+      var_part_ERSS <- ups$var_part_ERSS
     }
     
     ##Compute distance in mu1 between two successive iterations

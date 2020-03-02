@@ -308,9 +308,10 @@ compute_var_part_ERSS <- function(var_part_ERSS, bfit, xtx){
 }
 
 ###Update V
-update_V <- function(var_part_ERSS, rbar){
+update_V_fun <- function(Y, X, mu1_t, var_part_ERSS){
+  rbar <- Y - X%*%mu1_t
   ERSS <- crossprod(rbar) + var_part_ERSS
-  n <- nrow(rbar)
+  n <- nrow(X)
   V <- ERSS/n
   
   return(V)
