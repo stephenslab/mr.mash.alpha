@@ -189,7 +189,7 @@ compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, precomp_quants, standardi
       rbar_j <- rbar + outer(X[, j], mu1_t[j, ])
       
       for(k in 1:K){
-        L[j, k] <- bayes_mvr_ridge_scaled_X(X[, j], rbar_j, b, precomp_quants$S0[[k]], precomp_quants$S, 
+        L[j, k] <- bayes_mvr_ridge_scaled_X(b, precomp_quants$S0[[k]], precomp_quants$S, 
                                             precomp_quants$S1[[k]], precomp_quants$SplusS0_chol[[k]], precomp_quants$S_chol, 
                                             precomp_quants$ldetSplusS0_chol[k], precomp_quants$ldetS_chol)$logbf
       }
@@ -207,7 +207,7 @@ compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, precomp_quants, standardi
       rbar_j <- rbar + outer(X[, j], mu1_t[j, ])
       
       for(k in 1:K){
-        L[j, k] <- bayes_mvr_ridge_centered_X(X[, j], rbar_j, V, b, S, S0[[k]], precomp_quants$xtx[j], 
+        L[j, k] <- bayes_mvr_ridge_centered_X(V, b, S, S0[[k]], precomp_quants$xtx[j], 
                                               precomp_quants$V_chol, S_chol, precomp_quants$U0[[k]], precomp_quants$d[[k]], 
                                               precomp_quants$Q[[k]])$logbf
       }

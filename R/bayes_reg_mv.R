@@ -44,7 +44,7 @@ bayes_mvr_ridge <- function (x, Y, V, S0) {
 #
 # The outputs are: mu1, the posterior mean of the
 # regression coefficients; logbf, the log-Bayes factor.
-bayes_mvr_ridge_scaled_X <- function (x, Y, b, S0, S, S1, SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol) {
+bayes_mvr_ridge_scaled_X <- function (b, S0, S, S1, SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol) {
   
   # Compute the log-Bayes factor.
   logbf <- (ldetS_chol - ldetSplusS0_chol +
@@ -69,7 +69,7 @@ bayes_mvr_ridge_scaled_X <- function (x, Y, b, S0, S, S1, SplusS0_chol, S_chol, 
 # The outputs are: mu1, the posterior mean of the
 # regression coefficients; S1, the posterior covariance of the
 # regression coefficients; logbf, the log-Bayes factor.
-bayes_mvr_ridge_centered_X <- function (x, Y, V, b, S, S0, xtx, V_chol, S_chol, U0, d, Q) {
+bayes_mvr_ridge_centered_X <- function (V, b, S, S0, xtx, V_chol, S_chol, U0, d, Q) {
   
   # Compute the log-Bayes factor.
   SplusS0_chol <- chol(S+S0)
@@ -208,10 +208,10 @@ bayes_mvr_mix_scaled_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol, l
   # each mixture component.
   # out <- vector("list",K)
   # for (k in 1:K){
-  #   out[[k]] <- bayes_mvr_ridge_scaled_X(x, Y, S0[[k]], S, S1[[k]], SplusS0_chol[[k]], S_chol, ldetSplusS0_chol[k], ldetS_chol)
+  #   out[[k]] <- bayes_mvr_ridge_scaled_X(b, S0[[k]], S, S1[[k]], SplusS0_chol[[k]], S_chol, ldetSplusS0_chol[k], ldetS_chol)
   # }
   bayes_mvr_ridge_lapply <- function(i){
-    bayes_mvr_ridge_scaled_X(x, Y, b, S0[[i]], S, S1[[i]], SplusS0_chol[[i]], S_chol, ldetSplusS0_chol[i], ldetS_chol)
+    bayes_mvr_ridge_scaled_X(b, S0[[i]], S, S1[[i]], SplusS0_chol[[i]], S_chol, ldetSplusS0_chol[i], ldetS_chol)
   }
   out <- lapply(1:K, bayes_mvr_ridge_lapply)
   
@@ -276,10 +276,10 @@ bayes_mvr_mix_centered_X <- function (x, Y, V, w0, S0, xtx, V_chol, U0, d, Q) {
   # each mixture component.
   # out <- vector("list",K)
   # for (k in 1:K){
-  #   out[[k]] <- bayes_mvr_ridge_centered_X(x, Y, V, S0[[k]], xtx, V_chol, U0[[k]], d[[k]], Q[[k]])
+  #   out[[k]] <- bayes_mvr_ridge_centered_X(V, b, S, S0[[k]], xtx, V_chol, U0[[k]], d[[k]], Q[[k]])
   # }
   bayes_mvr_ridge_lapply <- function(i){
-    bayes_mvr_ridge_centered_X(x, Y, V, b, S, S0[[i]], xtx, V_chol, S_chol, U0[[i]], d[[i]], Q[[i]])
+    bayes_mvr_ridge_centered_X(V, b, S, S0[[i]], xtx, V_chol, S_chol, U0[[i]], d[[i]], Q[[i]])
   }
   out <- lapply(1:K, bayes_mvr_ridge_lapply)
   
