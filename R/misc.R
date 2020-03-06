@@ -164,6 +164,74 @@ precompute_quants_centered_X <- function(X, V, S0){
   return(list(xtx=xtx, V_chol=R, U0=U0, d=d, Q=Q))
 }
 
+###Precompute quantities in any case
+precompute_quants <- function(n, X, V, S0, standardize, version){
+  if(standardize){
+    ###Quantities that don't depend on S0
+    R <- chol(V)
+    S <- V/(n-1)
+    S_chol <- R/sqrt(n-1)
+    ldetS_chol <- chol2ldet(S_chol)
+    
+    ###Quantities that depend on S0
+    SplusS0_chol <- list()
+    S1 <- list()
+    ldetSplusS0_chol <- c()
+    for(i in 1:length(S0)){
+      SplusS0_chol[[i]] <- chol(S+S0[[i]])
+      ldetSplusS0_chol[i] <- chol2ldet(SplusS0_chol[[i]])
+      S1[[i]] <- S0[[i]]%*%backsolve(SplusS0_chol[[i]], forwardsolve(t(SplusS0_chol[[i]]), S))
+    }
+    
+    if(version=="R"){
+      return(list(V_chol=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol, 
+                  ldetS_chol=ldetS_chol, ldetSplusS0_chol=ldetSplusS0_chol))      
+    } else if(version=="Rcpp"){
+      xtx <- c(0, 0) ##Vector
+      U0 <- array(0, c(1, 1, 1))
+      d <- matrix(0, nrow=1, ncol=1)
+      Q <- array(0, c(1, 1, 1))
+      
+      return(list(V_chol=R, S=S, S1=simplify2array(S1), S_chol=S_chol, SplusS0_chol=simplify2array(SplusS0_chol), 
+                  ldetS_chol=ldetS_chol, ldetSplusS0_chol=simplify2array(ldetSplusS0_chol), xtx=xtx, 
+                  U0=U0, d=d, Q=Q))
+    }
+    
+  } else {
+    ###Quantities that don't depend on S0
+    #xtx <- diag(crossprod(X))
+    xtx <- colSums(X^2)
+    R <- chol(V)
+    Rtinv <- solve(t(R))
+    Rinv <- solve(R)
+    
+    ###Quantities that depend on S0
+    U0 <- list()
+    d <- list()
+    Q <- list()
+    for(i in 1:length(S0)){
+      U0[[i]]  <- Rtinv %*% S0[[i]] %*% Rinv
+      out <- eigen(U0[[i]])
+      d[[i]]   <- out$values
+      Q[[i]]   <- out$vectors   
+    }
+    
+    if(version=="R"){
+      return(list(xtx=xtx, V_chol=R, U0=U0, d=d, Q=Q))
+    } else if(version=="Rcpp"){
+      S <- matrix(0, nrow=1, ncol=1)
+      S1 <- array(0, c(1, 1, 1))
+      S_chol <- matrix(0, nrow=1, ncol=1)
+      SplusS0_chol <- array(0, c(1, 1, 1))
+      ldetS_chol <- 0 ##Scalar
+      ldetSplusS0_chol <- c(0, 0) ##Vector
+      
+      return(list(xtx=xtx, V_chol=R, U0=simplify2array(U0), d=simplify2array(d), Q=simplify2array(Q), S=S, S1=S1, S_chol=S_chol, 
+                  SplusS0_chol=SplusS0_chol, ldetS_chol=ldetS_chol, ldetSplusS0_chol=ldetSplusS0_chol))
+    }
+  }
+}
+
 ###Update mixture weights with mixsqp
 #' @importFrom mixsqp mixsqp
 #' 

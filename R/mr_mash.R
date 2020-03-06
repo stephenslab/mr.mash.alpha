@@ -18,6 +18,7 @@
 #' @param standardize if TRUE, X is standardized using the sample means and sample standard deviations. 
 #' Standardizing X allows a faster implementation, but the prior has a different interpretation.
 #' Coefficients and covariances are returned on the original scale.
+#' @param version whether to use R or Rcpp code to perform the coordinate ascent updates.
 #' @param verbose if TRUE, some information is printed to screen at each iteration.
 #' 
 #' @return a mr.mash fit, which is a list with some or all of the following elements\cr
@@ -70,7 +71,7 @@
 #'
 #' ###Fit mr.mash
 #' fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", 
-#'                compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=TRUE)
+#'                compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=TRUE, version="R")
 #'
 #' # Compare the "fitted" values of Y against the true Y in the training set.
 #' plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
@@ -84,13 +85,17 @@
 #' @export
 mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, 
                     tol=1e-8, max_iter=1e5, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
-                    compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=FALSE) {
+                    compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=FALSE, 
+                    version=c("R", "Rcpp")) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
   
   ###Select method to update the weights (if not specified by user, EM will be used)
   update_w0_method <- match.arg(update_w0_method)
+  
+  ###Select version of the inner loop (if not specified by user, R will be used)
+  version <- match.arg(version)
   
   ###Check that the inputs are in the correct format
   if(!is.matrix(Y)){
@@ -148,11 +153,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
   }
   
   ###Precompute quantities
-  if(standardize){
-    comps <- precompute_quants_scaled_X(n, V, S0)
-  } else {
-    comps <- precompute_quants_centered_X(X, V, S0) 
-  }
+  comps <- precompute_quants(n, X, V, S0, standardize, version)
   
   if(compute_ELBO){ 
     ###Compute inverse of V (needed for the ELBO)
@@ -240,11 +241,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
     ##Update V if requested
     if(update_V){
       V <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
-      if(standardize){
-        comps <- precompute_quants_scaled_X(n, V, S0)
-      } else {
-        comps <- precompute_quants_centered_X(X, V, S0) 
-      }
+      comps <- precompute_quants(n, X, V, S0, standardize, version)
       if(compute_ELBO){
         Vinv <- chol2inv(comps$V_chol)
         ldetV <- chol2ldet(comps$V_chol)
