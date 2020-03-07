@@ -147,8 +147,10 @@ precompute_quants_centered_X <- function(X, V, S0){
   #xtx <- diag(crossprod(X))
   xtx <- colSums(X^2)
   R <- chol(V)
-  Rtinv <- solve(t(R))
-  Rinv <- solve(R)
+  #Rtinv <- solve(t(R))
+  #Rinv <- solve(R)
+  Rtinv <- forwardsolve(t(R), diag(nrow(R)))
+  Rinv <- backsolve(R, diag(nrow(R)))
   
   ###Quantities that depend on S0
   U0 <- list()
@@ -202,8 +204,10 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
     #xtx <- diag(crossprod(X))
     xtx <- colSums(X^2)
     R <- chol(V)
-    Rtinv <- solve(t(R))
-    Rinv <- solve(R)
+    #Rtinv <- solve(t(R))
+    #Rinv <- solve(R)
+    Rtinv <- forwardsolve(t(R), diag(nrow(R)))
+    Rinv <- backsolve(R, diag(nrow(R)))
     
     ###Quantities that depend on S0
     U0 <- list()
