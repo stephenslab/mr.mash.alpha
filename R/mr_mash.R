@@ -157,7 +157,8 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
   
   if(compute_ELBO){ 
     ###Compute inverse of V (needed for the ELBO)
-    Vinv <- chol2inv(comps$V_chol)
+    #Vinv <- chol2inv(comps$V_chol)
+    Vinv <- backsolve(comps$V_chol, forwardsolve(t(comps$V_chol), diag(nrow(comps$V_chol))))
     ldetV <- chol2ldet(comps$V_chol)
   } else {
     Vinv <- NULL
@@ -243,7 +244,8 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
       V <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
       comps <- precompute_quants(n, X, V, S0, standardize, version)
       if(compute_ELBO){
-        Vinv <- chol2inv(comps$V_chol)
+        #Vinv <- chol2inv(comps$V_chol)
+        Vinv <- backsolve(comps$V_chol, forwardsolve(t(comps$V_chol), diag(nrow(comps$V_chol))))
         ldetV <- chol2ldet(comps$V_chol)
       } 
     }
