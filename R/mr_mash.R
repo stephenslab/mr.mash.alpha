@@ -112,7 +112,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
   }
   if(is.null(V)){
     V <- cov(Y)
-  } else if(!is.matrix(V) && (isSymmetric(V))){
+  } else if(!is.matrix(V) || !isSymmetric(V)){
     stop("V must be a symmetric matrix.")
   }
   if(!is.list(S0)){
