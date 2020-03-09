@@ -114,8 +114,7 @@ compute_ELBO_fun <- function(rbar, V, Vinv, ldetV, var_part_tr_wERSS, neg_KL){
 
 ###Compute log-determinant from Cholesky decomposition
 chol2ldet <- function(R){
-  logdet <- log(prod(diag(R)))*2
-  
+  logdet <- 2*sum(log(diag(R)))
   return(logdet)
 }
 
