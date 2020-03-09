@@ -173,21 +173,17 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
     R <- chol(V)
     S <- V/(n-1)
     S_chol <- R/sqrt(n-1)
-    ldetS_chol <- chol2ldet(S_chol)
     
     ###Quantities that depend on S0
     SplusS0_chol <- list()
     S1 <- list()
-    ldetSplusS0_chol <- c()
     for(i in 1:length(S0)){
       SplusS0_chol[[i]] <- chol(S+S0[[i]])
-      ldetSplusS0_chol[i] <- chol2ldet(SplusS0_chol[[i]])
       S1[[i]] <- S0[[i]]%*%backsolve(SplusS0_chol[[i]], forwardsolve(t(SplusS0_chol[[i]]), S))
     }
     
     if(version=="R"){
-      return(list(V_chol=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol, 
-                  ldetS_chol=ldetS_chol, ldetSplusS0_chol=ldetSplusS0_chol))      
+      return(list(V_chol=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))      
     } else if(version=="Rcpp"){
       xtx <- c(0, 0) ##Vector
       U0 <- array(0, c(1, 1, 1))
@@ -195,8 +191,7 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
       Q <- array(0, c(1, 1, 1))
       
       return(list(V_chol=R, S=S, S1=simplify2array(S1), S_chol=S_chol, SplusS0_chol=simplify2array(SplusS0_chol), 
-                  ldetS_chol=ldetS_chol, ldetSplusS0_chol=simplify2array(ldetSplusS0_chol), xtx=xtx, 
-                  U0=U0, d=d, Q=Q))
+                  xtx=xtx, U0=U0, d=d, Q=Q))
     }
     
   } else {
@@ -227,11 +222,9 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
       S1 <- array(0, c(1, 1, 1))
       S_chol <- matrix(0, nrow=1, ncol=1)
       SplusS0_chol <- array(0, c(1, 1, 1))
-      ldetS_chol <- 0 ##Scalar
-      ldetSplusS0_chol <- c(0, 0) ##Vector
       
-      return(list(xtx=xtx, V_chol=R, U0=simplify2array(U0), d=simplify2array(d), Q=simplify2array(Q), S=S, S1=S1, S_chol=S_chol, 
-                  SplusS0_chol=SplusS0_chol, ldetS_chol=ldetS_chol, ldetSplusS0_chol=ldetSplusS0_chol))
+      return(list(xtx=xtx, V_chol=R, U0=simplify2array(U0), d=simplify2array(d), Q=simplify2array(Q), 
+                  S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))
     }
   }
 }
@@ -262,8 +255,7 @@ compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, precomp_quants, standardi
       
       for(k in 1:K){
         L[j, k] <- bayes_mvr_ridge_scaled_X(b, precomp_quants$S0[[k]], precomp_quants$S, 
-                                            precomp_quants$S1[[k]], precomp_quants$SplusS0_chol[[k]], precomp_quants$S_chol, 
-                                            precomp_quants$ldetSplusS0_chol[k], precomp_quants$ldetS_chol)$logbf
+                                            precomp_quants$S1[[k]], precomp_quants$SplusS0_chol[[k]], precomp_quants$S_chol)$logbf
       }
     }
   } else {

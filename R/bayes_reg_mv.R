@@ -44,10 +44,10 @@ bayes_mvr_ridge <- function (x, Y, V, S0) {
 #
 # The outputs are: mu1, the posterior mean of the
 # regression coefficients; logbf, the log-Bayes factor.
-bayes_mvr_ridge_scaled_X <- function (b, S0, S, S1, SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol) {
+bayes_mvr_ridge_scaled_X <- function (b, S0, S, S1, SplusS0_chol, S_chol) {
   
   # Compute the log-Bayes factor.
-  logbf <- (ldetS_chol - ldetSplusS0_chol +
+  logbf <- (chol2ldet(S_chol) - chol2ldet(SplusS0_chol) +
               dot(b,backsolve(S_chol, forwardsolve(t(S_chol), b))) - 
               dot(b,backsolve(SplusS0_chol, forwardsolve(t(SplusS0_chol), b))))/2
   
@@ -192,7 +192,7 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
 # (w1), the posterior mean of the coefficients given that all the
 # coefficients are not nonzero (mu1), and the posterior covariance of
 # the coefficients given that all the coefficients are not zero (S1).
-bayes_mvr_mix_scaled_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol) {
+bayes_mvr_mix_scaled_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol) {
   
   
   # Get the number of conditions (R), the number of mixture
@@ -208,10 +208,10 @@ bayes_mvr_mix_scaled_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol, l
   # each mixture component.
   # out <- vector("list",K)
   # for (k in 1:K){
-  #   out[[k]] <- bayes_mvr_ridge_scaled_X(b, S0[[k]], S, S1[[k]], SplusS0_chol[[k]], S_chol, ldetSplusS0_chol[k], ldetS_chol)
+  #   out[[k]] <- bayes_mvr_ridge_scaled_X(b, S0[[k]], S, S1[[k]], SplusS0_chol[[k]], S_chol)
   # }
   bayes_mvr_ridge_lapply <- function(i){
-    bayes_mvr_ridge_scaled_X(b, S0[[i]], S, S1[[i]], SplusS0_chol[[i]], S_chol, ldetSplusS0_chol[i], ldetS_chol)
+    bayes_mvr_ridge_scaled_X(b, S0[[i]], S, S1[[i]], SplusS0_chol[[i]], S_chol)
   }
   out <- lapply(1:K, bayes_mvr_ridge_lapply)
   

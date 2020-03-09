@@ -79,7 +79,7 @@ mr_mash_update <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0,
 }
 
 ###Update variational parameters, expected residuals, and ELBO components with scaled X
-inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol){
+inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, S_chol){
   ###Create variables to store quantities
   n <- nrow(rbar)
   R <- ncol(rbar)
@@ -102,7 +102,7 @@ inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, 
     rbar_j <- rbar + outer(X[, j], mu1c[j, ])
     
     #Run Bayesian SLR
-    bfit <- bayes_mvr_mix_scaled_X(X[, j], rbar_j, w0, S0, S, S1, SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol)
+    bfit <- bayes_mvr_mix_scaled_X(X[, j], rbar_j, w0, S0, S, S1, SplusS0_chol, S_chol)
     
     #Update variational parameters
     mu1c[j, ]         <- bfit$mu1
@@ -132,8 +132,7 @@ inner_loop_scaled_X <- function(X, rbar, mu, Vinv, w0, S0, S, S1, SplusS0_chol, 
 
 ###Perform one iteration of the outer loop with scaled X
 mr_mash_update_scaled_X <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, S, S1, 
-                                    SplusS0_chol, S_chol, ldetSplusS0_chol, ldetS_chol, 
-                                    update_w0, compute_ELBO){
+                                    SplusS0_chol, S_chol, update_w0, compute_ELBO){
   ##Compute expected residuals
   rbar <- Y - X%*%mu1_t
   
@@ -144,8 +143,7 @@ mr_mash_update_scaled_X <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, S
   
   ##Update variational parameters, expected residuals, and ELBO components
   updates <- inner_loop_scaled_X(X=X, rbar=rbar, mu=mu1_t, Vinv=Vinv, w0=w0, S0=S0, 
-                                 S=S, S1=S1, SplusS0_chol=SplusS0_chol, S_chol=S_chol, 
-                                 ldetSplusS0_chol=ldetSplusS0_chol, ldetS_chol=ldetS_chol) 
+                                 S=S, S1=S1, SplusS0_chol=SplusS0_chol, S_chol=S_chol) 
 
   mu1_t   <- updates$mu1
   S1_t    <- updates$S1
@@ -197,8 +195,7 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
     #Run Bayesian SLR
     if(standardize){
       bfit <- bayes_mvr_mix_scaled_X(X[, j], rbar_j, w0, S0, precomp_quants$S, precomp_quants$S1, 
-                                     precomp_quants$SplusS0_chol, precomp_quants$S_chol, 
-                                     precomp_quants$ldetSplusS0_chol, precomp_quants$ldetS_chol)      
+                                     precomp_quants$SplusS0_chol, precomp_quants$S_chol)      
     } else {
       bfit <- bayes_mvr_mix_centered_X(X[, j], rbar_j, V, w0, S0, precomp_quants$xtx[j], 
                                           precomp_quants$V_chol, precomp_quants$U0, precomp_quants$d, 
