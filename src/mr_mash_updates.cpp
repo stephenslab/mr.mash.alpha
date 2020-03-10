@@ -47,7 +47,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
 //Inner loop
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-List inner_loop_general_rcpp (const arma::mat& X, arma::mat& Rbar, mat& mu1,
+List inner_loop_general_rcpp (const arma::mat& X, arma::mat& Rbar, arma::mat& mu1,
                               const arma::mat& V, const arma::vec& w0,
                               const arma::cube& S0,
                               const List& precomp_quants_list,

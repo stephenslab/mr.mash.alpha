@@ -27,11 +27,11 @@ List bayes_mvr_ridge_scaled_X_rcpp (const arma::vec& b, const arma::mat& S0,
 // Bayesian multivariate simple regression with normal prior with centered x.
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-List bayes_mvr_ridge_centered_X_rcpp (const mat& V, const vec& b, const mat& S,
-                                      const mat& S0, double xtx,
-                                      const mat& V_chol, const mat& S_chol,
-                                      const mat& U0, const vec& d,
-                                      const mat& Q) {
+List bayes_mvr_ridge_centered_X_rcpp (const arma::mat& V, const arma::vec& b, const arma::mat& S,
+                                      const arma::mat& S0, double xtx,
+                                      const arma::mat& V_chol, const arma::mat& S_chol,
+                                      const arma::mat& U0, const arma::vec& d,
+                                      const arma::mat& Q) {
   unsigned int r = b.n_elem;
   vec    mu1(r);
   mat    S1(r,r);
