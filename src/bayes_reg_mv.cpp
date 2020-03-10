@@ -6,88 +6,88 @@ using namespace arma;
 
 // FUNCTION DEFINITIONS
 // --------------------
-// Bayesian multivariate simple regression with normal prior with scaled x.
-// [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::export]]
-List bayes_mvr_ridge_scaled_X_rcpp (const arma::vec& b, const arma::mat& S0,
-                                    const arma::mat& S, const arma::mat& S1, 
-                                    const arma::mat& SplusS0_chol,
-                                    const arma::mat& S_chol,
-                                    double ldetSplusS0_chol,
-                                    double ldet_chol) {
-  unsigned int r = b.n_elem;
-  vec    mu1(r);
-  double logbf = bayes_mvr_ridge_scaled_X(b, S0, S, S1, SplusS0_chol, S_chol,
-                                          mu1);
-  return List::create(Named("mu1")   = mu1,
-                      Named("logbf") = logbf);
-}
-
-
-// Bayesian multivariate simple regression with normal prior with centered x.
-// [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::export]]
-List bayes_mvr_ridge_centered_X_rcpp (const arma::mat& V, const arma::vec& b, const arma::mat& S,
-                                      const arma::mat& S0, double xtx,
-                                      const arma::mat& V_chol, const arma::mat& S_chol,
-                                      const arma::mat& U0, const arma::vec& d,
-                                      const arma::mat& Q) {
-  unsigned int r = b.n_elem;
-  vec    mu1(r);
-  mat    S1(r,r);
-  double logbf = bayes_mvr_ridge_centered_X(V, b, S, S0, xtx, V_chol,
-                                            S_chol, U0, d, Q, mu1, S1);
-  return List::create(Named("mu1")   = mu1,
-                      Named("S1")   = S1,
-                      Named("logbf") = logbf);
-}
-
-
-// Bayesian multivariate simple regression with mixture-of-normals prior with scaled x.
-// [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::export]]
-List bayes_mvr_mix_scaled_X_rcpp (const arma::vec& x, const arma::mat& Y,
-                                  const arma::vec& w0, const arma::cube& S0,
-                                  const arma::mat& S, const arma::cube& S1,
-                                  const arma::cube& SplusS0_chol,
-                                  const arma::mat& S_chol,
-                                  const arma::vec& ldetSplusS0_chol,
-                                  double ldetS_chol) {
-  unsigned int r = Y.n_cols;
-  unsigned int k = w0.n_elem;
-  vec mu1_mix(r);
-  mat S1_mix(r,r);
-  vec w1(k);
-  double logbf_mix = bayes_mvr_mix_scaled_X(x,Y,w0,S0,S,S1,SplusS0_chol,
-                                            S_chol, mu1_mix, S1_mix, w1);
-  return List::create(Named("mu1")   = mu1_mix,
-                      Named("S1")    = S1_mix,
-                      Named("w1")    = w1,
-                      Named("logbf") = logbf_mix);
-}
-
-
-// Bayesian multivariate simple regression with mixture-of-normals prior with centered x.
-// [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::export]]
-List bayes_mvr_mix_centered_X_rcpp (const arma::vec& x, const arma::mat& Y,
-                                    const arma::mat& V, const arma::vec& w0,
-                                    const arma::cube& S0, double xtx, 
-                                    const arma::mat& V_chol,
-                                    const arma::cube& U0, const arma::mat& d, 
-                                    const arma::cube& Q) {
-  unsigned int r = Y.n_cols;
-  unsigned int k = w0.n_elem;
-  vec mu1_mix(r);
-  mat S1_mix(r,r);
-  vec w1(k);
-  double logbf_mix = bayes_mvr_mix_centered_X(x, Y, V, w0, S0, xtx, V_chol,
-                                              U0, d, Q, mu1_mix, S1_mix, w1);
-  return List::create(Named("mu1")   = mu1_mix,
-                      Named("S1")    = S1_mix,
-                      Named("w1")    = w1,
-                      Named("logbf") = logbf_mix);
-}
+// // Bayesian multivariate simple regression with normal prior with scaled x.
+// // [[Rcpp::depends(RcppArmadillo)]]
+// // [[Rcpp::export]]
+// List bayes_mvr_ridge_scaled_X_rcpp (const arma::vec& b, const arma::mat& S0,
+//                                     const arma::mat& S, const arma::mat& S1, 
+//                                     const arma::mat& SplusS0_chol,
+//                                     const arma::mat& S_chol,
+//                                     double ldetSplusS0_chol,
+//                                     double ldet_chol) {
+//   unsigned int r = b.n_elem;
+//   vec    mu1(r);
+//   double logbf = bayes_mvr_ridge_scaled_X(b, S0, S, S1, SplusS0_chol, S_chol,
+//                                           mu1);
+//   return List::create(Named("mu1")   = mu1,
+//                       Named("logbf") = logbf);
+// }
+// 
+// 
+// // Bayesian multivariate simple regression with normal prior with centered x.
+// // [[Rcpp::depends(RcppArmadillo)]]
+// // [[Rcpp::export]]
+// List bayes_mvr_ridge_centered_X_rcpp (const arma::mat& V, const arma::vec& b, const arma::mat& S,
+//                                       const arma::mat& S0, double xtx,
+//                                       const arma::mat& V_chol, const arma::mat& S_chol,
+//                                       const arma::mat& U0, const arma::vec& d,
+//                                       const arma::mat& Q) {
+//   unsigned int r = b.n_elem;
+//   vec    mu1(r);
+//   mat    S1(r,r);
+//   double logbf = bayes_mvr_ridge_centered_X(V, b, S, S0, xtx, V_chol,
+//                                             S_chol, U0, d, Q, mu1, S1);
+//   return List::create(Named("mu1")   = mu1,
+//                       Named("S1")   = S1,
+//                       Named("logbf") = logbf);
+// }
+// 
+// 
+// // Bayesian multivariate simple regression with mixture-of-normals prior with scaled x.
+// // [[Rcpp::depends(RcppArmadillo)]]
+// // [[Rcpp::export]]
+// List bayes_mvr_mix_scaled_X_rcpp (const arma::vec& x, const arma::mat& Y,
+//                                   const arma::vec& w0, const arma::cube& S0,
+//                                   const arma::mat& S, const arma::cube& S1,
+//                                   const arma::cube& SplusS0_chol,
+//                                   const arma::mat& S_chol,
+//                                   const arma::vec& ldetSplusS0_chol,
+//                                   double ldetS_chol) {
+//   unsigned int r = Y.n_cols;
+//   unsigned int k = w0.n_elem;
+//   vec mu1_mix(r);
+//   mat S1_mix(r,r);
+//   vec w1(k);
+//   double logbf_mix = bayes_mvr_mix_scaled_X(x,Y,w0,S0,S,S1,SplusS0_chol,
+//                                             S_chol, mu1_mix, S1_mix, w1);
+//   return List::create(Named("mu1")   = mu1_mix,
+//                       Named("S1")    = S1_mix,
+//                       Named("w1")    = w1,
+//                       Named("logbf") = logbf_mix);
+// }
+// 
+// 
+// // Bayesian multivariate simple regression with mixture-of-normals prior with centered x.
+// // [[Rcpp::depends(RcppArmadillo)]]
+// // [[Rcpp::export]]
+// List bayes_mvr_mix_centered_X_rcpp (const arma::vec& x, const arma::mat& Y,
+//                                     const arma::mat& V, const arma::vec& w0,
+//                                     const arma::cube& S0, double xtx, 
+//                                     const arma::mat& V_chol,
+//                                     const arma::cube& U0, const arma::mat& d, 
+//                                     const arma::cube& Q) {
+//   unsigned int r = Y.n_cols;
+//   unsigned int k = w0.n_elem;
+//   vec mu1_mix(r);
+//   mat S1_mix(r,r);
+//   vec w1(k);
+//   double logbf_mix = bayes_mvr_mix_centered_X(x, Y, V, w0, S0, xtx, V_chol,
+//                                               U0, d, Q, mu1_mix, S1_mix, w1);
+//   return List::create(Named("mu1")   = mu1_mix,
+//                       Named("S1")    = S1_mix,
+//                       Named("w1")    = w1,
+//                       Named("logbf") = logbf_mix);
+// }
 
 
 // Perform Bayesian multivariate simple regression with normal prior with scaled x.
