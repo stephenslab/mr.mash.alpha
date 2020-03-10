@@ -27,5 +27,11 @@ double ldmvnormdiff (const arma::vec& x, const arma::mat& S_chol,
 
 double chol2ldet (const arma::mat& R);
 
+void compute_ELBO_terms (double& var_part_tr_wERSS, double& neg_KL, arma::vec& x_j,
+                         const arma::mat& rbar_j, double logbf, const arma::mat& mu1, const arma::mat& S1, 
+                         double xtx, const arma::mat& Vinv);
+
+void compute_var_part_ERSS (arma::mat& var_part_ERSS, const arma::mat& S1, double xtx);
+
 
 #endif

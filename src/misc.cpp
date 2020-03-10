@@ -42,3 +42,50 @@ double ldmvnormdiff (const vec& x, const mat& S_chol,
 double chol2ldet (const mat& R) {
   return 2*sum(log(R.diag()));
 }
+
+// Function to compute some terms of the ELBO
+void compute_ELBO_terms (double& var_part_tr_wERSS, double& neg_KL, vec& x_j,
+                         const mat& rbar_j, double logbf, const mat& mu1, const mat& S1, 
+                         double xtx, const mat& Vinv){
+  
+  
+  var_part_tr_wERSS += (as_scalar(sum(Vinv % S1))*xtx);
+  
+  
+  neg_KL += (logbf + 0.5*(-2*as_scalar(sum((Vinv*trans(rbar_j)) % trans(x_j*trans(mu1))))+
+    as_scalar(sum(Vinv % (S1+(mu1*trans(mu1)))))*xtx));
+}
+
+// // [[Rcpp::plugins("cpp11")]]
+// // [[Rcpp::depends(RcppArmadillo)]]
+// // [[Rcpp::export]]
+// List compute_ELBO_terms_rcpp (double var_part_tr_wERSS_init, double neg_KL_init, double x_j,
+//                               const mat& rbar_j, double logbf, const mat& mu1, const mat& S1, 
+//                               double xtx, const mat& Vinv) {
+//   
+//   double var_part_tr_wERSS = var_part_tr_wERSS_init;
+//   double neg_KL = neg_KL_init;
+//   
+//   compute_ELBO_terms(var_part_tr_wERSS, neg_KL, x_j, rbar_j, logbf, mu1, S1, xtx, Vinv);
+//   
+//   return List::create(Named("var_part_tr_wERSS") = var_part_tr_wERSS,
+//                       Named("neg_KL")            = neg_KL);
+// }
+
+// Function to compute the variance part of the ERSS
+void compute_var_part_ERSS (mat& var_part_ERSS, const mat& S1, double xtx){
+  
+  var_part_ERSS += (S1*xtx);
+}
+
+// // [[Rcpp::plugins("cpp11")]]
+// // [[Rcpp::depends(RcppArmadillo)]]
+// // [[Rcpp::export]]
+// mat compute_var_part_ERSS_rcpp (mat& var_part_ERSS_init, const mat& S1, double xtx) {
+//   
+//   mat var_part_ERSS = var_part_ERSS_init;
+//   
+//   compute_var_part_ERSS(var_part_ERSS, S1, xtx);
+//   
+//   return var_part_ERSS;
+// }

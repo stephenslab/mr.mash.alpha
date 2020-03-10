@@ -257,11 +257,11 @@ mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
   if(version=="R"){
     updates <- inner_loop_general(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
                                   precomp_quants=precomp_quants, standardize=standardize,
-                                  update_V)   
+                                  update_V=update_V)   
   } else if(version=="Rcpp"){
-    updates <- inner_loop_general_rcpp(X=X, Rbar=rbar, mu1=mu1_t, V=V, w0=w0,
+    updates <- inner_loop_general_rcpp(X=X, Rbar=rbar, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0,
                                        S0=simplify2array(S0), precomp_quants=precomp_quants,
-                                       standardize=standardize)
+                                       standardize=standardize, update_V=update_V)
   }
 
   mu1_t   <- updates$mu1
