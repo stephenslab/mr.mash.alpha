@@ -248,15 +248,22 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
 
 ###Perform one iteration of the outer loop with or without scaling X
 mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
-                                   precomp_quants, compute_ELBO, standardize, update_V){
+                                   precomp_quants, compute_ELBO, standardize, 
+                                   update_V, version){
   ##Compute expected residuals
   rbar <- Y - X%*%mu1_t
   
   ##Update variational parameters, expected residuals, and ELBO components
-  updates <- inner_loop_general(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
-                                precomp_quants=precomp_quants, standardize=standardize,
-                                update_V) 
-  
+  if(version=="R"){
+    updates <- inner_loop_general(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
+                                  precomp_quants=precomp_quants, standardize=standardize,
+                                  update_V)   
+  } else if(version=="Rcpp"){
+    updates <- inner_loop_general_rcpp(X=X, Rbar=rbar, mu1=mu1_t, V=V, w0=w0,
+                                       S0=simplify2array(S0), precomp_quants=precomp_quants,
+                                       standardize=standardize)
+  }
+
   mu1_t   <- updates$mu1
   S1_t    <- updates$S1
   w1_t    <- updates$w1
