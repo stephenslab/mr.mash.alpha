@@ -262,7 +262,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
       } else if(update_w0_method=="mixsqp"){
         w0em <- update_weights_em(w1_t)
         w0 <- update_weights_mixsqp(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0em=w0em, 
-                                    S0=S0, precomp_quants=comps, standardize=standardize, 
+                                    S0=S0, precomp_quants=comps, standardize=standardize, version=version,
                                     stepsize.reduce = 0.5, stepsize.min = 1e-8)$w0
       }
     }
