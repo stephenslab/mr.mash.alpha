@@ -106,7 +106,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
   double xtx;
   
   // Initialize ELBO parameters
-  if (Vinv.n_cols == 1){
+  if (Vinv.n_cols != 1){
     var_part_tr_wERSS = 0;
     neg_KL = 0;
   }
@@ -143,7 +143,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
     w1.row(j)   = trans(w1_mix);
     
     // Compute ELBO parameters
-    if (Vinv.n_cols == 1){
+    if (Vinv.n_cols != 1){
       if (standardize){
         xtx = n-1;
       } else {
