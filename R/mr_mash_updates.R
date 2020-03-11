@@ -183,7 +183,7 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
   
   if(update_V){
     ##Initialize V parameters
-    var_part_ERSS <- 0
+    var_part_ERSS <- matrix(0, nrow=R, ncol=R)
   }
   
   ##Loop through the variables
