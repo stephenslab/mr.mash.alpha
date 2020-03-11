@@ -39,8 +39,9 @@ struct mr_mash_precomputed_quantities {
 void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
                          const mat& Vinv, const vec& w0, const cube& S0,
                          const mr_mash_precomputed_quantities& precomp_quants,
-                         bool standardize, bool update_V, cube& S1, mat& w1,
-                         double& var_part_tr_wERSS, double& neg_KL, mat& var_part_ERSS);
+                         bool standardize, bool compute_ELBO, bool update_V, 
+                         cube& S1, mat& w1, double& var_part_tr_wERSS, 
+                         double& neg_KL, mat& var_part_ERSS);
 
 
 // FUNCTION DEFINITIONS
@@ -52,7 +53,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
 List inner_loop_general_rcpp (const arma::mat& X, arma::mat& Rbar, arma::mat& mu1,
                               const arma::mat& V, const arma::mat& Vinv, const arma::vec& w0,
                               const arma::cube& S0, const List& precomp_quants_list,
-                              bool standardize, bool update_V) {
+                              bool standardize, bool compute_ELBO, bool update_V) {
   unsigned int r = Rbar.n_cols;
   unsigned int p = X.n_cols;
   unsigned int k = w0.n_elem;
@@ -74,15 +75,15 @@ List inner_loop_general_rcpp (const arma::mat& X, arma::mat& Rbar, arma::mat& mu
      as<cube>(precomp_quants_list["Q"]),
      as<vec>(precomp_quants_list["xtx"]));
   inner_loop_general(X, Rbar_new, mu1_new, V, Vinv, w0, S0, precomp_quants,
-                     standardize, update_V, S1, w1, var_part_tr_wERSS, 
+                     standardize, compute_ELBO, update_V, S1, w1, var_part_tr_wERSS, 
                      neg_KL, var_part_ERSS);
-  return List::create(Named("rbar") = Rbar_new,
-                      Named("mu1")  = mu1_new,
-                      Named("S1")   = S1,
-                      Named("w1")   = w1,
-                      Named("var_part_tr_wERSS")   = var_part_tr_wERSS,
-                      Named("neg_KL")   = neg_KL,
-                      Named("var_part_ERSS")   = var_part_ERSS);
+  return List::create(Named("rbar")               = Rbar_new,
+                      Named("mu1")                = mu1_new,
+                      Named("S1")                 = S1,
+                      Named("w1")                 = w1,
+                      Named("var_part_tr_wERSS")  = var_part_tr_wERSS,
+                      Named("neg_KL")             = neg_KL,
+                      Named("var_part_ERSS")      = var_part_ERSS);
 }
 
 
@@ -90,8 +91,9 @@ List inner_loop_general_rcpp (const arma::mat& X, arma::mat& Rbar, arma::mat& mu
 void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
                          const mat& Vinv, const vec& w0, const cube& S0,
                          const mr_mash_precomputed_quantities& precomp_quants,
-                         bool standardize, bool update_V, cube& S1, mat& w1,
-                         double& var_part_tr_wERSS, double& neg_KL, mat& var_part_ERSS) {
+                         bool standardize, bool compute_ELBO, bool update_V, 
+                         cube& S1, mat& w1, double& var_part_tr_wERSS, 
+                         double& neg_KL, mat& var_part_ERSS) {
   unsigned int n = X.n_rows;
   unsigned int p = X.n_cols;
   unsigned int r = Rbar.n_cols;
@@ -106,15 +108,11 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
   double xtx;
   
   // Initialize ELBO parameters
-  if (Vinv.n_cols != 1){
-    var_part_tr_wERSS = 0;
-    neg_KL = 0;
-  }
+  var_part_tr_wERSS = 0;
+  neg_KL = 0;
   
   // Initialize V parameters
-  if (update_V){
-    var_part_ERSS.fill(0);
-  }
+  var_part_ERSS.zeros(r,r);
   
   // Repeat for each predictor.
   for (unsigned int j = 0; j < p; j++) {
@@ -143,7 +141,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
     w1.row(j)   = trans(w1_mix);
     
     // Compute ELBO parameters
-    if (Vinv.n_cols != 1){
+    if (compute_ELBO){
       if (standardize){
         xtx = n-1;
       } else {
