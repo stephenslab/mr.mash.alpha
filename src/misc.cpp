@@ -48,14 +48,10 @@ void compute_ELBO_terms (double& var_part_tr_wERSS, double& neg_KL, const vec& x
                          const mat& rbar_j, double logbf, const mat& mu1, const mat& S1, 
                          double xtx, const mat& Vinv){
   
-  var_part_tr_wERSS += (as_scalar(trace(Vinv * S1))*xtx);
+  var_part_tr_wERSS += (as_scalar(accu(Vinv % S1))*xtx);
   
-  // neg_KL += (logbf + 0.5*(-2*as_scalar(sum((Vinv*trans(rbar_j)) % trans(x_j*trans(mu1))))+
-  //   as_scalar(sum(Vinv % (S1+mu1*trans(mu1))))*xtx));
-  
-  neg_KL += (logbf + as_scalar(0.5*(-2*trace(Vinv*trans(rbar_j) * x_j*trans(mu1))+
-    trace(Vinv * (S1+mu1*trans(mu1)))*xtx)));
-  
+  neg_KL += (logbf + as_scalar(0.5*(-2*accu((Vinv*trans(rbar_j)) % trans(x_j*trans(mu1)))+
+    accu(Vinv % (S1+mu1*trans(mu1)))*xtx)));
 }
 
 // // [[Rcpp::plugins("cpp11")]]
