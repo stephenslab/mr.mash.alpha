@@ -5,7 +5,7 @@ dmvnorm_rcpp <- function(x, mu, S) {
     .Call('_mr_mash_alpha_dmvnorm_rcpp', PACKAGE = 'mr.mash.alpha', x, mu, S)
 }
 
-inner_loop_general_rcpp <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, update_V) {
-    .Call('_mr_mash_alpha_inner_loop_general_rcpp', PACKAGE = 'mr.mash.alpha', X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, update_V)
+inner_loop_general_rcpp <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V) {
+    .Call('_mr_mash_alpha_inner_loop_general_rcpp', PACKAGE = 'mr.mash.alpha', X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V)
 }
 

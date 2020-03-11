@@ -20,8 +20,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // inner_loop_general_rcpp
-List inner_loop_general_rcpp(const arma::mat& X, arma::mat& Rbar, arma::mat& mu1, const arma::mat& V, const arma::mat& Vinv, const arma::vec& w0, const arma::cube& S0, const List& precomp_quants_list, bool standardize, bool update_V);
-RcppExport SEXP _mr_mash_alpha_inner_loop_general_rcpp(SEXP XSEXP, SEXP RbarSEXP, SEXP mu1SEXP, SEXP VSEXP, SEXP VinvSEXP, SEXP w0SEXP, SEXP S0SEXP, SEXP precomp_quants_listSEXP, SEXP standardizeSEXP, SEXP update_VSEXP) {
+List inner_loop_general_rcpp(const arma::mat& X, arma::mat& Rbar, arma::mat& mu1, const arma::mat& V, const arma::mat& Vinv, const arma::vec& w0, const arma::cube& S0, const List& precomp_quants_list, bool standardize, bool compute_ELBO, bool update_V);
+RcppExport SEXP _mr_mash_alpha_inner_loop_general_rcpp(SEXP XSEXP, SEXP RbarSEXP, SEXP mu1SEXP, SEXP VSEXP, SEXP VinvSEXP, SEXP w0SEXP, SEXP S0SEXP, SEXP precomp_quants_listSEXP, SEXP standardizeSEXP, SEXP compute_ELBOSEXP, SEXP update_VSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -34,15 +34,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::cube& >::type S0(S0SEXP);
     Rcpp::traits::input_parameter< const List& >::type precomp_quants_list(precomp_quants_listSEXP);
     Rcpp::traits::input_parameter< bool >::type standardize(standardizeSEXP);
+    Rcpp::traits::input_parameter< bool >::type compute_ELBO(compute_ELBOSEXP);
     Rcpp::traits::input_parameter< bool >::type update_V(update_VSEXP);
-    rcpp_result_gen = Rcpp::wrap(inner_loop_general_rcpp(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, update_V));
+    rcpp_result_gen = Rcpp::wrap(inner_loop_general_rcpp(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_mr_mash_alpha_dmvnorm_rcpp", (DL_FUNC) &_mr_mash_alpha_dmvnorm_rcpp, 3},
-    {"_mr_mash_alpha_inner_loop_general_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rcpp, 10},
+    {"_mr_mash_alpha_inner_loop_general_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rcpp, 11},
     {NULL, NULL, 0}
 };
 
