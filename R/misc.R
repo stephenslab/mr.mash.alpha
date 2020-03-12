@@ -189,7 +189,7 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
       d <- matrix(0, nrow=1, ncol=1)
       Q <- array(0, c(1, 1, 1))
       
-      return(list(V_chol=R, S=S, S1=simplify2array(S1), S_chol=S_chol, SplusS0_chol=simplify2array(SplusS0_chol), 
+      return(list(V_chol=R, S=S, S1=simplify2array_custom(S1), S_chol=S_chol, SplusS0_chol=simplify2array_custom(SplusS0_chol), 
                   xtx=xtx, U0=U0, d=d, Q=Q))
     }
     
@@ -222,7 +222,7 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
       S_chol <- matrix(0, nrow=1, ncol=1)
       SplusS0_chol <- array(0, c(1, 1, 1))
       
-      return(list(xtx=xtx, V_chol=R, U0=simplify2array(U0), d=simplify2array(d), Q=simplify2array(Q), 
+      return(list(xtx=xtx, V_chol=R, U0=simplify2array_custom(U0), d=simplify2array_custom(d), Q=simplify2array_custom(Q), 
                   S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))
     }
   }
@@ -314,7 +314,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1_t, w0em, w0m
                                   compute_ELBO=compute_ELBO, update_V=update_V)
   } else if(version=="Rcpp"){
     updates <- inner_loop_general_rcpp_wrapper(X=X, Rbar=rbar, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0em, 
-                                               S0=simplify2array(S0), precomp_quants=precomp_quants, 
+                                               S0=simplify2array_custom(S0), precomp_quants=precomp_quants, 
                                                standardize=standardize, compute_ELBO=compute_ELBO, 
                                                update_V=update_V)
   }
@@ -332,7 +332,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1_t, w0em, w0m
                                     compute_ELBO=compute_ELBO, update_V=update_V) 
     } else if(version=="Rcpp"){
       updates <- inner_loop_general_rcpp_wrapper(X=X, Rbar=rbar, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0new, 
-                                                 S0=simplify2array(S0), precomp_quants=precomp_quants, 
+                                                 S0=simplify2array_custom(S0), precomp_quants=precomp_quants, 
                                                  standardize=standardize, compute_ELBO=compute_ELBO, 
                                                  update_V=update_V)
     }
@@ -406,4 +406,29 @@ update_V_fun <- function(Y, X, mu1_t, var_part_ERSS){
   V <- ERSS/n
   
   return(V)
+}
+
+###Similar to base::simplify2array but returns appropriate output when R=1
+simplify2array_custom <- function (x, higher = TRUE) {
+  common.len <- unique(lengths(x))
+  if (common.len >= 1L){
+    n <- length(x)
+    r <- unlist(x, recursive = FALSE, use.names = FALSE)
+    if (higher && length(c.dim <- unique(lapply(x, dim))) == 
+        1 && is.numeric(c.dim <- c.dim[[1L]]) && prod(d <- c(c.dim, n)) == length(r)) {
+      iN1 <- is.null(n1 <- dimnames(x[[1L]]))
+      n2 <- names(x)
+      dnam <- if (!(iN1 && is.null(n2))) 
+        c(if (iN1) rep.int(list(n1), length(c.dim)) else n1, 
+          list(n2))
+      array(r, dim = d, dimnames = dnam)
+    }
+    else if (prod(d <- c(common.len, n)) == length(r)) 
+      array(r, dim = d, dimnames = if (!(is.null(n1 <- names(x[[1L]])) & 
+                                         is.null(n2 <- names(x)))) 
+        list(n1, n2))
+    else x
+  } else {
+    x
+  }
 }

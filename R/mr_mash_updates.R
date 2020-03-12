@@ -260,7 +260,7 @@ mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
                                   compute_ELBO=compute_ELBO, update_V=update_V)   
   } else if(version=="Rcpp"){
     updates <- inner_loop_general_rcpp_wrapper(X=X, Rbar=rbar, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0,
-                                              S0=simplify2array(S0), precomp_quants=precomp_quants,
+                                              S0=simplify2array_custom(S0), precomp_quants=precomp_quants,
                                               standardize=standardize, compute_ELBO=compute_ELBO,
                                               update_V=update_V)
   }
