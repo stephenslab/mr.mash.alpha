@@ -6,6 +6,42 @@
 
 using namespace Rcpp;
 
+// bayes_mvr_ridge_scaled_X_rcpp
+List bayes_mvr_ridge_scaled_X_rcpp(const arma::vec& b, const arma::mat& S0, const arma::mat& S, const arma::mat& S1, const arma::mat& SplusS0_chol, const arma::mat& S_chol);
+RcppExport SEXP _mr_mash_alpha_bayes_mvr_ridge_scaled_X_rcpp(SEXP bSEXP, SEXP S0SEXP, SEXP SSEXP, SEXP S1SEXP, SEXP SplusS0_cholSEXP, SEXP S_cholSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type b(bSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S0(S0SEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S1(S1SEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type SplusS0_chol(SplusS0_cholSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_chol(S_cholSEXP);
+    rcpp_result_gen = Rcpp::wrap(bayes_mvr_ridge_scaled_X_rcpp(b, S0, S, S1, SplusS0_chol, S_chol));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bayes_mvr_ridge_centered_X_rcpp
+List bayes_mvr_ridge_centered_X_rcpp(const arma::mat& V, const arma::vec& b, const arma::mat& S, const arma::mat& S0, double xtx, const arma::mat& V_chol, const arma::mat& S_chol, const arma::mat& U0, const arma::vec& d, const arma::mat& Q);
+RcppExport SEXP _mr_mash_alpha_bayes_mvr_ridge_centered_X_rcpp(SEXP VSEXP, SEXP bSEXP, SEXP SSEXP, SEXP S0SEXP, SEXP xtxSEXP, SEXP V_cholSEXP, SEXP S_cholSEXP, SEXP U0SEXP, SEXP dSEXP, SEXP QSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type V(VSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type b(bSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S0(S0SEXP);
+    Rcpp::traits::input_parameter< double >::type xtx(xtxSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type V_chol(V_cholSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S_chol(S_cholSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type U0(U0SEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type d(dSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Q(QSEXP);
+    rcpp_result_gen = Rcpp::wrap(bayes_mvr_ridge_centered_X_rcpp(V, b, S, S0, xtx, V_chol, S_chol, U0, d, Q));
+    return rcpp_result_gen;
+END_RCPP
+}
 // dmvnorm_rcpp
 double dmvnorm_rcpp(const arma::vec& x, const arma::vec& mu, const arma::mat& S);
 RcppExport SEXP _mr_mash_alpha_dmvnorm_rcpp(SEXP xSEXP, SEXP muSEXP, SEXP SSEXP) {
@@ -42,6 +78,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_mr_mash_alpha_bayes_mvr_ridge_scaled_X_rcpp", (DL_FUNC) &_mr_mash_alpha_bayes_mvr_ridge_scaled_X_rcpp, 6},
+    {"_mr_mash_alpha_bayes_mvr_ridge_centered_X_rcpp", (DL_FUNC) &_mr_mash_alpha_bayes_mvr_ridge_centered_X_rcpp, 10},
     {"_mr_mash_alpha_dmvnorm_rcpp", (DL_FUNC) &_mr_mash_alpha_dmvnorm_rcpp, 3},
     {"_mr_mash_alpha_inner_loop_general_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rcpp, 11},
     {NULL, NULL, 0}
