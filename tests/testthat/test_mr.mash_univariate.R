@@ -39,8 +39,11 @@ test_that("mr.mash and varbvsmix return the same results with univariate Y", {
   V_est <- cov(Y)
   
   ###Fit mr.mash
-  fit_mr.mash <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE, update_V=FALSE)
-
+  fit_mr.mash <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
+                         standardize=FALSE, verbose=FALSE, update_V=FALSE, version="R")
+  # fit_mr.mash_rcpp <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
+  #                        standardize=FALSE, verbose=FALSE, update_V=FALSE, version="Rcpp")
+  
   ###Fit varbvsmix
   fit_varbvsmix <- varbvs::varbvsmix(X,NULL,Y,sigma = as.numeric(V_est),w = w0,
                                      sa = grid/as.numeric(V_est),
@@ -58,4 +61,10 @@ test_that("mr.mash and varbvsmix return the same results with univariate Y", {
   expect_equivalent(drop(fit_mr.mash$S1), S1_varbvsmix, tolerance = 1e-6, scale = 1)
   expect_equivalent(fit_mr.mash$w1, fit_varbvsmix$alpha, tolerance = 1e-6, scale = 1)
   expect_equivalent(fit_mr.mash$ELBO, tail(fit_varbvsmix$logZ, 1), tolerance = 1e-6, scale = 1)
+  
+  # expect_equivalent(drop(fit_mr.mash_rcpp$mu1), mu1_varbvsmix, tolerance = 1e-6, scale = 1)
+  # expect_equivalent(drop(fit_mr.mash_rcpp$S1), S1_varbvsmix, tolerance = 1e-6, scale = 1)
+  # expect_equivalent(fit_mr.mash_rcpp$w1, fit_varbvsmix$alpha, tolerance = 1e-6, scale = 1)
+  # expect_equivalent(fit_mr.mash_rcpp$ELBO, tail(fit_varbvsmix$logZ, 1), tolerance = 1e-6, scale = 1)
+  
  })

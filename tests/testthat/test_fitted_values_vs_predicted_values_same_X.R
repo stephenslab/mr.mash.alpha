@@ -34,11 +34,17 @@ test_that("mr.mash outputted fitted values vs predicted values with the same X a
   V_est <- cov(Y)
   
   ###Fit the model
-  fit <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE, verbose=FALSE, update_V=FALSE)
+  fit <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
+                 standardize=TRUE, verbose=FALSE, update_V=FALSE, version="R")
+  fit_rcpp <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
+                 standardize=TRUE, verbose=FALSE, update_V=FALSE, version="Rcpp")
+  
   
   ###Predict values with tha same X 
   Yhat <- predict(fit, X)
+  Yhat_rcpp <- predict(fit_rcpp, X)
   
   ###Tests
   expect_equal(fit$fitted, Yhat, tolerance = 1e-10, scale = 1)
+  expect_equal(fit_rcpp$fitted, Yhat_rcpp, tolerance = 1e-10, scale = 1)
 })

@@ -33,17 +33,35 @@ test_that("ELBO does not decrease over iterations with mixsqp weights updates", 
   ###Estimate residual covariance
   V_est <- cov(Y)
   
-  ###Fit with current implementation
-  fit <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE, update_V=FALSE)
-  fit_scaled <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, standardize=TRUE, verbose=FALSE, update_V=FALSE)
-  fit_V <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE, update_V=TRUE)
-  fit_scaled_V <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, standardize=TRUE, verbose=FALSE, update_V=TRUE)
-  
+  ###Fit with current implementation (R version)
+  fit <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, 
+                 standardize=FALSE, verbose=FALSE, update_V=FALSE, version="R")
+  fit_scaled <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, 
+                        standardize=TRUE, verbose=FALSE, update_V=FALSE, version="R")
+  fit_V <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, 
+                   standardize=FALSE, verbose=FALSE, update_V=TRUE, version="R")
+  fit_scaled_V <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, 
+                          standardize=TRUE, verbose=FALSE, update_V=TRUE, version="R")
+ 
+  ###Fit with current implementation (Rcpp version)
+  fit_rcpp <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, 
+                 standardize=FALSE, verbose=FALSE, update_V=FALSE, version="Rcpp")
+  fit_scaled_rcpp <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, 
+                        standardize=TRUE, verbose=FALSE, update_V=FALSE, version="Rcpp")
+  fit_V_rcpp <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, 
+                   standardize=FALSE, verbose=FALSE, update_V=TRUE, version="Rcpp")
+  fit_scaled_V_rcpp <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-7, update_w0=TRUE, update_w0_method="mixsqp", compute_ELBO=TRUE, 
+                          standardize=TRUE, verbose=FALSE, update_V=TRUE, version="Rcpp")
   
   ###Tests
   expect_nondecreasing(fit$progress[, 4], tolerance=1e-10, scale=1)
   expect_nondecreasing(fit_scaled$progress[, 4], tolerance=1e-10, scale=1)
   expect_nondecreasing(fit_V$progress[, 4], tolerance=1e-10, scale=1)
   expect_nondecreasing(fit_scaled_V$progress[, 4], tolerance=1e-10, scale=1)
+  
+  expect_nondecreasing(fit_rcpp$progress[, 4], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_scaled_rcpp$progress[, 4], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_V_rcpp$progress[, 4], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_scaled_V_rcpp$progress[, 4], tolerance=1e-10, scale=1)
   
 })

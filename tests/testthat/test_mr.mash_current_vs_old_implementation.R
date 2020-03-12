@@ -34,7 +34,10 @@ test_that("Current implementation and old implementation of mr.mash return the s
   V_est <- cov(Y)
   
   ###Fit with current implementation
-  fit_current <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, standardize=FALSE, verbose=FALSE, update_V=FALSE)
+  fit_current <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
+                         standardize=FALSE, verbose=FALSE, update_V=FALSE, version="R")
+  fit_current_rcpp <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
+                         standardize=FALSE, verbose=FALSE, update_V=FALSE, version="Rcpp")
   
   ###Load old fit
   fit_old <- readRDS("mr_mash_slow_implement_fit.rds")
@@ -44,4 +47,10 @@ test_that("Current implementation and old implementation of mr.mash return the s
   expect_equal(fit_current$S1, fit_old$S1, tolerance = 1e-10, scale = 1)
   expect_equal(fit_current$w1, fit_old$w1, tolerance = 1e-10, scale = 1)
   expect_equal(fit_current$ELBO, fit_old$ELBO, tolerance = 1e-10, scale = 1)
+  
+  expect_equal(fit_current_rcpp$mu1, fit_old$mu1, tolerance = 1e-10, scale = 1)
+  expect_equal(fit_current_rcpp$S1, fit_old$S1, tolerance = 1e-10, scale = 1)
+  expect_equal(fit_current_rcpp$w1, fit_old$w1, tolerance = 1e-10, scale = 1)
+  expect_equal(fit_current_rcpp$ELBO, fit_old$ELBO, tolerance = 1e-10, scale = 1)
+  
 })
