@@ -231,7 +231,7 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
 ###Update mixture weights with mixsqp
 #' @importFrom mixsqp mixsqp
 #' 
-compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, precomp_quants, standardize) {
+compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, precomp_quants, standardize, version) {
   
   # Get the number of predictors (p), the number of mixture
   # components in the prior (k), and the number of samples (n).
@@ -246,33 +246,46 @@ compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, precomp_quants, standardi
   
   if(standardize){
     for(j in 1:p){
-      # Compute the least-squares estimate.
-      b <- drop(X[, j] %*% Y)/(n-1)
-      
       #Remove j-th effect from expected residuals 
       rbar_j <- rbar + outer(X[, j], mu1_t[j, ])
       
+      # Compute the least-squares estimate.
+      b <- drop(X[, j] %*% rbar_j)/(n-1)
+      
       for(k in 1:K){
-        L[j, k] <- bayes_mvr_ridge_scaled_X(b, precomp_quants$S0[[k]], precomp_quants$S, 
-                                            precomp_quants$S1[[k]], precomp_quants$SplusS0_chol[[k]], precomp_quants$S_chol)$logbf
+        if(version=="R"){
+          L[j, k] <- bayes_mvr_ridge_scaled_X(b, S0[[k]], precomp_quants$S, 
+                                              precomp_quants$S1[[k]], precomp_quants$SplusS0_chol[[k]], 
+                                              precomp_quants$S_chol)$logbf
+        } else if(version=="Rcpp"){
+          L[j, k] <- bayes_mvr_ridge_scaled_X_rcpp(b, S0[[k]], precomp_quants$S, 
+                                                   precomp_quants$S1[, , k], precomp_quants$SplusS0_chol[, , k], 
+                                                   precomp_quants$S_chol)$logbf
+        }
       }
     }
   } else {
     for(j in 1:p){
+      #Remove j-th effect from expected residuals 
+      rbar_j <- rbar + outer(X[, j], mu1_t[j, ])
+      
       # Compute the least-squares estimate and covariance.
-      b <- drop(X[, j] %*% Y)/precomp_quants$xtx[j]
+      b <- drop(X[, j] %*% rbar_j)/precomp_quants$xtx[j]
       S <- V/precomp_quants$xtx[j]
       
       # Compute quantities needed for bayes_mvr_ridge_centered_X()
       S_chol <- precomp_quants$V_chol/sqrt(precomp_quants$xtx[j])
       
-      #Remove j-th effect from expected residuals 
-      rbar_j <- rbar + outer(X[, j], mu1_t[j, ])
-      
       for(k in 1:K){
-        L[j, k] <- bayes_mvr_ridge_centered_X(V, b, S, S0[[k]], precomp_quants$xtx[j], 
-                                              precomp_quants$V_chol, S_chol, precomp_quants$U0[[k]], precomp_quants$d[[k]], 
-                                              precomp_quants$Q[[k]])$logbf
+        if(version=="R"){
+          L[j, k] <- bayes_mvr_ridge_centered_X(V, b, S, S0[[k]], precomp_quants$xtx[j], 
+                                                precomp_quants$V_chol, S_chol, precomp_quants$U0[[k]], precomp_quants$d[[k]], 
+                                                precomp_quants$Q[[k]])$logbf
+        } else if(version=="Rcpp"){
+          L[j, k] <- bayes_mvr_ridge_centered_X_rcpp(V, b, S, S0[[k]], precomp_quants$xtx[j], 
+                                                     precomp_quants$V_chol, S_chol, precomp_quants$U0[, , k], 
+                                                     precomp_quants$d[, k], precomp_quants$Q[, , k])$logbf
+        }
       }
     }
   }
@@ -356,13 +369,13 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1_t, w0em, w0m
 # Update the mixture weights with mix-SQP, following by backtracking
 # line search to ensure that the ELBO does not decrease.
 update_weights_mixsqp <- function (X, Y, mu1_t, V, Vinv, ldetV, w0em, S0,
-                                   precomp_quants, update_w0, standardize,
+                                   precomp_quants, standardize,
                                    compute_ELBO=TRUE, update_V=FALSE, version,
                                    stepsize.reduce = 0.5, stepsize.min = 1e-8) {
   
   # Compute the mix-SQP update for the mixture weights. Note that this
   # update is not guaranteed to increase the ELBO.
-  out1 <- compute_mixsqp_update(X, Y, V, S0, mu1_t, precomp_quants, standardize)
+  out1 <- compute_mixsqp_update(X, Y, V, S0, mu1_t, precomp_quants, standardize, version)
   
   # Perform backtracking line search to identify a step size that
   # increases the ELBO.

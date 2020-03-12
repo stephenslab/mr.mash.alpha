@@ -297,6 +297,9 @@ mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
 
 ###Wrapper for the Rcpp function to update variational parameters, expected residuals, 
 ###and ELBO components with or without scaling X
+#' @importFrom Rcpp evalCpp
+#' @useDynLib mr.mash.alpha
+#' 
 inner_loop_general_rcpp_wrapper <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
                                             standardize, compute_ELBO, update_V){
 
