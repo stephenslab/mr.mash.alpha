@@ -231,6 +231,8 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
 ###Update mixture weights with mixsqp
 #' @importFrom mixsqp mixsqp
 #' 
+#' @importFrom Rcpp evalCpp
+#' @useDynLib mr.mash.alpha
 compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, precomp_quants, standardize, version) {
   
   
@@ -240,10 +242,7 @@ compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, precomp_quants, standardi
   if(version=="R"){
     L <- compute_mixsqp_update_loop(X, rbar, V, S0, mu1_t, precomp_quants, standardize)
   } else if(version=="Rcpp"){
-    p <- ncol(X)
-    K <- length(S0)
-    L <- matrix(0, p, K)
-    L <- compute_mixsqp_update_loop_rcpp(X, rbar, V, simplify2array_custom(S0), mu1_t, precomp_quants, standardize, L)
+    L <- compute_mixsqp_update_loop_rcpp(X, rbar, V, simplify2array_custom(S0), mu1_t, precomp_quants, standardize)
   }
   
   out <- mixsqp(L,log = TRUE,control = list(verbose = FALSE))

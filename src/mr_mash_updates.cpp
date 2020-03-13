@@ -47,9 +47,9 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
                          double& neg_KL, mat& var_part_ERSS);
 
 // Loop to compute mixsqp update
-void compute_mixsqp_update_loop (const arma::mat& X, const arma::mat& Rbar, const arma::mat& V, const arma::cube& S0,
+arma::mat compute_mixsqp_update_loop (const arma::mat& X, const arma::mat& Rbar, const arma::mat& V, const arma::cube& S0,
                                  const arma::mat& mu1, const mr_mash_precomputed_quantities& precomp_quants,
-                                 bool standardize, arma::mat& L);
+                                 bool standardize);
 
 
 // FUNCTION DEFINITIONS
@@ -178,7 +178,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
 // [[Rcpp::export]]
 arma::mat compute_mixsqp_update_loop_rcpp (const arma::mat& X, const arma::mat& Rbar, const arma::mat& V, const arma::cube& S0,
                                            const arma::mat& mu1, const List& precomp_quants_list,
-                                           bool standardize, const arma::mat& L0) {
+                                           bool standardize) {
 
   mr_mash_precomputed_quantities precomp_quants
   (as<mat>(precomp_quants_list["S"]),
@@ -191,15 +191,14 @@ arma::mat compute_mixsqp_update_loop_rcpp (const arma::mat& X, const arma::mat& 
    as<cube>(precomp_quants_list["Q"]),
    as<vec>(precomp_quants_list["xtx"]));
 
-  mat L = L0;
-  compute_mixsqp_update_loop(X, Rbar, V, S0, mu1, precomp_quants, standardize, L);
-  return L;
+
+  return compute_mixsqp_update_loop(X, Rbar, V, S0, mu1, precomp_quants, standardize);
 }
 
 // Loop to compute mixsqp update in Rcpp
-void compute_mixsqp_update_loop (const mat& X, const mat& Rbar, const mat& V, const cube& S0,
+mat compute_mixsqp_update_loop (const mat& X, const mat& Rbar, const mat& V, const cube& S0,
                                  const mat& mu1, const mr_mash_precomputed_quantities& precomp_quants,
-                                 bool standardize, mat& L) {
+                                 bool standardize) {
   unsigned int n = X.n_rows;
   unsigned int p = X.n_cols;
   unsigned int r = Rbar.n_cols;
@@ -214,6 +213,7 @@ void compute_mixsqp_update_loop (const mat& X, const mat& Rbar, const mat& V, co
   mat S1_ridge(r,r);
   double xtx_j;
   double logbf;
+  mat L(p,k);
 
   // Repeat for each predictor.
   for (unsigned int j = 0; j < p; j++) {
@@ -252,5 +252,6 @@ void compute_mixsqp_update_loop (const mat& X, const mat& Rbar, const mat& V, co
       L(j,i) = logbf;
     }
   }
+  return L;
 }
 
