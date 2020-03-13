@@ -76,12 +76,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_mixsqp_update_loop_rcpp
+arma::mat compute_mixsqp_update_loop_rcpp(const arma::mat& X, const arma::mat& Rbar, const arma::mat& V, const arma::cube& S0, const arma::mat& mu1, const List& precomp_quants_list, bool standardize, const arma::mat& L0);
+RcppExport SEXP _mr_mash_alpha_compute_mixsqp_update_loop_rcpp(SEXP XSEXP, SEXP RbarSEXP, SEXP VSEXP, SEXP S0SEXP, SEXP mu1SEXP, SEXP precomp_quants_listSEXP, SEXP standardizeSEXP, SEXP L0SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Rbar(RbarSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type V(VSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type S0(S0SEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mu1(mu1SEXP);
+    Rcpp::traits::input_parameter< const List& >::type precomp_quants_list(precomp_quants_listSEXP);
+    Rcpp::traits::input_parameter< bool >::type standardize(standardizeSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type L0(L0SEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_mixsqp_update_loop_rcpp(X, Rbar, V, S0, mu1, precomp_quants_list, standardize, L0));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_mr_mash_alpha_bayes_mvr_ridge_scaled_X_rcpp", (DL_FUNC) &_mr_mash_alpha_bayes_mvr_ridge_scaled_X_rcpp, 6},
     {"_mr_mash_alpha_bayes_mvr_ridge_centered_X_rcpp", (DL_FUNC) &_mr_mash_alpha_bayes_mvr_ridge_centered_X_rcpp, 10},
     {"_mr_mash_alpha_dmvnorm_rcpp", (DL_FUNC) &_mr_mash_alpha_dmvnorm_rcpp, 3},
     {"_mr_mash_alpha_inner_loop_general_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rcpp, 11},
+    {"_mr_mash_alpha_compute_mixsqp_update_loop_rcpp", (DL_FUNC) &_mr_mash_alpha_compute_mixsqp_update_loop_rcpp, 8},
     {NULL, NULL, 0}
 };
 
