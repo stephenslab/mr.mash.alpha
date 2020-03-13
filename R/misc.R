@@ -233,61 +233,17 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
 #' 
 compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, precomp_quants, standardize, version) {
   
-  # Get the number of predictors (p), the number of mixture
-  # components in the prior (k), and the number of samples (n).
-  p <- ncol(X)
-  K <- length(S0)
-  n <- nrow(Y)
   
   # Compute the p x k matrix of log-likelihoods conditional on each
   # prior mixture component.
-  L <- matrix(0, p, K)
   rbar <- Y - X%*%mu1_t
-  
-  if(standardize){
-    for(j in 1:p){
-      #Remove j-th effect from expected residuals 
-      rbar_j <- rbar + outer(X[, j], mu1_t[j, ])
-      
-      # Compute the least-squares estimate.
-      b <- drop(X[, j] %*% rbar_j)/(n-1)
-      
-      for(k in 1:K){
-        if(version=="R"){
-          L[j, k] <- bayes_mvr_ridge_scaled_X(b, S0[[k]], precomp_quants$S, 
-                                              precomp_quants$S1[[k]], precomp_quants$SplusS0_chol[[k]], 
-                                              precomp_quants$S_chol)$logbf
-        } else if(version=="Rcpp"){
-          L[j, k] <- bayes_mvr_ridge_scaled_X_rcpp(b, S0[[k]], precomp_quants$S, 
-                                                   precomp_quants$S1[, , k], precomp_quants$SplusS0_chol[, , k], 
-                                                   precomp_quants$S_chol)$logbf
-        }
-      }
-    }
-  } else {
-    for(j in 1:p){
-      #Remove j-th effect from expected residuals 
-      rbar_j <- rbar + outer(X[, j], mu1_t[j, ])
-      
-      # Compute the least-squares estimate and covariance.
-      b <- drop(X[, j] %*% rbar_j)/precomp_quants$xtx[j]
-      S <- V/precomp_quants$xtx[j]
-      
-      # Compute quantities needed for bayes_mvr_ridge_centered_X()
-      S_chol <- precomp_quants$V_chol/sqrt(precomp_quants$xtx[j])
-      
-      for(k in 1:K){
-        if(version=="R"){
-          L[j, k] <- bayes_mvr_ridge_centered_X(V, b, S, S0[[k]], precomp_quants$xtx[j], 
-                                                precomp_quants$V_chol, S_chol, precomp_quants$U0[[k]], precomp_quants$d[[k]], 
-                                                precomp_quants$Q[[k]])$logbf
-        } else if(version=="Rcpp"){
-          L[j, k] <- bayes_mvr_ridge_centered_X_rcpp(V, b, S, S0[[k]], precomp_quants$xtx[j], 
-                                                     precomp_quants$V_chol, S_chol, precomp_quants$U0[, , k], 
-                                                     precomp_quants$d[, k], precomp_quants$Q[, , k])$logbf
-        }
-      }
-    }
+  if(version=="R"){
+    L <- compute_mixsqp_update_loop(X, rbar, V, S0, mu1_t, precomp_quants, standardize)
+  } else if(version=="Rcpp"){
+    p <- ncol(X)
+    K <- length(S0)
+    L <- matrix(0, p, K)
+    L <- compute_mixsqp_update_loop_rcpp(X, rbar, V, simplify2array_custom(S0), mu1_t, precomp_quants, standardize, L)
   }
   
   out <- mixsqp(L,log = TRUE,control = list(verbose = FALSE))
@@ -298,6 +254,49 @@ compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, precomp_quants, standardi
   # mix-SQP iterations performed.
   return(list(w0=out$x, numiter=nrow(out$progress)))
 }
+
+###Wrapper of the loop to compute mixsqp update of the weights
+compute_mixsqp_update_loop <- function(X, rbar, V, S0, mu1_t, precomp_quants, standardize){
+  # Get the number of predictors (p), the number of mixture
+  # components in the prior (k), and the number of samples (n).
+  p <- ncol(X)
+  K <- length(S0)
+  n <- nrow(rbar)
+  
+  L <- matrix(0, p, K)
+  
+  for(j in 1:p){
+    #Remove j-th effect from expected residuals 
+    rbar_j <- rbar + outer(X[, j], mu1_t[j, ])
+    
+    if(standardize){
+      # Compute the least-squares estimate.
+      b <- drop(X[, j] %*% rbar_j)/(n-1)
+    } else {
+      # Compute the least-squares estimate and covariance.
+      b <- drop(X[, j] %*% rbar_j)/precomp_quants$xtx[j]
+      S <- V/precomp_quants$xtx[j]
+      
+      # Compute quantities needed for bayes_mvr_ridge_centered_X()
+      S_chol <- precomp_quants$V_chol/sqrt(precomp_quants$xtx[j])
+    }
+    
+    for(k in 1:K){
+      if(standardize){
+        L[j, k] <- bayes_mvr_ridge_scaled_X(b, S0[[k]], precomp_quants$S, 
+                                            precomp_quants$S1[[k]], precomp_quants$SplusS0_chol[[k]], 
+                                            precomp_quants$S_chol)$logbf        
+      } else {
+        L[j, k] <- bayes_mvr_ridge_centered_X(V, b, S, S0[[k]], precomp_quants$xtx[j], 
+                                              precomp_quants$V_chol, S_chol, precomp_quants$U0[[k]], precomp_quants$d[[k]], 
+                                              precomp_quants$Q[[k]])$logbf
+      }
+    }
+  }
+  
+  return(L)
+}
+
 
 # Perform backtracking line search to identify a step size for the
 # mixture weights update that increases the ELBO.
