@@ -51,7 +51,7 @@ D   <- diag(d/(1 + xx*d))
 dx  <- d/(1 + xx*d)
 B   <- sqrt(dx) * QR
 S1  <- crossprod(B) # <-- Most expensive operation.
-mu1 <- drop(B %*% (t(B) %*% (P %*% (bhat/xx))))
+mu1 <- drop(B %*% (t(B) %*% (P %*% (xx*bhat))))
 
 # Compare the two calculations.
 print(mu1 - dat$mu1)
