@@ -47,11 +47,10 @@ QR  <- t(Q) %*% R
 # Same Bayesian calculations as before, but done more "efficiently" by
 # making use of the "pre-calculations". Here, U1 is the posterior
 # covariance of the "transformed" data.
-D   <- diag(d/(1 + xx*d))
 dx  <- d/(1 + xx*d)
 B   <- sqrt(dx) * QR
 S1  <- crossprod(B) # <-- Most expensive operation.
-mu1 <- drop(B %*% (t(B) %*% (P %*% (bhat/xx))))
+mu1 <- drop(t(B) %*% (B %*% (P %*% (xx*bhat))))
 
 # Compare the two calculations.
 print(mu1 - dat$mu1)
