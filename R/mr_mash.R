@@ -20,6 +20,8 @@
 #' Coefficients and covariances are returned on the original scale.
 #' @param version whether to use R or Rcpp code to perform the coordinate ascent updates.
 #' @param verbose if TRUE, some information is printed to screen at each iteration.
+#' @param e a small number to add to the diagonal elements of the prior matrices to improve numerical 
+#' stability.
 #' 
 #' @return a mr.mash fit, which is a list with some or all of the following elements\cr
 #' \item{mu1}{a p x r matrix of posterior means for the regression coeffcients.}
@@ -71,7 +73,7 @@
 #'
 #' ###Fit mr.mash
 #' fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", 
-#'                compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=TRUE, version="R")
+#'                compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=TRUE, version="R", e=1e-8)
 #'
 #' # Compare the "fitted" values of Y against the true Y in the training set.
 #' plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
@@ -86,7 +88,7 @@
 mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, 
                     tol=1e-8, max_iter=1e5, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                     compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=FALSE, 
-                    version=c("R", "Rcpp")) {
+                    version=c("R", "Rcpp"), e=1e-8) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -128,6 +130,9 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
     stop("ELBO needs to be computed with update_w0_method=\"mixsqp\".")
   }
 
+  ###Add number to diagonal elements of the prior matrices
+  S0 <- lapply(S0, makePD, e=e)
+  
   ###Center Y and either center and/or scale X
   Y <- scale(Y, center=TRUE, scale=FALSE)
   if(standardize){
@@ -155,18 +160,22 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
   ###Precompute quantities
   comps <- precompute_quants(n, X, V, S0, standardize, version)
   
-  if(compute_ELBO){ 
-    ###Compute inverse of V (needed for the ELBO)
+  if(compute_ELBO || !standardize){ 
+    ###Compute inverse of V (needed for the ELBO and unstandardized X)
     #Vinv <- chol2inv(comps$V_chol)
     Vinv <- backsolve(comps$V_chol, forwardsolve(t(comps$V_chol), diag(nrow(comps$V_chol))))
-    ldetV <- chol2ldet(comps$V_chol)
   } else {
     if(version=="R"){
       Vinv <- NULL
     } else if(version=="Rcpp"){
       Vinv <- matrix(0, nrow=R, ncol=R)
     }
-    
+  }
+  
+  if(compute_ELBO){
+    ###Compute log determinant of V (needed for the ELBO)
+    ldetV <- chol2ldet(comps$V_chol)
+  } else {
     ldetV <- NULL
   }
   
@@ -208,7 +217,6 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
     var_part_ERSS=ups$var_part_ERSS
   }
   
-  
   if(compute_ELBO){
     if(verbose){
       ##Print out useful info
@@ -248,11 +256,13 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
     if(update_V){
       V <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
       comps <- precompute_quants(n, X, V, S0, standardize, version)
-      if(compute_ELBO){
-        #Vinv <- chol2inv(comps$V_chol)
+      if(compute_ELBO || !standardize){ 
         Vinv <- backsolve(comps$V_chol, forwardsolve(t(comps$V_chol), diag(nrow(comps$V_chol))))
+      }    
+      if(compute_ELBO){
+        ###Compute log determinant of V (needed for the ELBO)
         ldetV <- chol2ldet(comps$V_chol)
-      } 
+      }
     }
     
     ##Update w0 if requested

@@ -69,7 +69,7 @@ bayes_mvr_ridge_scaled_X <- function (b, S0, S, S1, SplusS0_chol, S_chol) {
 # The outputs are: mu1, the posterior mean of the
 # regression coefficients; S1, the posterior covariance of the
 # regression coefficients; logbf, the log-Bayes factor.
-bayes_mvr_ridge_centered_X <- function (V, b, S, S0, xtx, V_chol, S_chol, U0, d, Q) {
+bayes_mvr_ridge_centered_X <- function (V, b, S, S0, xtx, Vinv, V_chol, S_chol, d, QtimesV_chol) {
   
   # Compute the log-Bayes factor.
   SplusS0_chol <- chol(S+S0)
@@ -79,16 +79,11 @@ bayes_mvr_ridge_centered_X <- function (V, b, S, S0, xtx, V_chol, S_chol, U0, d,
   #logbf <- dmvnorm(b, rep(0, times=length(b)), (S+S0)) - dmvnorm(b, rep(0, times=length(b)), S)
   
   # Compute the posterior mean assuming a multivariate
-  # normal prior with zero mean and covariance S0 (handling the univariate case).
-  if(length(d)>1){
-    D <- diag(1/(1 + xtx*d))
-  } else {
-    D <- 1/(1 + xtx*d)
-  }
-  U1 <- U0 %*% Q %*% tcrossprod(D, Q)
-  S1 <- crossprod(V_chol, U1) %*% V_chol
-  mu1 <- drop(S1%*%backsolve(S_chol, forwardsolve(t(S_chol), b)))
-  
+  # normal prior with zero mean and covariance S0.
+  dx <- d/(1 + xtx*d)
+  A <- sqrt(dx)*QtimesV_chol
+  S1 <- crossprod(A)
+  mu1 <- drop(crossprod(A, (A %*% (Vinv %*% (xtx*b)))))
   # Return the posterior mean and covariance
   # (mu1, S1), and the log-Bayes factor (logbf)
   return(list(mu1 = mu1, S1=S1, logbf=logbf))
@@ -258,7 +253,7 @@ bayes_mvr_mix_scaled_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol) {
 # (w1), the posterior mean of the coefficients given that all the
 # coefficients are not nonzero (mu1), and the posterior covariance of
 # the coefficients given that all the coefficients are not zero (S1).
-bayes_mvr_mix_centered_X <- function (x, Y, V, w0, S0, xtx, V_chol, U0, d, Q) {
+bayes_mvr_mix_centered_X <- function (x, Y, V, w0, S0, xtx, Vinv, V_chol, d, QtimesV_chol) {
   
   # Get the number of variables (n) and the number of mixture
   # components (k).
@@ -276,10 +271,10 @@ bayes_mvr_mix_centered_X <- function (x, Y, V, w0, S0, xtx, V_chol, U0, d, Q) {
   # each mixture component.
   # out <- vector("list",K)
   # for (k in 1:K){
-  #   out[[k]] <- bayes_mvr_ridge_centered_X(V, b, S, S0[[k]], xtx, V_chol, U0[[k]], d[[k]], Q[[k]])
+  #   out[[k]] <- bayes_mvr_ridge_centered_X(V, b, S, S0[[k]], xtx, V_chol, d[[k]], QtimesV_chol[[k]])
   # }
   bayes_mvr_ridge_lapply <- function(i){
-    bayes_mvr_ridge_centered_X(V, b, S, S0[[i]], xtx, V_chol, S_chol, U0[[i]], d[[i]], Q[[i]])
+    bayes_mvr_ridge_centered_X(V, b, S, S0[[i]], xtx, Vinv, V_chol, S_chol, d[[i]], QtimesV_chol[[i]])
   }
   out <- lapply(1:K, bayes_mvr_ridge_lapply)
   

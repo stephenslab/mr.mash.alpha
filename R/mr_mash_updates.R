@@ -1,5 +1,5 @@
 ###Update variational parameters, expected residuals, and ELBO components
-inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, xtx, V_chol, U0, d, Q){
+inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, xtx, V_chol, d, QtimesV_chol){
   ###Create variables to store quantities
   R <- ncol(rbar)
   p <- ncol(X)
@@ -21,7 +21,7 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, xtx, V_chol, U0, d, Q){
     rbar_j <- rbar + outer(X[, j], mu1[j, ])
     
     #Run Bayesian SLR
-    bfit <- bayes_mvr_mix_centered_X(X[, j], rbar_j, V, w0, S0, xtx[j], V_chol, U0, d, Q)
+    bfit <- bayes_mvr_mix_centered_X(X[, j], rbar_j, V, w0, S0, xtx[j], V_chol, d, QtimesV_chol)
     
     #Update variational parameters
     mu1[j, ]         <- bfit$mu1
@@ -50,7 +50,7 @@ inner_loop <- function(X, rbar, mu, V, Vinv, w0, S0, xtx, V_chol, U0, d, Q){
 
 ###Perform one iteration of the outer loop
 mr_mash_update <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0, 
-                           xtx, V_chol, U0, d, Q, update_w0, compute_ELBO){
+                           xtx, V_chol, d, QtimesV_chol, update_w0, compute_ELBO){
   ##Compute expected residuals
   rbar <- Y - X%*%mu1_t
   
@@ -60,7 +60,7 @@ mr_mash_update <- function(Y, X, mu1_t, w1_t, V, Vinv, ldetV, w0, S0,
   }
   
   ##Update variational parameters, expected residuals, and ELBO components
-  updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, xtx=xtx, V_chol=V_chol, U0=U0, d=d, Q=Q) 
+  updates <- inner_loop(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, xtx=xtx, V_chol=V_chol, d=d, QtimesV_chol=QtimesV_chol) 
   mu1_t   <- updates$mu1
   S1_t    <- updates$S1
   w1_t    <- updates$w1
@@ -197,9 +197,9 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
       bfit <- bayes_mvr_mix_scaled_X(X[, j], rbar_j, w0, S0, precomp_quants$S, precomp_quants$S1, 
                                      precomp_quants$SplusS0_chol, precomp_quants$S_chol)      
     } else {
-      bfit <- bayes_mvr_mix_centered_X(X[, j], rbar_j, V, w0, S0, precomp_quants$xtx[j], 
-                                          precomp_quants$V_chol, precomp_quants$U0, precomp_quants$d, 
-                                          precomp_quants$Q)
+      bfit <- bayes_mvr_mix_centered_X(X[, j], rbar_j, V, w0, S0, precomp_quants$xtx[j], Vinv, 
+                                          precomp_quants$V_chol, precomp_quants$d, 
+                                          precomp_quants$QtimesV_chol)
     }
     
     #Update variational parameters

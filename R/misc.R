@@ -152,17 +152,16 @@ precompute_quants_centered_X <- function(X, V, S0){
   Rinv <- backsolve(R, diag(nrow(R)))
   
   ###Quantities that depend on S0
-  U0 <- list()
   d <- list()
-  Q <- list()
+  QtimesR <- list()
   for(i in 1:length(S0)){
-    U0[[i]]  <- Rtinv %*% S0[[i]] %*% Rinv
+    U0 <- Rtinv %*% S0[[i]] %*% Rinv
     out <- eigen(U0[[i]])
     d[[i]]   <- out$values
-    Q[[i]]   <- out$vectors   
+    QtimesR[[i]]   <- crossprod(out$vectors, R)   
   }
   
-  return(list(xtx=xtx, V_chol=R, U0=U0, d=d, Q=Q))
+  return(list(xtx=xtx, V_chol=R, d=d, QtimesV_chol=QtimesR))
 }
 
 ###Precompute quantities in any case
@@ -187,10 +186,10 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
       xtx <- c(0, 0) ##Vector
       U0 <- array(0, c(1, 1, 1))
       d <- matrix(0, nrow=1, ncol=1)
-      Q <- array(0, c(1, 1, 1))
+      QtimesR <- array(0, c(1, 1, 1))
       
       return(list(V_chol=R, S=S, S1=simplify2array_custom(S1), S_chol=S_chol, SplusS0_chol=simplify2array_custom(SplusS0_chol), 
-                  xtx=xtx, U0=U0, d=d, Q=Q))
+                  xtx=xtx, U0=U0, d=d, QtimesV_chol=QtimesR))
     }
     
   } else {
@@ -206,23 +205,23 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
     ###Quantities that depend on S0
     U0 <- list()
     d <- list()
-    Q <- list()
+    QtimesR <- list()
     for(i in 1:length(S0)){
       U0[[i]]  <- Rtinv %*% S0[[i]] %*% Rinv
       out <- eigen(U0[[i]])
       d[[i]]   <- out$values
-      Q[[i]]   <- out$vectors   
+      QtimesR[[i]]   <- crossprod(out$vectors, R)   
     }
     
     if(version=="R"){
-      return(list(xtx=xtx, V_chol=R, U0=U0, d=d, Q=Q))
+      return(list(xtx=xtx, V_chol=R, U0=U0, d=d, QtimesV_chol=QtimesR))
     } else if(version=="Rcpp"){
       S <- matrix(0, nrow=1, ncol=1)
       S1 <- array(0, c(1, 1, 1))
       S_chol <- matrix(0, nrow=1, ncol=1)
       SplusS0_chol <- array(0, c(1, 1, 1))
       
-      return(list(xtx=xtx, V_chol=R, U0=simplify2array_custom(U0), d=simplify2array_custom(d), Q=simplify2array_custom(Q), 
+      return(list(xtx=xtx, V_chol=R, U0=simplify2array_custom(U0), d=simplify2array_custom(d), QtimesV_chol=simplify2array_custom(QtimesR), 
                   S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))
     }
   }
@@ -233,14 +232,14 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
 #' 
 #' @importFrom Rcpp evalCpp
 #' @useDynLib mr.mash.alpha
-compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, precomp_quants, standardize, version) {
+compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, Vinv, precomp_quants, standardize, version) {
   
   
   # Compute the p x k matrix of log-likelihoods conditional on each
   # prior mixture component.
   rbar <- Y - X%*%mu1_t
   if(version=="R"){
-    L <- compute_mixsqp_update_loop(X, rbar, V, S0, mu1_t, precomp_quants, standardize)
+    L <- compute_mixsqp_update_loop(X, rbar, V, S0, mu1_t, Vinv, precomp_quants, standardize)
   } else if(version=="Rcpp"){
     L <- compute_mixsqp_update_loop_rcpp(X, rbar, V, simplify2array_custom(S0), mu1_t, precomp_quants, standardize)
   }
@@ -255,7 +254,7 @@ compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, precomp_quants, standardi
 }
 
 ###Wrapper of the loop to compute mixsqp update of the weights
-compute_mixsqp_update_loop <- function(X, rbar, V, S0, mu1_t, precomp_quants, standardize){
+compute_mixsqp_update_loop <- function(X, rbar, V, S0, mu1_t, Vinv, precomp_quants, standardize){
   # Get the number of predictors (p), the number of mixture
   # components in the prior (k), and the number of samples (n).
   p <- ncol(X)
@@ -286,9 +285,9 @@ compute_mixsqp_update_loop <- function(X, rbar, V, S0, mu1_t, precomp_quants, st
                                             precomp_quants$S1[[k]], precomp_quants$SplusS0_chol[[k]], 
                                             precomp_quants$S_chol)$logbf        
       } else {
-        L[j, k] <- bayes_mvr_ridge_centered_X(V, b, S, S0[[k]], precomp_quants$xtx[j], 
-                                              precomp_quants$V_chol, S_chol, precomp_quants$U0[[k]], precomp_quants$d[[k]], 
-                                              precomp_quants$Q[[k]])$logbf
+        L[j, k] <- bayes_mvr_ridge_centered_X(V, b, S, S0[[k]], precomp_quants$xtx[j], Vinv,
+                                              precomp_quants$V_chol, S_chol, precomp_quants$d[[k]], 
+                                              precomp_quants$QtimesV_chol[[k]])$logbf
       }
     }
   }
@@ -373,7 +372,7 @@ update_weights_mixsqp <- function (X, Y, mu1_t, V, Vinv, ldetV, w0em, S0,
   
   # Compute the mix-SQP update for the mixture weights. Note that this
   # update is not guaranteed to increase the ELBO.
-  out1 <- compute_mixsqp_update(X, Y, V, S0, mu1_t, precomp_quants, standardize, version)
+  out1 <- compute_mixsqp_update(X, Y, V, S0, mu1_t, Vinv, precomp_quants, standardize, version)
   
   # Perform backtracking line search to identify a step size that
   # increases the ELBO.
@@ -429,4 +428,11 @@ simplify2array_custom <- function (x, higher = TRUE) {
   } else {
     x
   }
+}
+
+###Add small number e to diagonal elements to a matrix 
+makePD <- function(S0, e){
+  S0_PD <- S0+(diag(nrow(S0))*e)
+  
+  return(S0_PD)
 }
