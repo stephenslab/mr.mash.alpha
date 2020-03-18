@@ -19,19 +19,17 @@ struct mr_mash_precomputed_quantities {
   const cube S1;
   const cube SplusS0_chol;
   const mat  V_chol;
-  const cube U0;
   const mat  d;
-  const cube Q;
+  const cube QtimesV_chol;
   const vec  xtx;
 
   // This is used to create a mr_mash_precomputed_quantities object.
   mr_mash_precomputed_quantities (const mat& S, const mat& S_chol,
 				  const cube& S1, const cube& SplusS0_chol,
-				  const mat& V_chol, const cube& U0,
-				  const mat& d, const cube& Q,
+				  const mat& V_chol, const mat& d, const cube& QtimesV_chol,
 				  const vec& xtx) :
     S(S), S_chol(S_chol), S1(S1), SplusS0_chol(SplusS0_chol),
-    V_chol(V_chol), U0(U0), d(d), Q(Q), xtx(xtx) { };
+    V_chol(V_chol), d(d), QtimesV_chol(QtimesV_chol), xtx(xtx) { };
 };
 
 
@@ -48,7 +46,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
 
 // Loop to compute mixsqp update
 arma::mat compute_mixsqp_update_loop (const arma::mat& X, const arma::mat& Rbar, const arma::mat& V, const arma::cube& S0,
-                                 const arma::mat& mu1, const mr_mash_precomputed_quantities& precomp_quants,
+                                 const arma::mat& mu1, const arma::mat& Vinv, const mr_mash_precomputed_quantities& precomp_quants,
                                  bool standardize);
 
 
@@ -78,9 +76,8 @@ List inner_loop_general_rcpp (const arma::mat& X, arma::mat& Rbar, arma::mat& mu
      as<cube>(precomp_quants_list["S1"]),
      as<cube>(precomp_quants_list["SplusS0_chol"]),
      as<mat>(precomp_quants_list["V_chol"]),
-     as<cube>(precomp_quants_list["U0"]),
      as<mat>(precomp_quants_list["d"]),
-     as<cube>(precomp_quants_list["Q"]),
+     as<cube>(precomp_quants_list["QtimesV_chol"]),
      as<vec>(precomp_quants_list["xtx"]));
   inner_loop_general(X, Rbar_new, mu1_new, V, Vinv, w0, S0, precomp_quants,
                      standardize, compute_ELBO, update_V, S1, w1, var_part_tr_wERSS, 
@@ -137,9 +134,9 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
                              precomp_quants.S_chol, mu1_mix, S1_mix, w1_mix);
     else {
       double xtx_j = precomp_quants.xtx(j);
-      logbf_mix = bayes_mvr_mix_centered_X(x, Rbar_j, V, w0, S0, xtx_j,
-                               precomp_quants.V_chol, precomp_quants.U0,
-                               precomp_quants.d, precomp_quants.Q,
+      logbf_mix = bayes_mvr_mix_centered_X(x, Rbar_j, V, w0, S0, xtx_j, Vinv,
+                               precomp_quants.V_chol, precomp_quants.d, 
+                               precomp_quants.QtimesV_chol,
                                mu1_mix, S1_mix, w1_mix);
     }
     
@@ -177,7 +174,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 arma::mat compute_mixsqp_update_loop_rcpp (const arma::mat& X, const arma::mat& Rbar, const arma::mat& V, const arma::cube& S0,
-                                           const arma::mat& mu1, const List& precomp_quants_list,
+                                           const arma::mat& mu1, const arma::mat& Vinv, const List& precomp_quants_list,
                                            bool standardize) {
 
   mr_mash_precomputed_quantities precomp_quants
@@ -186,18 +183,17 @@ arma::mat compute_mixsqp_update_loop_rcpp (const arma::mat& X, const arma::mat& 
    as<cube>(precomp_quants_list["S1"]),
    as<cube>(precomp_quants_list["SplusS0_chol"]),
    as<mat>(precomp_quants_list["V_chol"]),
-   as<cube>(precomp_quants_list["U0"]),
    as<mat>(precomp_quants_list["d"]),
-   as<cube>(precomp_quants_list["Q"]),
+   as<cube>(precomp_quants_list["QtimesV_chol"]),
    as<vec>(precomp_quants_list["xtx"]));
 
 
-  return compute_mixsqp_update_loop(X, Rbar, V, S0, mu1, precomp_quants, standardize);
+  return compute_mixsqp_update_loop(X, Rbar, V, S0, mu1, Vinv, precomp_quants, standardize);
 }
 
 // Loop to compute mixsqp update in Rcpp
 mat compute_mixsqp_update_loop (const mat& X, const mat& Rbar, const mat& V, const cube& S0,
-                                 const mat& mu1, const mr_mash_precomputed_quantities& precomp_quants,
+                                 const mat& mu1, const mat& Vinv, const mr_mash_precomputed_quantities& precomp_quants,
                                  bool standardize) {
   unsigned int n = X.n_rows;
   unsigned int p = X.n_cols;
@@ -245,9 +241,9 @@ mat compute_mixsqp_update_loop (const mat& X, const mat& Rbar, const mat& V, con
                                          precomp_quants.S1.slice(i), precomp_quants.SplusS0_chol.slice(i),
                                          precomp_quants.S_chol, mu1_ridge);
       }else {
-        logbf = bayes_mvr_ridge_centered_X(V, b, S, S0.slice(i), xtx_j,
-                                           precomp_quants.V_chol, S_chol, precomp_quants.U0.slice(i),
-                                           precomp_quants.d.col(i), precomp_quants.Q.slice(i), mu1_ridge, S1_ridge);
+        logbf = bayes_mvr_ridge_centered_X(V, b, S, S0.slice(i), xtx_j, Vinv,
+                                           precomp_quants.V_chol, S_chol, precomp_quants.d.col(i), 
+                                           precomp_quants.QtimesV_chol.slice(i), mu1_ridge, S1_ridge);
       }
       L(j,i) = logbf;
     }

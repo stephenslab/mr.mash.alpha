@@ -156,7 +156,7 @@ precompute_quants_centered_X <- function(X, V, S0){
   QtimesR <- list()
   for(i in 1:length(S0)){
     U0 <- Rtinv %*% S0[[i]] %*% Rinv
-    out <- eigen(U0[[i]])
+    out <- eigen(U0)
     d[[i]]   <- out$values
     QtimesR[[i]]   <- crossprod(out$vectors, R)   
   }
@@ -184,12 +184,11 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
       return(list(V_chol=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))      
     } else if(version=="Rcpp"){
       xtx <- c(0, 0) ##Vector
-      U0 <- array(0, c(1, 1, 1))
       d <- matrix(0, nrow=1, ncol=1)
       QtimesR <- array(0, c(1, 1, 1))
       
       return(list(V_chol=R, S=S, S1=simplify2array_custom(S1), S_chol=S_chol, SplusS0_chol=simplify2array_custom(SplusS0_chol), 
-                  xtx=xtx, U0=U0, d=d, QtimesV_chol=QtimesR))
+                  xtx=xtx, d=d, QtimesV_chol=QtimesR))
     }
     
   } else {
@@ -203,25 +202,24 @@ precompute_quants <- function(n, X, V, S0, standardize, version){
     Rinv <- backsolve(R, diag(nrow(R)))
     
     ###Quantities that depend on S0
-    U0 <- list()
     d <- list()
     QtimesR <- list()
     for(i in 1:length(S0)){
-      U0[[i]]  <- Rtinv %*% S0[[i]] %*% Rinv
-      out <- eigen(U0[[i]])
+      U0  <- Rtinv %*% S0[[i]] %*% Rinv
+      out <- eigen(U0)
       d[[i]]   <- out$values
       QtimesR[[i]]   <- crossprod(out$vectors, R)   
     }
     
     if(version=="R"){
-      return(list(xtx=xtx, V_chol=R, U0=U0, d=d, QtimesV_chol=QtimesR))
+      return(list(xtx=xtx, V_chol=R, d=d, QtimesV_chol=QtimesR))
     } else if(version=="Rcpp"){
       S <- matrix(0, nrow=1, ncol=1)
       S1 <- array(0, c(1, 1, 1))
       S_chol <- matrix(0, nrow=1, ncol=1)
       SplusS0_chol <- array(0, c(1, 1, 1))
       
-      return(list(xtx=xtx, V_chol=R, U0=simplify2array_custom(U0), d=simplify2array_custom(d), QtimesV_chol=simplify2array_custom(QtimesR), 
+      return(list(xtx=xtx, V_chol=R, d=simplify2array_custom(d), QtimesV_chol=simplify2array_custom(QtimesR), 
                   S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))
     }
   }
@@ -241,7 +239,7 @@ compute_mixsqp_update <- function (X, Y, V, S0, mu1_t, Vinv, precomp_quants, sta
   if(version=="R"){
     L <- compute_mixsqp_update_loop(X, rbar, V, S0, mu1_t, Vinv, precomp_quants, standardize)
   } else if(version=="Rcpp"){
-    L <- compute_mixsqp_update_loop_rcpp(X, rbar, V, simplify2array_custom(S0), mu1_t, precomp_quants, standardize)
+    L <- compute_mixsqp_update_loop_rcpp(X, rbar, V, simplify2array_custom(S0), mu1_t, Vinv, precomp_quants, standardize)
   }
   
   out <- mixsqp(L,log = TRUE,control = list(verbose = FALSE))

@@ -11,9 +11,9 @@ double bayes_mvr_ridge_scaled_X (const arma::vec& b, const arma::mat& S0, const 
                                  const arma::mat& S_chol, arma::vec& mu1);
 
 double bayes_mvr_ridge_centered_X (const arma::mat& V, const arma::vec& b, const arma::mat& S, 
-                                   const arma::mat& S0, double xtx,
+                                   const arma::mat& S0, double xtx, const arma::mat& Vinv,
                                    const arma::mat& V_chol, const arma::mat& S_chol,
-                                   const arma::mat& U0, const arma::vec& d, const arma::mat& Q,
+                                   const arma::vec& d, const arma::mat& QtimesV_chol,
                                    arma::vec& mu1, arma::mat& S1);
 
 double bayes_mvr_mix_scaled_X (const arma::vec& x, const arma::mat& Y, const arma::vec& w0,
@@ -23,8 +23,8 @@ double bayes_mvr_mix_scaled_X (const arma::vec& x, const arma::mat& Y, const arm
 
 double bayes_mvr_mix_centered_X (const arma::vec& x, const arma::mat& Y, const arma::mat& V,
                                  const arma::vec& w0, const arma::cube& S0, double xtx, 
-                                 const arma::mat& V_chol, const arma::cube& U0,
-                                 const arma::mat& d, const arma::cube& Q, arma::vec& mu1_mix,
+                                 const arma::mat& Vinv, const arma::mat& V_chol,
+                                 const arma::mat& d, const arma::cube& QtimesV_chol, arma::vec& mu1_mix,
                                  arma::mat& S1_mix, arma::vec& w1);
 
 #endif
