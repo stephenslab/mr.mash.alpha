@@ -43,14 +43,14 @@ test_that("Current implementation and old implementation of mr.mash return the s
   fit_old <- readRDS("mr_mash_slow_implement_fit.rds")
   
   ###Tests
-  expect_equal(fit_current$mu1, fit_old$mu1, tolerance = 1e-10, scale = 1)
-  expect_equal(fit_current$S1, fit_old$S1, tolerance = 1e-10, scale = 1)
-  expect_equal(fit_current$w1, fit_old$w1, tolerance = 1e-10, scale = 1)
-  expect_equal(fit_current$ELBO, fit_old$ELBO, tolerance = 1e-10, scale = 1)
+  expect_equal(fit_current$mu1, fit_old$mu1, tolerance = 1e-6, scale = 1)
+  expect_equal(fit_current$S1, fit_old$S1, tolerance = 1e-6, scale = 1)
+  expect_equal(fit_current$w1, fit_old$w1, tolerance = 1e-6, scale = 1)
+  expect_equal(fit_current$ELBO, fit_old$ELBO, tolerance = 9.99e-5, scale = 1)
   
-  expect_equal(fit_current_rcpp$mu1, fit_old$mu1, tolerance = 1e-10, scale = 1)
-  expect_equal(fit_current_rcpp$S1, fit_old$S1, tolerance = 1e-10, scale = 1)
-  expect_equal(fit_current_rcpp$w1, fit_old$w1, tolerance = 1e-10, scale = 1)
-  expect_equal(fit_current_rcpp$ELBO, fit_old$ELBO, tolerance = 1e-10, scale = 1)
+  expect_equal(fit_current_rcpp$mu1, fit_old$mu1, tolerance = 1e-6, scale = 1)
+  expect_equal(fit_current_rcpp$S1, fit_old$S1, tolerance = 1e-6, scale = 1)
+  expect_equal(fit_current_rcpp$w1, fit_old$w1, tolerance = 1e-6, scale = 1)
+  expect_equal(fit_current_rcpp$ELBO, fit_old$ELBO, tolerance = 9.99e-5, scale = 1)
   
 })
