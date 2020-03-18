@@ -19,7 +19,8 @@ mr.mash(
   standardize = TRUE,
   verbose = TRUE,
   update_V = FALSE,
-  version = c("R", "Rcpp")
+  version = c("R", "Rcpp"),
+  e = 1e-08
 )
 }
 \arguments{
@@ -56,6 +57,9 @@ Coefficients and covariances are returned on the original scale.}
 \item{update_V}{if TRUE, residual covariance is updated.}
 
 \item{version}{whether to use R or Rcpp code to perform the coordinate ascent updates.}
+
+\item{e}{a small number to add to the diagonal elements of the prior matrices to improve numerical 
+stability.}
 }
 \value{
 a mr.mash fit, which is a list with some or all of the following elements\cr
@@ -114,7 +118,7 @@ V_est <- cov(Ytrain)
 
 ###Fit mr.mash
 fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", 
-               compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=TRUE, version="R")
+               compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=TRUE, version="R", e=1e-8)
 
 # Compare the "fitted" values of Y against the true Y in the training set.
 plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
