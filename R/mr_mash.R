@@ -106,10 +106,10 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
   if(!is.matrix(X)){
     stop("X must be a matrix.")
   }
-  if (any(is.na(Y))) {
+  if(any(is.na(Y))){
     stop("Y must not contain missing values.")
   }
-  if (any(is.na(X))) {
+  if(any(is.na(X))){
     stop("X must not contain missing values.")
   }
   if(is.null(V)){
@@ -130,7 +130,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
     stop("ELBO needs to be computed with update_w0_method=\"mixsqp\".")
   }
 
-  ###Add number to diagonal elements of the prior matrices
+  ###Add number to diagonal elements of the prior matrices (improves numerical stability)
   S0 <- lapply(S0, makePD, e=e)
   
   ###Center Y and either center and/or scale X
