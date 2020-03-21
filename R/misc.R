@@ -32,10 +32,6 @@ tr <- function(x)
 addtocols <- function (A, b)
   t(t(A) + b)
 
-# scale.cols(A,b) scales each column A[,i] by b[i].
-scale.cols <- function (A, b)
-  t(t(A) * b)
-
 ###Function to simulate from MN distribution
 #
 #' @importFrom MBSP matrix.normal
