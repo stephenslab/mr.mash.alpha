@@ -28,6 +28,10 @@ norm2 <- function (x)
 tr <- function(x)
   sum(diag(x))
 
+# Add b[i] to each column A[,i].
+addtocols <- function (A, b)
+  t(t(A) + b)
+
 # Should be the same as mvtnorm::dmvnorm(x,mu,S,log = TRUE)
 #
 #' @importFrom Rcpp evalCpp

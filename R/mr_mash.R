@@ -184,10 +184,14 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   ###numerical stability)
   S0 <- lapply(S0, makePD, e=e)
   
-  ###Center Y and either center and/or scale X
-  Y <- scale(Y, center=TRUE, scale=FALSE)
-  X <- scale(X, center=TRUE, scale=standardize)
- 
+  ###Center Y, and center (and, optionally, scale) X
+  Y    <- scale(Y, center=TRUE, scale=FALSE)
+  X    <- scale(X, center=TRUE, scale=standardize)
+  mu.y <- attr(Y,"scaled:center")
+  #attr(X,"scaled:center") <- NULL
+  #attr(X,"scaled:scale")  <- NULL
+  attr(Y,"scaled:center") <- NULL
+  
   ###Initilize mu1, S1, w1, error, ELBO, iterator, and progress
   mu1_t    <- mu_init 
   err      <- matrix(Inf, nrow=p, ncol=R)
@@ -218,8 +222,6 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   
   cat("Done!\n")
 
-  # MAIN LOOP
-  # ---------
   ###First iteration
   t <- 0
   if(verbose){
@@ -273,7 +275,10 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
     progress <- rbind(progress, c(t, max(err)))
   }
   
-  ###Repeat the following until convergence
+  # MAIN LOOP
+  # ---------
+  ###Repeat the following until convergence, or until maximum number
+  ###of iterations is reached.
   while(any(err>tol)){
       
     ##Save current estimates.
@@ -321,12 +326,12 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
     }
     
     ###Variational parameters
-    ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
-                                    ldetV=ldetV, w0=w0, S0=S0, 
-                                    precomp_quants=comps,
-                                    compute_ELBO=compute_ELBO,
-                                    standardize=standardize,
-                                    update_V=update_V, version=version)
+    ups <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
+                                  ldetV=ldetV, w0=w0, S0=S0, 
+                                  precomp_quants=comps,
+                                  compute_ELBO=compute_ELBO,
+                                  standardize=standardize,
+                                  update_V=update_V, version=version)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t
@@ -360,10 +365,8 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   cat("Processing the output... ")
   
   ###Compute fitted values
-  fitted_vals <- X%*%mu1_t +
-    matrix(rep(attr(Y,"scaled:center"), each=nrow(Y)), ncol=ncol(Y))
-  attr(fitted_vals, "scaled:center") <- NULL
-  attr(fitted_vals, "scaled:scale") <- NULL
+  fitted_vals <- X %*% mu1_t
+  fitted_vals <- addtocols(fitted_vals,mu.y)
 
   if(standardize){
     ###Rescale posterior means and covariance of coefficients
@@ -375,7 +378,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   }
 
   ###Compute intercept
-  intercept <- attr(Y,"scaled:center") - attr(X,"scaled:center") %*% mu1_t
+  intercept <- mu.y - attr(X,"scaled:center") %*% mu1_t
   intercept <- drop(intercept)
   
   if(compute_ELBO && update_V){
