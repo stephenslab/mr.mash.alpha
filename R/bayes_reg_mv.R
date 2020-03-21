@@ -90,35 +90,6 @@ bayes_mvr_ridge_centered_X <- function (V, b, S, S0, xtx, Vinv, V_chol, S_chol, 
 }
 
 
-
-# Bayesian multivariate regression with spike-and-slab prior 
-#
-# The outputs are: b, the least-squares estimate of the regression
-# coefficients; S, the covariance of b; mu1, the posterior mean of the
-# regression coefficients given that the coefficients are not all
-# zero; S1, the posterior covariance of the regression coefficients
-# given that the coefficients are not all zero; and p1, the posterior
-# probability that the coefficients are not all zero; logbf,
-# the log-Bayes factor.
-#
-# Input argument p0 specifies the prior probability that the
-# coefficients are not all zero.
-bayes_mvr_spike_slab <- function (x, Y, V, S0, p0) {
-  
-  # Compute the least-squares estimate and its covariance.
-  f <- bayes_mvr_ridge(x, Y, V, S0)
-  
-  # Compute the posterior probability that the coefficient is nonzero.
-  p1 <- sigmoid(log(p0/(1 - p0)) + f$logbf)
-  
-  # Return the least-squares estimate (b, S), the posterior mean and
-  # standard deviation (mu1, S1), the log-Bayes factor (logbf), and the
-  # posterior inclusion probability (p1).
-  return(list(b = f$b,S = f$S,mu1 = f$mu1,S1 = f$S1,logbf = f$logbf,p1 = p1))
-}
-
-
-
 # Bayesian multivariate regression with mixture-of-normals prior
 # (mixture weights w0 and covariance matrices S0) 
 #
@@ -178,7 +149,6 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
   return(list(logbf = logbf_mix,w1 = w1,mu1 = mu1_mix,S1 = S1_mix))
 }
 
-                  
                   
 # Bayesian multivariate regression with mixture-of-normals prior
 # (mixture weights w0 and covariance matrices S0) with scaled X.
@@ -245,9 +215,8 @@ bayes_mvr_mix_scaled_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol) {
 }
 
 
-
 # Bayesian multivariate regression with mixture-of-normals prior
-# (mixture weights w0 and covariance matrices S0) and transformed X
+# (mixture weights w0 and covariance matrices S0) and centered X
 #
 # The outputs are: the log-Bayes factor (logbf), the posterior assignment probabilities
 # (w1), the posterior mean of the coefficients given that all the
@@ -310,27 +279,4 @@ bayes_mvr_mix_centered_X <- function (x, Y, V, w0, S0, xtx, Vinv, V_chol, d, Qti
   # posterior mean of the coefficients (mu1), and the posterior
   # covariance of the coefficients (S1).
   return(list(logbf = logbf_mix,w1 = w1,mu1 = mu1_mix,S1 = S1_mix))
-}
-
-  
-                
-# Bayesian multivariate regression with mixture-of-normals prior
-# (mixture weights w0 and covariance matrices S0) using MASH
-# TO DO: Move MashInitializer$new outside the function when using in mr.mash
-# because it only needs to be done once!                
-#
-# The outputs are: the log-Bayes factor (logbf), the posterior
-# assignment probabilities (w1), the posterior mean of the
-# coefficients given that all the coefficients are not nonzero (mu1),
-# and the posterior covariance of the coefficients given that all the
-# coefficients are not zero (S1).
-bayes_mvr_mash <- function(x, Y, V, w0, S0){
-  if(!is.matrix(x)){x <- matrix(x, ncol=1)}
-  data <- mmbr:::DenseData$new(x, Y)
-  data$standardize(FALSE, FALSE)
-  mash_init <- mmbr:::MashInitializer$new(S0, grid=1, prior_weights=w0, null_weight=0, top_mixtures=-1)
-  B <- mmbr:::MashRegression$new(1, V, mash_init)
-  B$fit(data, save_var=TRUE)
-
-  return(list(mu1=drop(B$posterior_b1), S1=drop(B$posterior_variance), w1=drop(B$mixture_posterior_weights[, -1]), logbf=B$lbf))
 }

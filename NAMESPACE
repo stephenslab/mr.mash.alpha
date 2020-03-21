@@ -2,7 +2,6 @@
 
 S3method(predict,mr.mash)
 export(mr.mash)
-export(mr.mash.scaled.X)
 importFrom(MBSP,matrix.normal)
 importFrom(Rcpp,evalCpp)
 importFrom(mixsqp,mixsqp)

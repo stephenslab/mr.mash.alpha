@@ -32,14 +32,6 @@ tr <- function(x)
 addtocols <- function (A, b)
   t(t(A) + b)
 
-# Should be the same as mvtnorm::dmvnorm(x,mu,S,log = TRUE)
-#
-#' @importFrom Rcpp evalCpp
-#' @useDynLib mr.mash.alpha
-#' 
-dmvnorm <- function (x, mu, S)
-  dmvnorm_rcpp(x,mu,S)
-
 ###Function to simulate from MN distribution
 #
 #' @importFrom MBSP matrix.normal
@@ -120,52 +112,6 @@ compute_ELBO_fun <- function(rbar, V, Vinv, ldetV, var_part_tr_wERSS, neg_KL){
 chol2ldet <- function(R){
   logdet <- 2*sum(log(diag(R)))
   return(logdet)
-}
-
-###Compute quantities needed when using scaled X
-precompute_quants_scaled_X <- function(n, V, S0){
-  ###Quantities that don't depend on S0
-  R <- chol(V)
-  S <- V/(n-1)
-  S_chol <- R/sqrt(n-1)
-  ldetS_chol <- chol2ldet(S_chol)
-  
-  ###Quantities that depend on S0
-  SplusS0_chol <- list()
-  S1 <- list()
-  ldetSplusS0_chol <- c()
-  for(i in 1:length(S0)){
-    SplusS0_chol[[i]] <- chol(S+S0[[i]])
-    ldetSplusS0_chol[i] <- chol2ldet(SplusS0_chol[[i]])
-    S1[[i]] <- S0[[i]]%*%backsolve(SplusS0_chol[[i]], forwardsolve(t(SplusS0_chol[[i]]), S))
-  }
-  
-  return(list(V_chol=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol, 
-              ldetS_chol=ldetS_chol, ldetSplusS0_chol=ldetSplusS0_chol))
-}
-
-###Compute quantities needed when using centered X
-precompute_quants_centered_X <- function(X, V, S0){
-  ###Quantities that don't depend on S0
-  #xtx <- diag(crossprod(X))
-  xtx <- colSums(X^2)
-  R <- chol(V)
-  #Rtinv <- solve(t(R))
-  #Rinv <- solve(R)
-  Rtinv <- forwardsolve(t(R), diag(nrow(R)))
-  Rinv <- backsolve(R, diag(nrow(R)))
-  
-  ###Quantities that depend on S0
-  d <- list()
-  QtimesR <- list()
-  for(i in 1:length(S0)){
-    U0 <- Rtinv %*% S0[[i]] %*% Rinv
-    out <- eigen(U0)
-    d[[i]]   <- out$values
-    QtimesR[[i]]   <- crossprod(out$vectors, R)   
-  }
-  
-  return(list(xtx=xtx, V_chol=R, d=d, QtimesV_chol=QtimesR))
 }
 
 ###Precompute quantities in any case
@@ -362,8 +308,6 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1_t, w0em, w0m
   # determined by the backtracking line search ("a").
   return(list(w0 = w0new,a = a))
 }
-
-
 
 # Update the mixture weights with mix-SQP, following by backtracking
 # line search to ensure that the ELBO does not decrease.

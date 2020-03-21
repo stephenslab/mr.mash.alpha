@@ -6,19 +6,6 @@
 
 using namespace Rcpp;
 
-// dmvnorm_rcpp
-double dmvnorm_rcpp(const arma::vec& x, const arma::vec& mu, const arma::mat& S);
-RcppExport SEXP _mr_mash_alpha_dmvnorm_rcpp(SEXP xSEXP, SEXP muSEXP, SEXP SSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
-    rcpp_result_gen = Rcpp::wrap(dmvnorm_rcpp(x, mu, S));
-    return rcpp_result_gen;
-END_RCPP
-}
 // inner_loop_general_rcpp
 List inner_loop_general_rcpp(const arma::mat& X, arma::mat& Rbar, arma::mat& mu1, const arma::mat& V, const arma::mat& Vinv, const arma::vec& w0, const arma::cube& S0, const List& precomp_quants_list, bool standardize, bool compute_ELBO, bool update_V);
 RcppExport SEXP _mr_mash_alpha_inner_loop_general_rcpp(SEXP XSEXP, SEXP RbarSEXP, SEXP mu1SEXP, SEXP VSEXP, SEXP VinvSEXP, SEXP w0SEXP, SEXP S0SEXP, SEXP precomp_quants_listSEXP, SEXP standardizeSEXP, SEXP compute_ELBOSEXP, SEXP update_VSEXP) {
@@ -60,7 +47,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_mr_mash_alpha_dmvnorm_rcpp", (DL_FUNC) &_mr_mash_alpha_dmvnorm_rcpp, 3},
     {"_mr_mash_alpha_inner_loop_general_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rcpp, 11},
     {"_mr_mash_alpha_compute_mixsqp_update_loop_rcpp", (DL_FUNC) &_mr_mash_alpha_compute_mixsqp_update_loop_rcpp, 8},
     {NULL, NULL, 0}

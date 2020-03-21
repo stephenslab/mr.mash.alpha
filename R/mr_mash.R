@@ -375,7 +375,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
     SX    <- matrix(rep(sx, each=ncol(mu1_t)),ncol=ncol(mu1_t), byrow=TRUE)
     mu1_t <- mu1_t/SX
     for(j in 1:dim(S1_t)[3])
-      S1_t[, , j] <- S1_t[, , j]/sx[j]^2
+      S1_t[, , j] <- S1_t[, , j]/(sx[j]^2)
   }
 
   ###Compute intercept
