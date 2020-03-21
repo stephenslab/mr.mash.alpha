@@ -1,36 +1,71 @@
 #' @title  Multiple Regression with Multivariate Adaptive Shrinkage.
-#' @details Performs multivariate multiple regression with mixture-of-normals prior.
 #' 
-#' @param Y an n x r matrix of responses.
-#' @param X an n x p matrix of covariates.
-#' @param V an r x r residual covariance matrix.
-#' @param S0 a list of length K containing the desired r x r prior covariance matrices 
-#' on the regression coefficients.
-#' @param w0 a K-vector with prior mixture weights, each associated with the 
-#' respective covariance matrix in \code{S0}.   
-#' @param mu_init a p x r matrix of initial estimates for the regression coefficients.
-#' @param tol convergence tolerance.
-#' @param max_iter maximum number of iterations for the optimization algorithm.
-#' @param update_w0 if TRUE, prior weights are updated.
-#' @param update_w0_method method to update prior weights. Current options are EM or mixsqp.
-#' @param update_V if TRUE, residual covariance is updated.
-#' @param compute_ELBO if TRUE, ELBO is computed.
-#' @param standardize if TRUE, X is standardized using the sample means and sample standard deviations. 
-#' Standardizing X allows a faster implementation, but the prior has a different interpretation.
-#' Coefficients and covariances are returned on the original scale.
-#' @param version whether to use R or Rcpp code to perform the coordinate ascent updates.
-#' @param verbose if TRUE, some information is printed to screen at each iteration.
-#' @param e a small number to add to the diagonal elements of the prior matrices to improve numerical 
-#' stability.
+#' @description Performs multivariate multiple regression with
+#'   mixture-of-normals prior.
 #' 
-#' @return a mr.mash fit, which is a list with some or all of the following elements\cr
-#' \item{mu1}{a p x r matrix of posterior means for the regression coeffcients.}
-#' \item{S1}{a r x r x p array of posterior covariances for the regression coeffcients.}
-#' \item{w1}{a p x K matrix of posterior assignment probabilities to the mixture components.}
-#' \item{intercept}{an r-vector with the estimated intercepts.}
-#' \item{fitted}{an n x r matrix of fitted values.}
-#' \item{ELBO}{the Evidence Lower Bound at convergence.}
-#' \item{progress}{A data.frame including information regarding convergence criteria at each iteration.}
+#' @param Y n x r matrix of responses.
+#' 
+#' @param X n x p matrix of covariates.
+#' 
+#' @param V r x r residual covariance matrix.
+#' 
+#' @param S0 List of length K containing the desired r x r prior
+#'   covariance matrices on the regression coefficients.
+#' 
+#' @param w0 K-vector with prior mixture weights, each associated with
+#'   the respective covariance matrix in \code{S0}.
+#' 
+#' @param mu_init p x r matrix of initial estimates for the regression
+#'   coefficients.
+#' 
+#' @param tol Convergence tolerance.
+#' 
+#' @param max_iter Maximum number of iterations for the optimization
+#'   algorithm.
+#' 
+#' @param update_w0 If \code{TRUE}, prior weights are updated.
+#' 
+#' @param update_w0_method Method to update prior weights.
+#' 
+#' @param update_V if \code{TRUE}, residual covariance is updated.
+#' 
+#' @param compute_ELBO If \code{TRUE}, ELBO is computed.
+#' 
+#' @param standardize If \code{TRUE}, X is "standardized" using the
+#'   sample means and sample standard deviations. Standardizing X
+#'   allows a faster implementation, but the prior has a different
+#'   interpretation. Coefficients and covariances are returned on the
+#'   original scale.
+#' 
+#' @param version Whether to use R or C++ code to perform the
+#'   coordinate ascent updates.
+#' 
+#' @param verbose If \code{TRUE}, some information about the
+#'   algorithm's process is printed at each iteration.
+#' 
+#' @param e A small number to add to the diagonal elements of the
+#'   prior matrices to improve numerical stability of the updates.
+#' 
+#' @return A mr.mash fit, stored as a list with some or all of the
+#' following elements:
+#' 
+#' \item{mu1}{p x r matrix of posterior means for the regression
+#'   coeffcients.}
+#' 
+#' \item{S1}{r x r x p array of posterior covariances for the
+#'   regression coeffcients.}
+#' 
+#' \item{w1}{p x K matrix of posterior assignment probabilities to the
+#'   mixture components.}
+#' 
+#' \item{intercept}{r-vector with the estimated intercepts.}
+#' 
+#' \item{fitted}{n x r matrix of fitted values.}
+#' 
+#' \item{ELBO}{Evidence Lower Bound (ELBO) at convergence.}
+#' 
+#' \item{progress}{A data frame including information regarding
+#'   convergence criteria at each iteration.}
 #' 
 #' @examples 
 #' ###Set seed
@@ -85,66 +120,57 @@
 #' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 #' 
 #' @export
-mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, 
-                    tol=1e-8, max_iter=1e5, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
-                    compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=FALSE, 
-                    version=c("R", "Rcpp"), e=1e-8) {
+#' 
+mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
+                    max_iter=1e5, update_w0=TRUE,
+                    update_w0_method=c("EM", "mixsqp"), 
+                    compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
+                    update_V=FALSE, version=c("R", "Rcpp"), e=1e-8) {
 
-  tic <- Sys.time()
+  tic <- proc.time()
   cat("Processing the inputs... ")
   
-  ###Select method to update the weights (if not specified by user, EM will be used)
+  ###Select method to update the weights (if not specified by user, EM
+  ###will be used)
   update_w0_method <- match.arg(update_w0_method)
   
-  ###Select version of the inner loop (if not specified by user, R will be used)
+  ###Select version of the inner loop (if not specified by user, R
+  ###will be used)
   version <- match.arg(version)
   
   ###Check that the inputs are in the correct format
-  if(!is.matrix(Y)){
+  if(!is.matrix(Y))
     stop("Y must be a matrix.")
-  }
-  if(!is.matrix(X)){
+  if(!is.matrix(X))
     stop("X must be a matrix.")
-  }
-  if(any(is.na(Y))){
+  if(any(is.na(Y)))
     stop("Y must not contain missing values.")
-  }
-  if(any(is.na(X))){
+  if(any(is.na(X)))
     stop("X must not contain missing values.")
-  }
-  if(is.null(V)){
+  if(is.null(V))
     V <- cov(Y)
-  } else if(!is.matrix(V) || !isSymmetric(V)){
+  else if(!is.matrix(V) || !isSymmetric(V))
     stop("V must be a symmetric matrix.")
-  }
-  if(!is.list(S0)){
+  if(!is.list(S0))
     stop("S0 must be a list.")
-  }
-  if(!is.vector(w0)){
+  if(!is.vector(w0))
     stop("w0 must be a vector.")
-  }
-  if(length(S0)!=length(w0)){
+  if(length(S0)!=length(w0))
     stop("S0 and w0 must have the same length.")
-  }
-  if(update_w0_method=="mixsqp" && !compute_ELBO){
+  if(update_w0_method=="mixsqp" && !compute_ELBO)
     stop("ELBO needs to be computed with update_w0_method=\"mixsqp\".")
-  }
 
-  ###Add number to diagonal elements of the prior matrices (improves numerical stability)
+  ###Add number to diagonal elements of the prior matrices (improves
+  ###numerical stability)
   S0 <- lapply(S0, makePD, e=e)
   
   ###Center Y and either center and/or scale X
   Y <- scale(Y, center=TRUE, scale=FALSE)
-  if(standardize){
-    X <- scale(X, center=TRUE, scale=TRUE)
-  } else {
-    X <- scale(X, center=TRUE, scale=FALSE)
-  }
+  X <- scale(X, center=TRUE, scale=standardize)
  
   ###Initilize mu1, S1, w1, error, ELBO, iterator, and progress
-  if(is.null(mu_init)){
+  if(is.null(mu_init))
     mu_init <- matrix(0, nrow=ncol(X), ncol=ncol(Y))
-  }
   p        <- ncol(X)
   n        <- nrow(X)
   R        <- ncol(Y)
@@ -153,9 +179,8 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
   err      <- matrix(Inf, nrow=p, ncol=R)
   t        <- 0
   progress <- data.frame() 
-  if(compute_ELBO){
+  if(compute_ELBO)
     ELBO    <- -Inf
-  }
   
   ###Precompute quantities
   comps <- precompute_quants(n, X, V, S0, standardize, version)
@@ -184,24 +209,22 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
   ###First iteration
   if(verbose){
     cat("Fitting the optimization algorithm... \n")
-    if(compute_ELBO){
+    if(compute_ELBO)
       cat(" iter    mu1_max.diff     ELBO_diff               ELBO\n")
-    } else {
+    else 
       cat(" iter    mu1_max.diff\n")
-    }
-  } else {
-    cat("Fitting the optimization algorithm... ")
-  }
+  } else 
+      cat("Fitting the optimization algorithm... ")
+  
   ##Save current estimates.
   mu1_tminus1 <- mu1_t   
   
   ##Update iterator
   t <- t+1
   
-  if(compute_ELBO){
+  if(compute_ELBO)
     ##Set last value of ELBO as ELBO0
     ELBO0 <- ELBO
-  }
   
   ###Update variational parameters
   ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
@@ -213,9 +236,8 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
   if(compute_ELBO){
     ELBO  <- ups$ELBO
   }
-  if(update_V){
-    var_part_ERSS=ups$var_part_ERSS
-  }
+  if(update_V)
+    var_part_ERSS <- ups$var_part_ERSS
   
   if(compute_ELBO){
     if(verbose){
@@ -321,7 +343,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
 
   if(standardize){
     ###Rescale posterior means and covariance of coefficients
-    SX <- matrix(rep(attr(X, 'scaled:scale'), each=ncol(mu1_t)), ncol=ncol(mu1_t), byrow=TRUE)
+    SX <- matrix(rep(attr(X, "scaled:scale"), each=ncol(mu1_t)), ncol=ncol(mu1_t), byrow=TRUE)
     mu1_t <- mu1_t/SX
     for(j in 1:dim(S1_t)[3]){
       S1_t[, , j] <- S1_t[, , j]/((attr(X, 'scaled:scale')[j])^2)
@@ -364,7 +386,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL,
   class(out) <- c("mr.mash", "list")
   
   cat("Done!\n")
-  toc <- Sys.time()
+  toc <- proc.time()
   cat("mr.mash successfully executed in", difftime(toc,tic, units="mins"), "minutes!\n")
   
   return(out)

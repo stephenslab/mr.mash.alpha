@@ -24,58 +24,73 @@ mr.mash(
 )
 }
 \arguments{
-\item{X}{an n x p matrix of covariates.}
+\item{X}{n x p matrix of covariates.}
 
-\item{Y}{an n x r matrix of responses.}
+\item{Y}{n x r matrix of responses.}
 
-\item{V}{an r x r residual covariance matrix.}
+\item{V}{r x r residual covariance matrix.}
 
-\item{S0}{a list of length K containing the desired r x r prior covariance matrices 
-on the regression coefficients.}
+\item{S0}{List of length K containing the desired r x r prior
+covariance matrices on the regression coefficients.}
 
-\item{w0}{a K-vector with prior mixture weights, each associated with the 
-respective covariance matrix in \code{S0}.}
+\item{w0}{K-vector with prior mixture weights, each associated with
+the respective covariance matrix in \code{S0}.}
 
-\item{mu_init}{a p x r matrix of initial estimates for the regression coefficients.}
+\item{mu_init}{p x r matrix of initial estimates for the regression
+coefficients.}
 
-\item{tol}{convergence tolerance.}
+\item{tol}{Convergence tolerance.}
 
-\item{max_iter}{maximum number of iterations for the optimization algorithm.}
+\item{max_iter}{Maximum number of iterations for the optimization
+algorithm.}
 
-\item{update_w0}{if TRUE, prior weights are updated.}
+\item{update_w0}{If \code{TRUE}, prior weights are updated.}
 
-\item{update_w0_method}{method to update prior weights. Current options are EM or mixsqp.}
+\item{update_w0_method}{Method to update prior weights.}
 
-\item{compute_ELBO}{if TRUE, ELBO is computed.}
+\item{compute_ELBO}{If \code{TRUE}, ELBO is computed.}
 
-\item{standardize}{if TRUE, X is standardized using the sample means and sample standard deviations. 
-Standardizing X allows a faster implementation, but the prior has a different interpretation.
-Coefficients and covariances are returned on the original scale.}
+\item{standardize}{If \code{TRUE}, X is "standardized" using the
+sample means and sample standard deviations. Standardizing X
+allows a faster implementation, but the prior has a different
+interpretation. Coefficients and covariances are returned on the
+original scale.}
 
-\item{verbose}{if TRUE, some information is printed to screen at each iteration.}
+\item{verbose}{If \code{TRUE}, some information about the
+algorithm's process is printed at each iteration.}
 
-\item{update_V}{if TRUE, residual covariance is updated.}
+\item{update_V}{if \code{TRUE}, residual covariance is updated.}
 
-\item{version}{whether to use R or Rcpp code to perform the coordinate ascent updates.}
+\item{version}{Whether to use R or C++ code to perform the
+coordinate ascent updates.}
 
-\item{e}{a small number to add to the diagonal elements of the prior matrices to improve numerical 
-stability.}
+\item{e}{A small number to add to the diagonal elements of the
+prior matrices to improve numerical stability of the updates.}
 }
 \value{
-a mr.mash fit, which is a list with some or all of the following elements\cr
-\item{mu1}{a p x r matrix of posterior means for the regression coeffcients.}
-\item{S1}{a r x r x p array of posterior covariances for the regression coeffcients.}
-\item{w1}{a p x K matrix of posterior assignment probabilities to the mixture components.}
-\item{intercept}{an r-vector with the estimated intercepts.}
-\item{fitted}{an n x r matrix of fitted values.}
-\item{ELBO}{the Evidence Lower Bound at convergence.}
-\item{progress}{A data.frame including information regarding convergence criteria at each iteration.}
+A mr.mash fit, stored as a list with some or all of the
+following elements:
+
+\item{mu1}{p x r matrix of posterior means for the regression coeffcients.}
+
+\item{S1}{r x r x p array of posterior covariances for the
+  regression coeffcients.}
+
+\item{w1}{p x K matrix of posterior assignment probabilities to the
+  mixture components.}
+
+\item{intercept}{r-vector with the estimated intercepts.}
+
+\item{fitted}{n x r matrix of fitted values.}
+
+\item{ELBO}{Evidence Lower Bound (ELBO) at convergence.}
+
+\item{progress}{A data frame including information regarding
+  convergence criteria at each iteration.}
 }
 \description{
-Multiple Regression with Multivariate Adaptive Shrinkage.
-}
-\details{
-Performs multivariate multiple regression with mixture-of-normals prior.
+Performs multivariate multiple regression with
+  mixture-of-normals prior.
 }
 \examples{
 ###Set seed
