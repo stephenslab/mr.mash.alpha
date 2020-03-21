@@ -1,6 +1,8 @@
-context("Test mr.mash outputted fitted values vs predicted values with the same X")
+context(paste("Test mr.mash outputted fitted values vs predicted values",
+              "with the same X"))
 
-test_that("mr.mash outputted fitted values vs predicted values with the same X are equal", {
+test_that(paste("mr.mash outputted fitted vs predicted values with same X",
+                "are equal"), {
   ###Set seed
   set.seed(123)
   

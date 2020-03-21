@@ -62,8 +62,8 @@ Y <- matrix.normal(X %*% B + matrix(intercept,n,r,byrow = TRUE),diag(n),V)
 # -----------------
 # Run 50 co-ordinate ascent updates.
 mu1 <- matrix(0,p,r)
-fit <- mr.mash(X,Y,V,S0,w0,mu_init = mu1,max_iter = 50,
-               standardize = FALSE,version = "Rcpp")
+fit <- mr.mash(X,Y,V,S0,w0,mu_init = mu1,max_iter = 50,standardize = FALSE,
+               version = "Rcpp")
 
 # Compare the posterior mean estimates of the regression coefficients
 # against the coefficients used to simulate the data.
