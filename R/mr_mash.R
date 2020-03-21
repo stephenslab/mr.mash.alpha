@@ -185,11 +185,13 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   S0 <- lapply(S0, makePD, e=e)
   
   ###Center Y, and center (and, optionally, scale) X
-  Y    <- scale(Y, center=TRUE, scale=FALSE)
-  X    <- scale(X, center=TRUE, scale=standardize)
-  mu.y <- attr(Y,"scaled:center")
-  #attr(X,"scaled:center") <- NULL
-  #attr(X,"scaled:scale")  <- NULL
+  Y   <- scale(Y, center=TRUE, scale=FALSE)
+  X   <- scale(X, center=TRUE, scale=standardize)
+  muy <- attr(Y,"scaled:center")
+  mux <- attr(X,"scaled:center")
+  sx  <- attr(X,"scaled:scale")
+  attr(X,"scaled:center") <- NULL
+  attr(X,"scaled:scale")  <- NULL
   attr(Y,"scaled:center") <- NULL
   
   ###Initilize mu1, S1, w1, error, ELBO, iterator, and progress
@@ -366,19 +368,18 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   
   ###Compute fitted values
   fitted_vals <- X %*% mu1_t
-  fitted_vals <- addtocols(fitted_vals,mu.y)
+  fitted_vals <- addtocols(fitted_vals,muy)
 
   if(standardize){
     ###Rescale posterior means and covariance of coefficients
-    SX <- matrix(rep(attr(X, "scaled:scale"), each=ncol(mu1_t)),
-                 ncol=ncol(mu1_t), byrow=TRUE)
+    SX    <- matrix(rep(sx, each=ncol(mu1_t)),ncol=ncol(mu1_t), byrow=TRUE)
     mu1_t <- mu1_t/SX
     for(j in 1:dim(S1_t)[3])
-      S1_t[, , j] <- S1_t[, , j]/((attr(X, 'scaled:scale')[j])^2)
+      S1_t[, , j] <- S1_t[, , j]/sx[j]^2
   }
 
   ###Compute intercept
-  intercept <- mu.y - attr(X,"scaled:center") %*% mu1_t
+  intercept <- muy - mux %*% mu1_t
   intercept <- drop(intercept)
   
   if(compute_ELBO && update_V){
