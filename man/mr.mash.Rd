@@ -36,8 +36,8 @@ covariance matrices on the regression coefficients.}
 \item{w0}{K-vector with prior mixture weights, each associated with
 the respective covariance matrix in \code{S0}.}
 
-\item{mu_init}{p x r matrix of initial estimates for the regression
-coefficients.}
+\item{mu_init}{p x r matrix of initial estimates of the posterior
+mean regression coefficients.}
 
 \item{tol}{Convergence tolerance.}
 
@@ -71,7 +71,8 @@ prior matrices to improve numerical stability of the updates.}
 A mr.mash fit, stored as a list with some or all of the
 following elements:
 
-\item{mu1}{p x r matrix of posterior means for the regression coeffcients.}
+\item{mu1}{p x r matrix of posterior means for the regression
+  coeffcients.}
 
 \item{S1}{r x r x p array of posterior covariances for the
   regression coeffcients.}
@@ -83,7 +84,7 @@ following elements:
 
 \item{fitted}{n x r matrix of fitted values.}
 
-\item{ELBO}{Evidence Lower Bound (ELBO) at convergence.}
+\item{ELBO}{Evidence Lower Bound (ELBO) at last iteration.}
 
 \item{progress}{A data frame including information regarding
   convergence criteria at each iteration.}
@@ -114,12 +115,15 @@ B  <- matrix(c(-2, -2,
 X <- matrix(rnorm(n*p), nrow=n, ncol=p)
 X <- scale(X, center=TRUE, scale=FALSE)
 
-##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix and V is the residual covariance  
+##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix
+##and V is the residual covariance  
 Y <- mr.mash.alpha:::sim_mvr(X, B, V)
 
-###Specify the mixture weights and covariance matrices for the mixture-of-normals prior.
+###Specify the mixture weights and covariance matrices for the
+### mixture-of-normals prior.
 grid <- seq(1, 5)
-S0mix <- mr.mash.alpha:::compute_cov_canonical(ncol(Y), singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=TRUE)
+S0mix <- mr.mash.alpha:::compute_cov_canonical(ncol(Y), singletons=TRUE,
+           hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=TRUE)
 w0    <- rep(1/(length(S0mix)), length(S0mix))
 
 ###Split the data in training and test sets
@@ -132,16 +136,19 @@ Xtest <- X[c(1:10), ]
 V_est <- cov(Ytrain)
 
 ###Fit mr.mash
-fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", 
-               compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=TRUE, version="R", e=1e-8)
+fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE,
+               update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE,
+               verbose=TRUE, update_V=TRUE, version="R", e=1e-8)
 
 # Compare the "fitted" values of Y against the true Y in the training set.
-plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
+plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",
+     ylab = "fitted")
 abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 
 # Predict the multivariate outcomes in the test set using the fitted model.
 Ytest_est <- predict(fit,Xtest)
-plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",ylab = "predicted")
+plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",
+     ylab = "predicted")
 abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 
 }

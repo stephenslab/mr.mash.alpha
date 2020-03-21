@@ -13,12 +13,16 @@ p <- 20
 V <- rbind(c(1.0,0.2),
            c(0.2,0.4))
 r <- nrow(V)
+rownames(V) <- paste0("r",1:r)
+colnames(V) <- paste0("r",1:r)
 
 # True effects used to simulate the data.
 intercept <- c(-1,+1)
 B <- rbind(c(-2.0, -1.5),
            c( 1.0,  1.0),
            matrix(0,p - 2,r))
+rownames(B) <- paste0("x",1:p)
+colnames(B) <- paste0("d",1:r)
 
 # Covariances in the mixture-of-normals prior on the regression
 # coefficients.
@@ -30,17 +34,24 @@ S0 <- list(k1 = rbind(c(3,0),
                       c(3.5,4)),
            k4 = rbind(c(5,0),
                       c(0,0)))
+S0 <- lapply(S0,function (x) {
+  rownames(x) <- paste0("r",1:r)
+  colnames(x) <- paste0("r",1:r)
+  return(x)
+})
 
 # The mixture weights in the mixture-of-normals prior on the
 # regression coefficients.
 w0 <- c(0.1,0.6,0.2,0.1)
 k  <- length(w0)
+names(w0) <- paste0("k",1:k)
 
 # SIMULATE DATA
 # -------------
 set.seed(1)
 X <- matrix(rnorm(n*p),n,p)
-X <- scale(X,scale = FALSE)
+rownames(X) <- paste0("i",1:n)
+colnames(X) <- paste0("x",1:p)
 
 # Simulate Y ~ MN(X*B,I,V). Note that matrix.normal from the MBSP
 # package appears to be much faster than rmatrixnorm from the

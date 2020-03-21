@@ -15,8 +15,8 @@
 #' @param w0 K-vector with prior mixture weights, each associated with
 #'   the respective covariance matrix in \code{S0}.
 #' 
-#' @param mu_init p x r matrix of initial estimates for the regression
-#'   coefficients.
+#' @param mu_init p x r matrix of initial estimates of the posterior
+#'   mean regression coefficients.
 #' 
 #' @param tol Convergence tolerance.
 #' 
@@ -62,7 +62,7 @@
 #' 
 #' \item{fitted}{n x r matrix of fitted values.}
 #' 
-#' \item{ELBO}{Evidence Lower Bound (ELBO) at convergence.}
+#' \item{ELBO}{Evidence Lower Bound (ELBO) at last iteration.}
 #' 
 #' \item{progress}{A data frame including information regarding
 #'   convergence criteria at each iteration.}
@@ -89,12 +89,15 @@
 #' X <- matrix(rnorm(n*p), nrow=n, ncol=p)
 #' X <- scale(X, center=TRUE, scale=FALSE)
 #'
-#' ##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix and V is the residual covariance  
+#' ##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix
+#' ##and V is the residual covariance  
 #' Y <- mr.mash.alpha:::sim_mvr(X, B, V)
 #'
-#' ###Specify the mixture weights and covariance matrices for the mixture-of-normals prior.
+#' ###Specify the mixture weights and covariance matrices for the
+#' ### mixture-of-normals prior.
 #' grid <- seq(1, 5)
-#' S0mix <- mr.mash.alpha:::compute_cov_canonical(ncol(Y), singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=TRUE)
+#' S0mix <- mr.mash.alpha:::compute_cov_canonical(ncol(Y), singletons=TRUE,
+#'            hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=TRUE)
 #' w0    <- rep(1/(length(S0mix)), length(S0mix))
 #' 
 #' ###Split the data in training and test sets
@@ -107,16 +110,19 @@
 #' V_est <- cov(Ytrain)
 #'
 #' ###Fit mr.mash
-#' fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", 
-#'                compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, update_V=TRUE, version="R", e=1e-8)
+#' fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE,
+#'                update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE,
+#'                verbose=TRUE, update_V=TRUE, version="R", e=1e-8)
 #'
 #' # Compare the "fitted" values of Y against the true Y in the training set.
-#' plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
+#' plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",
+#'      ylab = "fitted")
 #' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 #'
 #' # Predict the multivariate outcomes in the test set using the fitted model.
 #' Ytest_est <- predict(fit,Xtest)
-#' plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",ylab = "predicted")
+#' plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",
+#'      ylab = "predicted")
 #' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 #' 
 #' @export
@@ -127,9 +133,11 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
                     compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, version=c("R", "Rcpp"), e=1e-8) {
 
-  tic <- proc.time()
+  tic <- Sys.time()
   cat("Processing the inputs... ")
-  
+
+  # CHECK AND PROCESS INPUTS
+  # ------------------------
   ###Select method to update the weights (if not specified by user, EM
   ###will be used)
   update_w0_method <- match.arg(update_w0_method)
@@ -138,7 +146,8 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   ###will be used)
   version <- match.arg(version)
   
-  ###Check that the inputs are in the correct format
+  ###Check that the inputs are in the correct format, and initialize
+  ###any model parameters that are not specified.
   if(!is.matrix(Y))
     stop("Y must be a matrix.")
   if(!is.matrix(X))
@@ -160,6 +169,17 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   if(update_w0_method=="mixsqp" && !compute_ELBO)
     stop("ELBO needs to be computed with update_w0_method=\"mixsqp\".")
 
+  # If not specified, set the initial estimates of the posterior mean
+  # regression coefficients.
+  p <- ncol(X)
+  n <- nrow(X)
+  R <- ncol(Y)
+  K <- length(S0)
+  if(is.null(mu_init))
+    mu_init <- matrix(0, nrow=p, ncol=R)
+
+  # PRE-PROCESSING STEPS
+  # --------------------
   ###Add number to diagonal elements of the prior matrices (improves
   ###numerical stability)
   S0 <- lapply(S0, makePD, e=e)
@@ -169,44 +189,39 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   X <- scale(X, center=TRUE, scale=standardize)
  
   ###Initilize mu1, S1, w1, error, ELBO, iterator, and progress
-  if(is.null(mu_init))
-    mu_init <- matrix(0, nrow=ncol(X), ncol=ncol(Y))
-  p        <- ncol(X)
-  n        <- nrow(X)
-  R        <- ncol(Y)
-  K        <- length(S0)
   mu1_t    <- mu_init 
   err      <- matrix(Inf, nrow=p, ncol=R)
-  t        <- 0
   progress <- data.frame() 
   if(compute_ELBO)
-    ELBO    <- -Inf
+    ELBO <- -Inf
   
   ###Precompute quantities
   comps <- precompute_quants(n, X, V, S0, standardize, version)
   
-  if(compute_ELBO || !standardize){ 
+  if(compute_ELBO || !standardize)
     ###Compute inverse of V (needed for the ELBO and unstandardized X)
     #Vinv <- chol2inv(comps$V_chol)
-    Vinv <- backsolve(comps$V_chol, forwardsolve(t(comps$V_chol), diag(nrow(comps$V_chol))))
-  } else {
-    if(version=="R"){
+    Vinv <- backsolve(comps$V_chol, forwardsolve(t(comps$V_chol),
+                                                 diag(nrow(comps$V_chol))))
+  else {
+    if(version=="R")
       Vinv <- NULL
-    } else if(version=="Rcpp"){
+    else if(version=="Rcpp")
       Vinv <- matrix(0, nrow=R, ncol=R)
-    }
   }
   
-  if(compute_ELBO){
+  if(compute_ELBO)
     ###Compute log determinant of V (needed for the ELBO)
     ldetV <- chol2ldet(comps$V_chol)
-  } else {
+  else
     ldetV <- NULL
-  }
   
   cat("Done!\n")
-  
+
+  # MAIN LOOP
+  # ---------
   ###First iteration
+  t <- 0
   if(verbose){
     cat("Fitting the optimization algorithm... \n")
     if(compute_ELBO)
@@ -214,7 +229,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
     else 
       cat(" iter    mu1_max.diff\n")
   } else 
-      cat("Fitting the optimization algorithm... ")
+    cat("Fitting the optimization algorithm... ")
   
   ##Save current estimates.
   mu1_tminus1 <- mu1_t   
@@ -222,41 +237,45 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   ##Update iterator
   t <- t+1
   
+  ##Set last value of ELBO as ELBO0
   if(compute_ELBO)
-    ##Set last value of ELBO as ELBO0
     ELBO0 <- ELBO
   
   ###Update variational parameters
-  ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
-                                  precomp_quants=comps, compute_ELBO=compute_ELBO, standardize=standardize, 
-                                  update_V=update_V, version=version)
+  ups <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
+                                ldetV=ldetV, w0=w0, S0=S0,
+                                precomp_quants=comps,
+                                compute_ELBO=compute_ELBO,
+                                standardize=standardize, 
+                                update_V=update_V, version=version)
   mu1_t <- ups$mu1_t
   S1_t  <- ups$S1_t
   w1_t  <- ups$w1_t
-  if(compute_ELBO){
-    ELBO  <- ups$ELBO
-  }
+  if(compute_ELBO)
+    ELBO <- ups$ELBO
   if(update_V)
     var_part_ERSS <- ups$var_part_ERSS
   
   if(compute_ELBO){
-    if(verbose){
+    if(verbose)
       ##Print out useful info
-      cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
-    }
+      cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n",
+                  t, max(err), ELBO - ELBO0, ELBO))
+
     ##Update progress data.frame 
     progress <- rbind(progress, c(t, max(err), ELBO - ELBO0, ELBO))
   } else {
-    if(verbose){
+    if(verbose)
       ##Print out useful info
       cat(sprintf("%4d      %9.2e\n", t, max(err)))
-    }
+    
     ##Update progress data.frame 
     progress <- rbind(progress, c(t, max(err)))
   }
   
   ###Repeat the following until convergence
   while(any(err>tol)){
+      
     ##Save current estimates.
     mu1_tminus1 <- mu1_t   
     
@@ -269,65 +288,69 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
       break
     }
     
-    if(compute_ELBO){
-      ##Set last value of ELBO as ELBO0
+    ##Set last value of ELBO as ELBO0
+    if(compute_ELBO)
       ELBO0 <- ELBO
-    }
     
     ##Update V if requested
     if(update_V){
-      V <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
+      V     <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
       comps <- precompute_quants(n, X, V, S0, standardize, version)
-      if(compute_ELBO || !standardize){ 
-        Vinv <- backsolve(comps$V_chol, forwardsolve(t(comps$V_chol), diag(nrow(comps$V_chol))))
-      }    
-      if(compute_ELBO){
-        ###Compute log determinant of V (needed for the ELBO)
+      if(compute_ELBO || !standardize)
+        Vinv <- backsolve(comps$V_chol,
+                          forwardsolve(t(comps$V_chol),
+                                       diag(nrow(comps$V_chol))))
+      
+      ###Compute log determinant of V (needed for the ELBO)
+      if(compute_ELBO)
         ldetV <- chol2ldet(comps$V_chol)
-      }
     }
     
     ##Update w0 if requested
     if(update_w0){
-      if(update_w0_method=="EM"){
+      if(update_w0_method=="EM")
         w0 <- update_weights_em(w1_t)
-      } else if(update_w0_method=="mixsqp"){
+      else if(update_w0_method=="mixsqp"){
         w0em <- update_weights_em(w1_t)
-        w0 <- update_weights_mixsqp(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0em=w0em, 
-                                    S0=S0, precomp_quants=comps, standardize=standardize, version=version,
-                                    stepsize.reduce = 0.5, stepsize.min = 1e-8)$w0
+        w0   <- update_weights_mixsqp(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
+                                      ldetV=ldetV, w0em=w0em, S0=S0,
+                                      precomp_quants=comps,
+                                      standardize=standardize,
+                                      version=version)$w0
       }
     }
     
     ###Variational parameters
-    ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
-                                    precomp_quants=comps, compute_ELBO=compute_ELBO, standardize=standardize,
+    ups   <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
+                                    ldetV=ldetV, w0=w0, S0=S0, 
+                                    precomp_quants=comps,
+                                    compute_ELBO=compute_ELBO,
+                                    standardize=standardize,
                                     update_V=update_V, version=version)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t
-    if(compute_ELBO){
-      ELBO  <- ups$ELBO
-    }
-    if(update_V){
+    if(compute_ELBO)
+      ELBO <- ups$ELBO
+    if(update_V)
       var_part_ERSS <- ups$var_part_ERSS
-    }
     
     ##Compute distance in mu1 between two successive iterations
     err <- abs(mu1_t - mu1_tminus1)
     
     if(compute_ELBO){
-      if(verbose){
+      if(verbose)
         ##Print out useful info
-        cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n", t, max(err), ELBO - ELBO0, ELBO))
-      }
+        cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n",
+                    t, max(err), ELBO - ELBO0, ELBO))
+
       ##Update progress data.frame 
       progress <- rbind(progress, c(t, max(err), ELBO - ELBO0, ELBO))
     } else {
-      if(verbose){
+      if(verbose)
         ##Print out useful info
         cat(sprintf("%4d      %9.2e\n", t, max(err)))
-      }
+
       ##Update progress data.frame 
       progress <- rbind(progress, c(t, max(err)))
     }
@@ -337,17 +360,18 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   cat("Processing the output... ")
   
   ###Compute fitted values
-  fitted_vals <- X%*%mu1_t + matrix(rep(attr(Y,"scaled:center"), each=nrow(Y)), ncol=ncol(Y))
+  fitted_vals <- X%*%mu1_t +
+    matrix(rep(attr(Y,"scaled:center"), each=nrow(Y)), ncol=ncol(Y))
   attr(fitted_vals, "scaled:center") <- NULL
   attr(fitted_vals, "scaled:scale") <- NULL
 
   if(standardize){
     ###Rescale posterior means and covariance of coefficients
-    SX <- matrix(rep(attr(X, "scaled:scale"), each=ncol(mu1_t)), ncol=ncol(mu1_t), byrow=TRUE)
+    SX <- matrix(rep(attr(X, "scaled:scale"), each=ncol(mu1_t)),
+                 ncol=ncol(mu1_t), byrow=TRUE)
     mu1_t <- mu1_t/SX
-    for(j in 1:dim(S1_t)[3]){
+    for(j in 1:dim(S1_t)[3])
       S1_t[, , j] <- S1_t[, , j]/((attr(X, 'scaled:scale')[j])^2)
-    }
   }
 
   ###Compute intercept
@@ -357,37 +381,51 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   if(compute_ELBO && update_V){
     colnames(progress) <- c("iter", "mu1_max.diff", "ELBO_diff", "ELBO")
     
-    ###Return the posterior assignment probabilities (w1), the posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), the residual covariance (V), the intercept (intercept), the fitted values (fitted), 
-    ###the Evidence Lower Bound (ELBO), and the progress data frame (progress).
-    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, intercept=intercept, fitted=fitted_vals, ELBO=ELBO, progress=progress)
+    ###Return the posterior assignment probabilities (w1), the
+    ###posterior mean of the coefficients (mu1), and the posterior
+    ###covariance of the coefficients (S1), the residual covariance
+    ###(V), the intercept (intercept), the fitted values (fitted), the
+    ###Evidence Lower Bound (ELBO), and the progress data frame
+    ###(progress).
+    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, intercept=intercept,
+                fitted=fitted_vals, ELBO=ELBO, progress=progress)
   } else if(compute_ELBO && !update_V){
     colnames(progress) <- c("iter", "mu1_max.diff", "ELBO_diff", "ELBO")
     
-    ###Return the posterior assignment probabilities (w1), the posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), the intercept (intercept), the fitted values (fitted), 
-    ###the Evidence Lower Bound (ELBO), and the progress data frame (progress).
-    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept, fitted=fitted_vals, ELBO=ELBO, progress=progress)
+    ###Return the posterior assignment probabilities (w1), the
+    ###posterior mean of the coefficients (mu1), and the posterior
+    ###covariance of the coefficients (S1), the intercept (intercept),
+    ###the fitted values (fitted), the Evidence Lower Bound (ELBO),
+    ###and the progress data frame (progress).
+    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept,
+                fitted=fitted_vals, ELBO=ELBO, progress=progress)
   } else if(!compute_ELBO && update_V){
     colnames(progress) <- c("iter", "mu1_max.diff")
     
-    ###Return the posterior assignment probabilities (w1), the posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), the residual covariance (V), the intercept (intercept), the fitted values (fitted), 
-    ###and the progress data frame (progress).    
-    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, intercept=intercept, fitted=fitted_vals, progress=progress)
+    ###Return the posterior assignment probabilities (w1), the
+    ###posterior mean of the coefficients (mu1), and the posterior
+    ###covariance of the coefficients (S1), the residual covariance
+    ###(V), the intercept (intercept), the fitted values (fitted), and
+    ###the progress data frame (progress).
+    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, intercept=intercept,
+                fitted=fitted_vals, progress=progress)
   } else {
     colnames(progress) <- c("iter", "mu1_max.diff")
     
-    ###Return the posterior assignment probabilities (w1), the posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), the intercept (intercept), the fitted values (fitted), and the progress data frame (progress).    
-    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept, fitted=fitted_vals, progress=progress)
-  }
-  
+    ###Return the posterior assignment probabilities (w1), the
+    ###posterior mean of the coefficients (mu1), and the posterior
+    ###covariance of the coefficients (S1), the intercept (intercept),
+    ###the fitted values (fitted), and the progress data frame
+    ###(progress).
+    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept,
+                fitted=fitted_vals, progress=progress)
+  }  
   class(out) <- c("mr.mash", "list")
   
   cat("Done!\n")
-  toc <- proc.time()
-  cat("mr.mash successfully executed in", difftime(toc,tic, units="mins"), "minutes!\n")
+  toc <- Sys.time()
+  cat("mr.mash successfully executed in", difftime(toc,tic, units="mins"),
+      "minutes!\n")
   
   return(out)
 }
