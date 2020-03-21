@@ -1,4 +1,4 @@
-context("Test Bayesian multivariate regression with centered x")
+context("Test Bayesian multivariate regression with centered X")
 
 test_that("bayes_mvr_mix and bayes_mvr_mix_centered_X return the same results", {
   ###Set seed

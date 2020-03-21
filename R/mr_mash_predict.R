@@ -4,7 +4,7 @@
 #' 
 #' @param newx a new value for X at which to do predictions.
 #' 
-#' @return a matrix of predicted values.
+#' @return Matrix of predicted values.
 #' 
 #' @export
 #' 
