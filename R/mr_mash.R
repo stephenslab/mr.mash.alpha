@@ -189,7 +189,8 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   X   <- scale(X, center=TRUE, scale=standardize)
   muy <- attr(Y,"scaled:center")
   mux <- attr(X,"scaled:center")
-  sx  <- attr(X,"scaled:scale")
+  if (standardize)
+    sx <- attr(X,"scaled:scale")
   attr(X,"scaled:center") <- NULL
   attr(X,"scaled:scale")  <- NULL
   attr(Y,"scaled:center") <- NULL

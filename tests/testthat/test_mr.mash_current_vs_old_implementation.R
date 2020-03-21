@@ -1,6 +1,6 @@
 context("Test current implementation of mr.mash vs old implementation")
 
-test_that("Current implementation and old implementation of mr.mash return the same results", {
+test_that("Current and old mr.mash return the same results",{
   ###Set seed
   set.seed(123)
   
@@ -21,23 +21,32 @@ test_that("Current implementation and old implementation of mr.mash return the s
   X <- matrix(rnorm(n*p), nrow=n, ncol=p)
   X <- scale(X, center=TRUE, scale=FALSE)
   
-  ###Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix and V is the residual covariance
+  ###Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity
+  ###matrix and V is the residual covariance
   Y <- sim_mvr(X, B, V)
   
-  ###Specify the mixture weights and covariance matrices for the mixture-of-normals prior
-  grid <- seq(1, 5)
-  S0mix <- compute_cov_canonical(ncol(Y), singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=TRUE)
-  
+  ###Specify the mixture weights and covariance matrices for the
+  ###mixture-of-normals prior
+  grid  <- seq(1, 5)
+  S0mix <- compute_cov_canonical(ncol(Y), singletons=TRUE,
+                                 hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid,
+                                 zeromat=TRUE)
   w0    <- rep(1/(length(S0mix)), length(S0mix))
   
   ###Estimate residual covariance
   V_est <- cov(Y)
   
   ###Fit with current implementation
-  fit_current <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
-                         standardize=FALSE, verbose=FALSE, update_V=FALSE, version="R")
-  fit_current_rcpp <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
-                         standardize=FALSE, verbose=FALSE, update_V=FALSE, version="Rcpp")
+  capture.output(
+    fit_current <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE,
+                           update_w0_method="EM", compute_ELBO=TRUE, 
+                           standardize=FALSE, verbose=FALSE, update_V=FALSE,
+                           version="R"))
+  capture.output(
+    fit_current_rcpp <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8,
+                                update_w0=TRUE, update_w0_method="EM",
+                                compute_ELBO=TRUE, standardize=FALSE,
+                                verbose=FALSE, update_V=FALSE, version="Rcpp"))
   
   ###Load old fit
   fit_old <- readRDS("mr_mash_slow_implement_fit.rds")
@@ -51,6 +60,7 @@ test_that("Current implementation and old implementation of mr.mash return the s
   expect_equal(fit_current_rcpp$mu1, fit_old$mu1, tolerance = 1e-6, scale = 1)
   expect_equal(fit_current_rcpp$S1, fit_old$S1, tolerance = 1e-6, scale = 1)
   expect_equal(fit_current_rcpp$w1, fit_old$w1, tolerance = 1e-6, scale = 1)
-  expect_equal(fit_current_rcpp$ELBO, fit_old$ELBO, tolerance = 9.99e-5, scale = 1)
+  expect_equal(fit_current_rcpp$ELBO, fit_old$ELBO, tolerance = 9.99e-5,
+               scale = 1)
   
 })
