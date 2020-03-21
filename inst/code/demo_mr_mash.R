@@ -69,3 +69,8 @@ fit <- mr.mash(X,Y,V,S0,w0,mu_init = mu1,max_iter = 50,
 # against the coefficients used to simulate the data.
 plot(B,fit$mu1,pch = 20,xlab = "true",ylab = "estimated")
 abline(a = 0,b = 1,col = "skyblue",lty = "dotted")
+
+# Compare the fitted responses against the ground-truth responses.
+Yest <- predict(fit,X)
+plot(Y,Yest,pch = 20)
+abline(a = 0,b = 1,col = "skyblue",lty = "dotted")

@@ -32,6 +32,10 @@ tr <- function(x)
 addtocols <- function (A, b)
   t(t(A) + b)
 
+# scale.cols(A,b) scales each column A[,i] by b[i].
+scale.cols <- function (A, b)
+  t(t(A) * b)
+
 # Should be the same as mvtnorm::dmvnorm(x,mu,S,log = TRUE)
 #
 #' @importFrom Rcpp evalCpp
