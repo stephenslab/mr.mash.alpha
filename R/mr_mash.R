@@ -380,17 +380,17 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
 
   # PRE-PROCESSING STEPS
   # --------------------
-  ###Compute fitted values
-  fitted_vals <- X %*% mu1_t
-  fitted_vals <- addtocols(fitted_vals,muy)
+  ###Compute the "fitted" values.
+  fitted_vals <- addtocols(X %*% mu1_t, muy)
 
   ###Compute posterior mean estimate of intercept.
-  intercept <- muy - mux %*% mu1_t
-  intercept <- drop(intercept)
+  intercept <- drop(muy - mux %*% mu1_t)
   
   if(standardize){
       
-    ###Rescale posterior means and covariance of coefficients.
+    ###Rescale posterior means and covariance of coefficients. In the
+    ###context of predicting Y, this rescaling is equivalent to
+    ###rescaling each column j of a given matrix, Xnew, by sx[j].
     mu1_t <- mu1_t/sx
     for(j in 1:p)
       S1_t[, , j] <- S1_t[, , j]/sx[j]^2
