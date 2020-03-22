@@ -384,17 +384,20 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   fitted_vals <- X %*% mu1_t
   fitted_vals <- addtocols(fitted_vals,muy)
 
-  if(standardize){
-    ###Rescale posterior means and covariance of coefficients
-    mu1_t <- mu1_t/sx
-    for(j in 1:dim(S1_t)[3])
-      S1_t[, , j] <- S1_t[, , j]/(sx[j]^2)
-  }
-
   ###Compute posterior mean estimate of intercept.
   intercept <- muy - mux %*% mu1_t
   intercept <- drop(intercept)
   
+  if(standardize){
+      
+    ###Rescale posterior means and covariance of coefficients,
+    ###including the intercept.
+    intercept <- intercept/sx  
+    mu1_t     <- mu1_t/sx
+    for(j in 1:p)
+      S1_t[, , j] <- S1_t[, , j]/(sx[j]^2)
+  }
+
   if(compute_ELBO && update_V){
     colnames(progress) <- c("iter", "mu1_max.diff", "ELBO_diff", "ELBO")
     
