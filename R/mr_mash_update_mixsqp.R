@@ -66,7 +66,6 @@ compute_mixsqp_update_loop <- function(X, rbar, V, S0, mu1_t, Vinv, precomp_quan
   return(L)
 }
 
-
 # Perform backtracking line search to identify a step size for the
 # mixture weights update that increases the ELBO.
 backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1_t, w0em, w0mixsqp,

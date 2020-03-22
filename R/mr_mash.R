@@ -228,6 +228,8 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   
   cat("Done!\n")
 
+  # PERFORM ONE UPDATE
+  # ------------------
   ###First iteration
   t <- 0
   if(verbose){
@@ -292,7 +294,9 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
     
     ##Update iterator
     t <- t+1
-    
+
+    # CHECK CONVERGENCE
+    # -----------------
     ##Exit loop if maximum number of iterations is reached
     if(t>max_iter){
       warning("Max number of iterations reached. Try increasing max_iter.")
@@ -302,7 +306,9 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
     ##Set last value of ELBO as ELBO0
     if(compute_ELBO)
       ELBO0 <- ELBO
-    
+
+    # M-STEP
+    # ------
     ##Update V if requested
     if(update_V){
       V     <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
@@ -330,7 +336,9 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
                                       version=version)$w0
       }
     }
-    
+
+    # E-STEP
+    # ------
     ###Variational parameters
     ups <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
                                   ldetV=ldetV, w0=w0, S0=S0, 
@@ -369,7 +377,9 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   
   cat("Done!\n")
   cat("Processing the output... ")
-  
+
+  # PRE-PROCESSING STEPS
+  # --------------------
   ###Compute fitted values
   fitted_vals <- X %*% mu1_t
   fitted_vals <- addtocols(fitted_vals,muy)
