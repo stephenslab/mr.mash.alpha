@@ -5,7 +5,7 @@ library(mvtnorm)
 
 # SCRIPT PARAMETERS
 # -----------------
-standardize <- FALSE
+standardize <- TRUE
 
 # Number of samples (n) and number of predictors (p).
 n <- 500

@@ -383,9 +383,6 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   ###Compute the "fitted" values.
   fitted_vals <- addtocols(X %*% mu1_t, muy)
 
-  ###Compute posterior mean estimate of intercept.
-  intercept <- drop(muy - mux %*% mu1_t)
-  
   if(standardize){
       
     ###Rescale posterior means and covariance of coefficients. In the
@@ -396,6 +393,13 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
       S1_t[, , j] <- S1_t[, , j]/sx[j]^2
   }
 
+  ###Compute posterior mean estimate of intercept. Note that when
+  ###columns of X are standardized, the intercept should be computed
+  ###with respect to the *rescaled* coefficients to recover the
+  ###correct fitted values. This is why this is done after rescaling
+  ###the coefficients above.
+  intercept <- drop(muy - mux %*% mu1_t)
+  
   if(compute_ELBO && update_V){
     colnames(progress) <- c("iter", "mu1_max.diff", "ELBO_diff", "ELBO")
     
