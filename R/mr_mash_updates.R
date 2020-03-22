@@ -154,3 +154,21 @@ inner_loop_general_rcpp_wrapper <- function(X, Rbar, mu1, V, Vinv, w0, S0, preco
     return(list(rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1))
   }
 }
+
+###Update V
+update_V_fun <- function(Y, X, mu1_t, var_part_ERSS){
+  rbar <- Y - X%*%mu1_t
+  ERSS <- crossprod(rbar) + var_part_ERSS
+  n <- nrow(X)
+  V <- ERSS/n
+  
+  return(V)
+}
+
+###Update mixture weights
+update_weights_em <- function(x){
+  w <- colSums(x)
+  w <- w/sum(w)
+  return(w)
+}
+
