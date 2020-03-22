@@ -80,7 +80,8 @@ following elements:
 \item{w1}{p x K matrix of posterior assignment probabilities to the
   mixture components.}
 
-\item{intercept}{r-vector with the estimated intercepts.}
+\item{intercept}{r-vector containing posterior mean estimate of the
+  intercept.}
 
 \item{fitted}{n x r matrix of fitted values.}
 

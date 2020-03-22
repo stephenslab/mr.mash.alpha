@@ -58,7 +58,8 @@
 #' \item{w1}{p x K matrix of posterior assignment probabilities to the
 #'   mixture components.}
 #' 
-#' \item{intercept}{r-vector with the estimated intercepts.}
+#' \item{intercept}{r-vector containing posterior mean estimate of the
+#'   intercept.}
 #' 
 #' \item{fitted}{n x r matrix of fitted values.}
 #' 
@@ -185,12 +186,14 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   S0 <- lapply(S0, makePD, e=e)
   
   ###Center Y, and center (and, optionally, scale) X
-  Y   <- scale(Y, center=TRUE, scale=FALSE)
-  X   <- scale(X, center=TRUE, scale=standardize)
+  Y <- scale(Y, center=TRUE, scale=FALSE)
+  X <- scale(X, center=TRUE, scale=standardize)
   muy <- attr(Y,"scaled:center")
   mux <- attr(X,"scaled:center")
   if (standardize)
     sx <- attr(X,"scaled:scale")
+  else
+    sx <- rep(1,p)
   attr(X,"scaled:center") <- NULL
   attr(X,"scaled:scale")  <- NULL
   attr(Y,"scaled:center") <- NULL
@@ -378,7 +381,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
       S1_t[, , j] <- S1_t[, , j]/(sx[j]^2)
   }
 
-  ###Compute intercept
+  ###Compute posterior mean estimate of intercept.
   intercept <- muy - mux %*% mu1_t
   intercept <- drop(intercept)
   

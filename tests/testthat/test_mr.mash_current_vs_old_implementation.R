@@ -1,4 +1,4 @@
-context("Test current implementation of mr.mash vs old implementation")
+context("Test current vs old mr.mash implementations")
 
 test_that("Current and old mr.mash return the same results",{
   ###Set seed
