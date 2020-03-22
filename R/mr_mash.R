@@ -390,12 +390,10 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   
   if(standardize){
       
-    ###Rescale posterior means and covariance of coefficients,
-    ###including the intercept.
-    intercept <- intercept/sx  
-    mu1_t     <- mu1_t/sx
+    ###Rescale posterior means and covariance of coefficients.
+    mu1_t <- mu1_t/sx
     for(j in 1:p)
-      S1_t[, , j] <- S1_t[, , j]/(sx[j]^2)
+      S1_t[, , j] <- S1_t[, , j]/sx[j]^2
   }
 
   if(compute_ELBO && update_V){
