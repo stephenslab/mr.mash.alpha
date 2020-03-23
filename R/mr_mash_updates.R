@@ -29,7 +29,7 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
     
     #Run Bayesian SLR
     if(standardize){
-      bfit <- bayes_mvr_mix_scaled_X(X[, j], rbar_j, w0, S0, precomp_quants$S, precomp_quants$S1, 
+      bfit <- bayes_mvr_mix_standardized_X(X[, j], rbar_j, w0, S0, precomp_quants$S, precomp_quants$S1, 
                                      precomp_quants$SplusS0_chol, precomp_quants$S_chol)      
     } else {
       bfit <- bayes_mvr_mix_centered_X(X[, j], rbar_j, V, w0, S0, precomp_quants$xtx[j], Vinv, 

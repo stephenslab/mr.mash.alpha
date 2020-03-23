@@ -52,7 +52,7 @@ compute_mixsqp_update_loop <- function(X, rbar, V, S0, mu1_t, Vinv, precomp_quan
     
     for(k in 1:K){
       if(standardize){
-        L[j, k] <- bayes_mvr_ridge_scaled_X(b, S0[[k]], precomp_quants$S, 
+        L[j, k] <- bayes_mvr_ridge_standardized_X(b, S0[[k]], precomp_quants$S, 
                                             precomp_quants$S1[[k]], precomp_quants$SplusS0_chol[[k]], 
                                             precomp_quants$S_chol)$logbf        
       } else {

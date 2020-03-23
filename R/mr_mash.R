@@ -197,8 +197,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   mux <- attr(X,"scaled:center")
   if (standardize)
     sx <- attr(X,"scaled:scale")
-  else
-    sx <- rep(1,p)
+  # else
+  #   sx <- rep(1,p)
   attr(X,"scaled:center") <- NULL
   attr(X,"scaled:scale")  <- NULL
   attr(Y,"scaled:center") <- NULL
@@ -206,9 +206,12 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   ###Initilize mu1, S1, w1, error, ELBO, iterator, and progress
   mu1_t    <- mu1_init 
   err      <- matrix(Inf, nrow=p, ncol=r)
-  progress <- data.frame() 
+  ELBO <- -Inf
   if(compute_ELBO)
-    ELBO <- -Inf
+    progress <- as.data.frame(matrix(NA, nrow=max_iter, ncol=4))
+  else
+    progress <- as.data.frame(matrix(NA, nrow=max_iter, ncol=2))
+  
   
   ###Precompute quantities
   comps <- precompute_quants(X, V, S0, standardize, version)
@@ -251,8 +254,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   t <- t+1
   
   ##Set last value of ELBO as ELBO0
-  if(compute_ELBO)
-    ELBO0 <- ELBO
+  ELBO0 <- ELBO
   
   ###Update variational parameters
   ups <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
@@ -276,14 +278,14 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                   t, max(err), ELBO - ELBO0, ELBO))
 
     ##Update progress data.frame 
-    progress <- rbind(progress, c(t, max(err), ELBO - ELBO0, ELBO))
+    progress[t, ] <- c(t, max(err), ELBO - ELBO0, ELBO)
   } else {
     if(verbose)
       ##Print out useful info
       cat(sprintf("%4d      %9.2e\n", t, max(err)))
     
     ##Update progress data.frame 
-    progress <- rbind(progress, c(t, max(err)))
+    progress[t, ] <- c(t, max(err))
   }
   
   # MAIN LOOP
@@ -307,8 +309,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     }
     
     ##Set last value of ELBO as ELBO0
-    if(compute_ELBO)
-      ELBO0 <- ELBO
+    ELBO0 <- ELBO
 
     # M-STEP
     # ------
@@ -365,14 +366,14 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                     t, max(err), ELBO - ELBO0, ELBO))
 
       ##Update progress data.frame 
-      progress <- rbind(progress, c(t, max(err), ELBO - ELBO0, ELBO))
+      progress[t, ] <- c(t, max(err), ELBO - ELBO0, ELBO)
     } else {
       if(verbose)
         ##Print out useful info
         cat(sprintf("%4d      %9.2e\n", t, max(err)))
 
       ##Update progress data.frame 
-      progress <- rbind(progress, c(t, max(err)))
+      progress[t, ] <- c(t, max(err))
     }
   }
   
@@ -401,9 +402,12 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   ###the coefficients above.
   intercept <- drop(muy - mux %*% mu1_t)
   
-  ###Assign names to outputs
+  ###Assign names to outputs dimensions
   rownames(mu1_t) <- colnames(X)
   colnames(mu1_t) <- colnames(Y)
+  dimnames(S1_t)[[1]] <- colnames(Y)
+  dimnames(S1_t)[[2]] <- colnames(Y)
+  dimnames(S1_t)[[3]] <- colnames(X)
   rownames(w1_t) <- colnames(X)
   colnames(w1_t) <- names(S0)
   rownames(V) <- colnames(Y)
@@ -411,6 +415,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   rownames(fitted_vals) <- rownames(Y)
   colnames(fitted_vals) <- colnames(Y)
   
+  ###Remove unused rows of progress
+  progress <- progress[rowSums(is.na(progress)) != ncol(progress), ]
   
   if(compute_ELBO){
     colnames(progress) <- c("iter", "mu1_max.diff", "ELBO_diff", "ELBO")

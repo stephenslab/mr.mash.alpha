@@ -21,8 +21,8 @@ bayes_mvr_ridge <- function (x, Y, V, S0) {
   
   # Compute the posterior mean and covariance assuming a multivariate
   # normal prior with zero mean and covariance S0.
-  # R   <- ncol(Y)
-  # I   <- diag(R)
+  # r   <- ncol(Y)
+  # I   <- diag(r)
   # S1  <- solve(solve(S0) + solve(S))
   # S1 <- S0%*%solve(S+S0)%*%S
   #Avoid inverting matrices
@@ -40,11 +40,11 @@ bayes_mvr_ridge <- function (x, Y, V, S0) {
 }
 
 
-# Bayesian multivariate regression with Normal prior with scaled X
+# Bayesian multivariate regression with Normal prior with standardized X
 #
 # The outputs are: mu1, the posterior mean of the
 # regression coefficients; logbf, the log-Bayes factor.
-bayes_mvr_ridge_scaled_X <- function (b, S0, S, S1, SplusS0_chol, S_chol) {
+bayes_mvr_ridge_standardized_X <- function (b, S0, S, S1, SplusS0_chol, S_chol) {
   
   # Compute the log-Bayes factor.
   logbf <- (chol2ldet(S_chol) - chol2ldet(SplusS0_chol) +
@@ -101,7 +101,7 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
   
   # Get the number of variables (n) and the number of mixture
   # components (k).
-  R <- ncol(Y)
+  r <- ncol(Y)
   K <- length(S0)
   
   # Compute the Bayes factors and posterior statistics separately for
@@ -122,8 +122,8 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
   
   # Compute the posterior mean (mu1_mix) and covariance (S1_mix) of the
   # regression coefficients.
-  A   <- matrix(0,R,R)
-  mu1_mix <- rep(0,R)
+  A   <- matrix(0,r,r)
+  mu1_mix <- rep(0,r)
   for (k in 1:K) {
     wk  <- w1[k]
     muk <- out[[k]]$mu1
@@ -151,18 +151,18 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
 
                   
 # Bayesian multivariate regression with mixture-of-normals prior
-# (mixture weights w0 and covariance matrices S0) with scaled X.
+# (mixture weights w0 and covariance matrices S0) with standardized X.
 #
 # The outputs are: the log-Bayes factor (logbf), the posterior assignment probabilities
 # (w1), the posterior mean of the coefficients given that all the
 # coefficients are not nonzero (mu1), and the posterior covariance of
 # the coefficients given that all the coefficients are not zero (S1).
-bayes_mvr_mix_scaled_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol) {
+bayes_mvr_mix_standardized_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol) {
   
   
-  # Get the number of conditions (R), the number of mixture
+  # Get the number of conditions (r), the number of mixture
   # components (K), and the number of samples (n).
-  R <- ncol(Y)
+  r <- ncol(Y)
   K <- length(S0)
   n <- nrow(Y)
   
@@ -173,10 +173,10 @@ bayes_mvr_mix_scaled_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol) {
   # each mixture component.
   # out <- vector("list",K)
   # for (k in 1:K){
-  #   out[[k]] <- bayes_mvr_ridge_scaled_X(b, S0[[k]], S, S1[[k]], SplusS0_chol[[k]], S_chol)
+  #   out[[k]] <- bayes_mvr_ridge_standardized_X(b, S0[[k]], S, S1[[k]], SplusS0_chol[[k]], S_chol)
   # }
   bayes_mvr_ridge_lapply <- function(i){
-    bayes_mvr_ridge_scaled_X(b, S0[[i]], S, S1[[i]], SplusS0_chol[[i]], S_chol)
+    bayes_mvr_ridge_standardized_X(b, S0[[i]], S, S1[[i]], SplusS0_chol[[i]], S_chol)
   }
   out <- lapply(1:K, bayes_mvr_ridge_lapply)
   
@@ -187,8 +187,8 @@ bayes_mvr_mix_scaled_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol) {
   
   # Compute the posterior mean (mu1_mix) and covariance (S1_mix) of the
   # regression coefficients.
-  A   <- matrix(0,R,R)
-  mu1_mix <- rep(0,R)
+  A   <- matrix(0,r,r)
+  mu1_mix <- rep(0,r)
   for (k in 1:K) {
     wk  <- w1[k]
     muk <- out[[k]]$mu1
@@ -226,7 +226,7 @@ bayes_mvr_mix_centered_X <- function (x, Y, V, w0, S0, xtx, Vinv, V_chol, d, Qti
   
   # Get the number of variables (n) and the number of mixture
   # components (k).
-  R <- ncol(Y)
+  r <- ncol(Y)
   K <- length(S0)
   
   # Compute the least-squares estimate and covariance.
@@ -254,8 +254,8 @@ bayes_mvr_mix_centered_X <- function (x, Y, V, w0, S0, xtx, Vinv, V_chol, d, Qti
   
   # Compute the posterior mean (mu1_mix) and covariance (S1_mix) of the
   # regression coefficients.
-  A   <- matrix(0,R,R)
-  mu1_mix <- rep(0,R)
+  A   <- matrix(0,r,r)
+  mu1_mix <- rep(0,r)
   for (k in 1:K) {
     wk  <- w1[k]
     muk <- out[[k]]$mu1
