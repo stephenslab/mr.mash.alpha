@@ -3,11 +3,11 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
                                precomp_quants, standardize, compute_ELBO, update_V){
   ###Create variables to store quantities
   n <- nrow(rbar)
-  R <- ncol(rbar)
+  r <- ncol(rbar)
   p <- ncol(X)
   K <- length(S0)
   mu1   <- mu
-  S1    <- array(0, c(R, R, p))
+  S1    <- array(0, c(r, r, p))
   w1    <- matrix(0, nrow=p, ncol=K)
   
   if(compute_ELBO){
@@ -18,7 +18,7 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
   
   if(update_V){
     ##Initialize V parameters
-    var_part_ERSS <- matrix(0, nrow=R, ncol=R)
+    var_part_ERSS <- matrix(0, nrow=r, ncol=r)
   }
   
   ##Loop through the variables

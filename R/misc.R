@@ -40,7 +40,7 @@ sim_mvr <- function (X, B, V) {
   
   # Get the number of samples (n) and conditions (m).
   n <- nrow(X)
-  R <- ncol(B)
+  r <- ncol(B)
   
   # Simulate the responses, Y.
   M <- X%*%B
@@ -81,7 +81,7 @@ chol2ldet <- function(R){
   return(logdet)
 }
 
-###Similar to base::simplify2array but returns appropriate output when R=1
+###Similar to base::simplify2array but returns appropriate output when r=1
 simplify2array_custom <- function (x, higher = TRUE) {
   common.len <- unique(lengths(x))
   if (common.len >= 1L){

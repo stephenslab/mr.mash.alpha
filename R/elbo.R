@@ -1,10 +1,10 @@
 ###Compute ELBO from intermediate components
 compute_ELBO_fun <- function(rbar, V, Vinv, ldetV, var_part_tr_wERSS, neg_KL){
   n <- nrow(rbar)
-  R <- ncol(rbar)
+  r <- ncol(rbar)
   # tr_wERSS <- tr(Vinv%*%(crossprod(rbar))) + var_part_tr_wERSS
   tr_wERSS <- sum(Vinv*(crossprod(rbar))) + var_part_tr_wERSS
-  ELBO <- -log(n)/2 - (n*R)/2*log(2*pi) - n/2 * ldetV - 0.5*tr_wERSS + neg_KL
+  ELBO <- -log(n)/2 - (n*r)/2*log(2*pi) - n/2 * ldetV - 0.5*tr_wERSS + neg_KL
   
   return(ELBO)
 }

@@ -181,7 +181,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   ###Obtain dimensions needed from inputs
   p <- ncol(X)
   n <- nrow(X)
-  R <- ncol(Y)
+  r <- ncol(Y)
   K <- length(S0)
 
   # PRE-PROCESSING STEPS
@@ -205,7 +205,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   
   ###Initilize mu1, S1, w1, error, ELBO, iterator, and progress
   mu1_t    <- mu1_init 
-  err      <- matrix(Inf, nrow=p, ncol=R)
+  err      <- matrix(Inf, nrow=p, ncol=r)
   progress <- data.frame() 
   if(compute_ELBO)
     ELBO <- -Inf
@@ -220,7 +220,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     if(version=="R")
       Vinv <- NULL
     else if(version=="Rcpp")
-      Vinv <- matrix(0, nrow=R, ncol=R)
+      Vinv <- matrix(0, nrow=r, ncol=r)
   }
   
   if(compute_ELBO)
