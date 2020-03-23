@@ -8,8 +8,8 @@ compute_mixsqp_update <- function (X, Y, V, S0, mu1, Vinv, precomp_quants,
   
   # Compute the p x k matrix of log-likelihoods conditional on each
   # prior mixture component.
-  rbar <- Y - X%*%mu1
-  L <- compute_mixsqp_update_loop_general(X, rbar, V, S0, mu1, Vinv, precomp_quants, standardize, version)
+  Rbar <- Y - X%*%mu1
+  L <- compute_mixsqp_update_loop_general(X, Rbar, V, S0, mu1, Vinv, precomp_quants, standardize, version)
   
   # Run mixsqp
   out <- mixsqp(L,log = TRUE,control = list(verbose = FALSE))
@@ -22,26 +22,26 @@ compute_mixsqp_update <- function (X, Y, V, S0, mu1, Vinv, precomp_quants,
 }
 
 ###Wrapper of the loop to compute mixsqp update of the weights
-compute_mixsqp_update_loop_R <- function(X, rbar, V, S0, mu1, Vinv, precomp_quants, standardize){
+compute_mixsqp_update_loop_R <- function(X, Rbar, V, S0, mu1, Vinv, precomp_quants, standardize){
   # Get the number of predictors (p), the number of mixture
   # components in the prior (k), and the number of samples (n).
   p <- ncol(X)
   K <- length(S0)
-  n <- nrow(rbar)
+  n <- nrow(Rbar)
   
   L <- matrix(0, p, K)
   
   for(j in 1:p){
     #Remove j-th effect from expected residuals 
-    rbar_j <- rbar + outer(X[, j], mu1[j, ])
+    Rbar_j <- Rbar + outer(X[, j], mu1[j, ])
     
     if(standardize){
       # Compute the least-squares estimate.
       xtx <- n-1
-      b <- drop(X[, j] %*% rbar_j)/xtx
+      b <- drop(X[, j] %*% Rbar_j)/xtx
     } else {
       # Compute the least-squares estimate and covariance.
-      b <- drop(X[, j] %*% rbar_j)/precomp_quants$xtx[j]
+      b <- drop(X[, j] %*% Rbar_j)/precomp_quants$xtx[j]
       S <- V/precomp_quants$xtx[j]
       
       # Compute quantities needed for bayes_mvr_ridge_centered_X()
@@ -65,11 +65,11 @@ compute_mixsqp_update_loop_R <- function(X, rbar, V, S0, mu1, Vinv, precomp_quan
 }
 
 ###Wrapper of the loop to compute mixsqp update of the weights with R or Rcpp
-compute_mixsqp_update_loop_general <- function(X, rbar, V, S0, mu1, Vinv, precomp_quants, standardize, version){
+compute_mixsqp_update_loop_general <- function(X, Rbar, V, S0, mu1, Vinv, precomp_quants, standardize, version){
   if(version=="R"){
-    out <- compute_mixsqp_update_loop_R(X, rbar, V, S0, mu1, Vinv, precomp_quants, standardize)
+    out <- compute_mixsqp_update_loop_R(X, Rbar, V, S0, mu1, Vinv, precomp_quants, standardize)
   } else if(version=="Rcpp"){
-    out <- compute_mixsqp_update_loop_rcpp(X, rbar, V, simplify2array_custom(S0), mu1, Vinv, precomp_quants, standardize)
+    out <- compute_mixsqp_update_loop_rcpp(X, Rbar, V, simplify2array_custom(S0), mu1, Vinv, precomp_quants, standardize)
   }
   
   return(out)
@@ -83,13 +83,13 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mix
   
   # Compute the objective (ELBO) at the current iterate.
   ##Update variational parameters, expected residuals, and ELBO components
-  rbar <- Y - X%*%mu1
+  Rbar <- Y - X%*%mu1
   
-  updates <- inner_loop_general(X=X, rbar=rbar, mu=mu1, V=V, Vinv=Vinv, w0=w0em, S0=S0, 
+  updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1, V=V, Vinv=Vinv, w0=w0em, S0=S0, 
                                 precomp_quants=precomp_quants, standardize=standardize, 
                                 compute_ELBO=compute_ELBO, update_V=update_V, version=version)
 
-  f <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=updates$var_part_tr_wERSS, neg_KL=updates$neg_KL)
+  f <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=updates$var_part_tr_wERSS, neg_KL=updates$neg_KL)
     
   
   # Perform backtracking line search to identify a step size that
@@ -97,11 +97,11 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mix
   a <- 1
   while (TRUE) {
     w0new <- a*w0mixsqp + (1 - a)*w0em
-    updates <- inner_loop_general(X=X, rbar=rbar, mu1=mu1, V=V, Vinv=Vinv, w0=w0new, S0=S0, 
+    updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1, V=V, Vinv=Vinv, w0=w0new, S0=S0, 
                                   precomp_quants=precomp_quants, standardize=standardize,
                                   compute_ELBO=compute_ELBO, update_V=update_V, version=version) 
 
-    fnew <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=updates$var_part_tr_wERSS, neg_KL=updates$neg_KL)
+    fnew <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=updates$var_part_tr_wERSS, neg_KL=updates$neg_KL)
     
     # Check whether the new candidate increases the ELBO.
     if (fnew > f)

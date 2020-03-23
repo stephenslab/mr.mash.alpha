@@ -1,9 +1,9 @@
 ###Update variational parameters, expected residuals, and ELBO components with or without scaling X
-inner_loop_general_R <- function(X, rbar, mu1, V, Vinv, w0, S0, ###note: V is only needed when not scaling X
+inner_loop_general_R <- function(X, Rbar, mu1, V, Vinv, w0, S0, ###note: V is only needed when not scaling X
                                precomp_quants, standardize, compute_ELBO, update_V){
   ###Create variables to store quantities
-  n <- nrow(rbar)
-  r <- ncol(rbar)
+  n <- nrow(Rbar)
+  r <- ncol(Rbar)
   p <- ncol(X)
   K <- length(S0)
   S1    <- array(0, c(r, r, p))
@@ -16,14 +16,14 @@ inner_loop_general_R <- function(X, rbar, mu1, V, Vinv, w0, S0, ###note: V is on
   for(j in 1:p){
     
     #Remove j-th effect from expected residuals 
-    rbar_j <- rbar + outer(X[, j], mu1[j, ])
+    Rbar_j <- Rbar + outer(X[, j], mu1[j, ])
     
     #Run Bayesian SLR
     if(standardize){
-      bfit <- bayes_mvr_mix_standardized_X(X[, j], rbar_j, w0, S0, precomp_quants$S, precomp_quants$S1, 
+      bfit <- bayes_mvr_mix_standardized_X(X[, j], Rbar_j, w0, S0, precomp_quants$S, precomp_quants$S1, 
                                      precomp_quants$SplusS0_chol, precomp_quants$S_chol)      
     } else {
-      bfit <- bayes_mvr_mix_centered_X(X[, j], rbar_j, V, w0, S0, precomp_quants$xtx[j], Vinv, 
+      bfit <- bayes_mvr_mix_centered_X(X[, j], Rbar_j, V, w0, S0, precomp_quants$xtx[j], Vinv, 
                                           precomp_quants$V_chol, precomp_quants$d, 
                                           precomp_quants$QtimesV_chol)
     }
@@ -40,7 +40,7 @@ inner_loop_general_R <- function(X, rbar, mu1, V, Vinv, w0, S0, ###note: V is on
       } else {
         xtx <- precomp_quants$xtx[j]
       }
-      ELBO_parts <- compute_ELBO_terms(var_part_tr_wERSS, neg_KL, X[, j], rbar_j, bfit, xtx, Vinv)
+      ELBO_parts <- compute_ELBO_terms(var_part_tr_wERSS, neg_KL, X[, j], Rbar_j, bfit, xtx, Vinv)
       var_part_tr_wERSS <- ELBO_parts$var_part_tr_wERSS
       neg_KL <- ELBO_parts$neg_KL
     }
@@ -56,18 +56,18 @@ inner_loop_general_R <- function(X, rbar, mu1, V, Vinv, w0, S0, ###note: V is on
     }
     
     #Update expected residuals
-    rbar <- rbar_j - outer(X[, j], mu1[j, ])
+    Rbar <- Rbar_j - outer(X[, j], mu1[j, ])
   }
   
   ###Return output
   if(compute_ELBO && update_V){
-    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL, var_part_ERSS=var_part_ERSS))
+    return(list(Rbar=Rbar, mu1=mu1, S1=S1, w1=w1, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL, var_part_ERSS=var_part_ERSS))
   } else if(compute_ELBO && !update_V){
-    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL))
+    return(list(Rbar=Rbar, mu1=mu1, S1=S1, w1=w1, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL))
   } else if(!compute_ELBO && update_V) {
-    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1, var_part_ERSS=var_part_ERSS))
+    return(list(Rbar=Rbar, mu1=mu1, S1=S1, w1=w1, var_part_ERSS=var_part_ERSS))
   } else { 
-    return(list(rbar=rbar, mu1=mu1, S1=S1, w1=w1))
+    return(list(Rbar=Rbar, mu1=mu1, S1=S1, w1=w1))
   }
 }
 
@@ -84,26 +84,26 @@ inner_loop_general_Rcpp <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quant
   
   ###Return output
   if(compute_ELBO && update_V){
-    return(list(rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS, 
+    return(list(Rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS, 
                 neg_KL=out$neg_KL, var_part_ERSS=out$var_part_ERSS))
   } else if(compute_ELBO && !update_V){
-    return(list(rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS, 
+    return(list(Rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS, 
                 neg_KL=out$neg_KL))
   } else if(!compute_ELBO && update_V) {
-    return(list(rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_ERSS=out$var_part_ERSS))
+    return(list(Rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_ERSS=out$var_part_ERSS))
   } else { 
-    return(list(rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1))
+    return(list(Rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1))
   }
 }
 
 ###Wrapper of the inner loop with R or Rcpp
-inner_loop_general <- function(X, rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
+inner_loop_general <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
                                standardize, compute_ELBO, update_V, version){
   if(version=="R"){
-    out <- inner_loop_general_R(X, rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
+    out <- inner_loop_general_R(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
                                 standardize, compute_ELBO, update_V)
   } else if(version=="Rcpp"){
-    out <- inner_loop_general_Rcpp(X, rbar, mu1, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, 
+    out <- inner_loop_general_Rcpp(X, Rbar, mu1, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, 
                                    standardize, compute_ELBO, update_V)
   }
   
@@ -116,22 +116,22 @@ mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
                                    precomp_quants, compute_ELBO, standardize, 
                                    update_V, version){
   ##Compute expected residuals
-  rbar <- Y - X%*%mu1_t
+  Rbar <- Y - X%*%mu1_t
   
   ##Update variational parameters, expected residuals, and ELBO components
-  updates <- inner_loop_general(X=X, rbar=rbar, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
+  updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
                                 precomp_quants=precomp_quants, standardize=standardize,
                                 compute_ELBO=compute_ELBO, update_V=update_V, version=version)   
   mu1_t   <- updates$mu1
   S1_t    <- updates$S1
   w1_t    <- updates$w1
-  rbar    <- updates$rbar
+  Rbar    <- updates$Rbar
   
   if(compute_ELBO && update_V){
     ##Compute ELBO
     var_part_tr_wERSS <- updates$var_part_tr_wERSS
     neg_KL <- updates$neg_KL
-    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL)
+    ELBO <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL)
     
     var_part_ERSS <- updates$var_part_ERSS
     
@@ -140,7 +140,7 @@ mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
     ##Compute ELBO
     var_part_tr_wERSS <- updates$var_part_tr_wERSS
     neg_KL <- updates$neg_KL
-    ELBO <- compute_ELBO_fun(rbar=rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL)
+    ELBO <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL)
     
     return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO))
   } else if(!compute_ELBO && update_V){
@@ -155,8 +155,8 @@ mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
 
 ###Update V
 update_V_fun <- function(Y, X, mu1_t, var_part_ERSS){
-  rbar <- Y - X%*%mu1_t
-  ERSS <- crossprod(rbar) + var_part_ERSS
+  Rbar <- Y - X%*%mu1_t
+  ERSS <- crossprod(Rbar) + var_part_ERSS
   n <- nrow(X)
   V <- ERSS/n
   
