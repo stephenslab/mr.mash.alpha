@@ -1,25 +1,16 @@
 ###Update variational parameters, expected residuals, and ELBO components with or without scaling X
-inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only needed when not scaling X
+inner_loop_general_R <- function(X, rbar, mu1, V, Vinv, w0, S0, ###note: V is only needed when not scaling X
                                precomp_quants, standardize, compute_ELBO, update_V){
   ###Create variables to store quantities
   n <- nrow(rbar)
   r <- ncol(rbar)
   p <- ncol(X)
   K <- length(S0)
-  mu1   <- mu
   S1    <- array(0, c(r, r, p))
   w1    <- matrix(0, nrow=p, ncol=K)
-  
-  if(compute_ELBO){
-    ##Initialize ELBO parameters
-    var_part_tr_wERSS <- 0
-    neg_KL <- 0
-  }
-  
-  if(update_V){
-    ##Initialize V parameters
-    var_part_ERSS <- matrix(0, nrow=r, ncol=r)
-  }
+  var_part_tr_wERSS <- 0
+  neg_KL <- 0
+  var_part_ERSS <- matrix(0, nrow=r, ncol=r)
   
   ##Loop through the variables
   for(j in 1:p){
@@ -80,6 +71,45 @@ inner_loop_general <- function(X, rbar, mu, V, Vinv, w0, S0, ###note: V is only 
   }
 }
 
+###Wrapper for the Rcpp function to update variational parameters, expected residuals, 
+###and ELBO components with or without scaling X
+#' @importFrom Rcpp evalCpp
+#' @useDynLib mr.mash.alpha
+#' 
+inner_loop_general_Rcpp <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
+                                    standardize, compute_ELBO, update_V){
+  
+  out <- inner_loop_general_rcpp(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
+                                 standardize, compute_ELBO, update_V)
+  
+  ###Return output
+  if(compute_ELBO && update_V){
+    return(list(rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS, 
+                neg_KL=out$neg_KL, var_part_ERSS=out$var_part_ERSS))
+  } else if(compute_ELBO && !update_V){
+    return(list(rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS, 
+                neg_KL=out$neg_KL))
+  } else if(!compute_ELBO && update_V) {
+    return(list(rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_ERSS=out$var_part_ERSS))
+  } else { 
+    return(list(rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1))
+  }
+}
+
+###Wrapper of the inner loop with R or Rcpp
+inner_loop_general <- function(X, rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
+                               standardize, compute_ELBO, update_V, version){
+  if(version=="R"){
+    out <- inner_loop_general_R(X, rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
+                                standardize, compute_ELBO, update_V)
+  } else if(version=="Rcpp"){
+    out <- inner_loop_general_Rcpp(X, rbar, mu1, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, 
+                                   standardize, compute_ELBO, update_V)
+  }
+  
+  return(out)
+}
+
 
 ###Perform one iteration of the outer loop with or without scaling X
 mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
@@ -89,17 +119,9 @@ mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
   rbar <- Y - X%*%mu1_t
   
   ##Update variational parameters, expected residuals, and ELBO components
-  if(version=="R"){
-    updates <- inner_loop_general(X=X, rbar=rbar, mu=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
-                                  precomp_quants=precomp_quants, standardize=standardize,
-                                  compute_ELBO=compute_ELBO, update_V=update_V)   
-  } else if(version=="Rcpp"){
-    updates <- inner_loop_general_rcpp_wrapper(X=X, Rbar=rbar, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0,
-                                              S0=simplify2array_custom(S0), precomp_quants=precomp_quants,
-                                              standardize=standardize, compute_ELBO=compute_ELBO,
-                                              update_V=update_V)
-  }
-
+  updates <- inner_loop_general(X=X, rbar=rbar, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
+                                precomp_quants=precomp_quants, standardize=standardize,
+                                compute_ELBO=compute_ELBO, update_V=update_V, version=version)   
   mu1_t   <- updates$mu1
   S1_t    <- updates$S1
   w1_t    <- updates$w1
@@ -130,30 +152,6 @@ mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
   }
 }
 
-###Wrapper for the Rcpp function to update variational parameters, expected residuals, 
-###and ELBO components with or without scaling X
-#' @importFrom Rcpp evalCpp
-#' @useDynLib mr.mash.alpha
-#' 
-inner_loop_general_rcpp_wrapper <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
-                                            standardize, compute_ELBO, update_V){
-
-    out <- inner_loop_general_rcpp(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
-                                 standardize, compute_ELBO, update_V)
-
-    ###Return output
-  if(compute_ELBO && update_V){
-    return(list(rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS, 
-                neg_KL=out$neg_KL, var_part_ERSS=out$var_part_ERSS))
-  } else if(compute_ELBO && !update_V){
-    return(list(rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS, 
-                neg_KL=out$neg_KL))
-  } else if(!compute_ELBO && update_V) {
-    return(list(rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_ERSS=out$var_part_ERSS))
-  } else { 
-    return(list(rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1))
-  }
-}
 
 ###Update V
 update_V_fun <- function(Y, X, mu1_t, var_part_ERSS){
