@@ -7,12 +7,12 @@
 mr.mash(
   X,
   Y,
-  V = NULL,
   S0,
-  w0,
-  mu_init = NULL,
+  w0 = rep(1/(length(S0)), length(S0)),
+  V = cov(Y),
+  mu1_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)),
   tol = 1e-08,
-  max_iter = 100000,
+  max_iter = 5000,
   update_w0 = TRUE,
   update_w0_method = c("EM", "mixsqp"),
   compute_ELBO = TRUE,
@@ -28,15 +28,15 @@ mr.mash(
 
 \item{Y}{n x r matrix of responses.}
 
-\item{V}{r x r residual covariance matrix.}
-
 \item{S0}{List of length K containing the desired r x r prior
 covariance matrices on the regression coefficients.}
 
 \item{w0}{K-vector with prior mixture weights, each associated with
 the respective covariance matrix in \code{S0}.}
 
-\item{mu_init}{p x r matrix of initial estimates of the posterior
+\item{V}{r x r residual covariance matrix.}
+
+\item{mu1_init}{p x r matrix of initial estimates of the posterior
 mean regression coefficients.}
 
 \item{tol}{Convergence tolerance.}
@@ -79,6 +79,14 @@ following elements:
 
 \item{w1}{p x K matrix of posterior assignment probabilities to the
   mixture components.}
+  
+\item{V}{r x r residual covariance matrix}
+
+\item{w0}{K-vector with (updated, if \code{update_w0=TRUE}) prior mixture weights, each associated with
+  the respective covariance matrix in \code{S0}}.
+  
+\item{S0}{r x r x K array of prior covariance matrices
+  on the regression coefficients}.
 
 \item{intercept}{r-vector with the estimated intercepts.}
 
@@ -136,7 +144,7 @@ Xtest <- X[c(1:10), ]
 V_est <- cov(Ytrain)
 
 ###Fit mr.mash
-fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE,
+fit <- mr.mash(Xtrain, Ytrain, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE,
                update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE,
                verbose=TRUE, update_V=TRUE, version="R", e=1e-8)
 

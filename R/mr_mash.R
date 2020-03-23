@@ -15,7 +15,7 @@
 #' @param w0 K-vector with prior mixture weights, each associated with
 #'   the respective covariance matrix in \code{S0}.
 #' 
-#' @param mu_init p x r matrix of initial estimates of the posterior
+#' @param mu1_init p x r matrix of initial estimates of the posterior
 #'   mean regression coefficients.
 #' 
 #' @param tol Convergence tolerance.
@@ -57,6 +57,14 @@
 #' 
 #' \item{w1}{p x K matrix of posterior assignment probabilities to the
 #'   mixture components.}
+#'   
+#' \item{V}{r x r residual covariance matrix}
+#' 
+#' \item{w0}{K-vector with (updated, if \code{update_w0=TRUE}) prior mixture weights, each associated with
+#'   the respective covariance matrix in \code{S0}}.
+#'   
+#' \item{S0}{r x r x K array of prior covariance matrices
+#'   on the regression coefficients}.
 #' 
 #' \item{intercept}{r-vector with the estimated intercepts.}
 #' 
@@ -66,6 +74,7 @@
 #' 
 #' \item{progress}{A data frame including information regarding
 #'   convergence criteria at each iteration.}
+#'  
 #' 
 #' @examples 
 #' ###Set seed
@@ -110,7 +119,7 @@
 #' V_est <- cov(Ytrain)
 #'
 #' ###Fit mr.mash
-#' fit <- mr.mash(Xtrain, Ytrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE,
+#' fit <- mr.mash(Xtrain, Ytrain, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE,
 #'                update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE,
 #'                verbose=TRUE, update_V=TRUE, version="R", e=1e-8)
 #'
@@ -127,9 +136,9 @@
 #' 
 #' @export
 #' 
-mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
-                    max_iter=1e5, update_w0=TRUE,
-                    update_w0_method=c("EM", "mixsqp"), 
+mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y), 
+                    mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-8,
+                    max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                     compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, version=c("R", "Rcpp"), e=1e-8) {
 
@@ -146,8 +155,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   ###will be used)
   version <- match.arg(version)
   
-  ###Check that the inputs are in the correct format, and initialize
-  ###any model parameters that are not specified.
+  ###Check that the inputs are in the correct format
   if(!is.matrix(Y))
     stop("Y must be a matrix.")
   if(!is.matrix(X))
@@ -156,27 +164,24 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
     stop("Y must not contain missing values.")
   if(any(is.na(X)))
     stop("X must not contain missing values.")
-  if(is.null(V))
-    V <- cov(Y)
-  else if(!is.matrix(V) || !isSymmetric(V))
+  if(!is.matrix(V) || !isSymmetric(V))
     stop("V must be a symmetric matrix.")
   if(!is.list(S0))
     stop("S0 must be a list.")
   if(!is.vector(w0))
     stop("w0 must be a vector.")
+  if(sum(w0)!=1)
+    stop("Elements of w0 must sum to 1.")
   if(length(S0)!=length(w0))
     stop("S0 and w0 must have the same length.")
   if(update_w0_method=="mixsqp" && !compute_ELBO)
     stop("ELBO needs to be computed with update_w0_method=\"mixsqp\".")
 
-  # If not specified, set the initial estimates of the posterior mean
-  # regression coefficients.
+  ###Obtain dimensions needed from inputs
   p <- ncol(X)
   n <- nrow(X)
   R <- ncol(Y)
   K <- length(S0)
-  if(is.null(mu_init))
-    mu_init <- matrix(0, nrow=p, ncol=R)
 
   # PRE-PROCESSING STEPS
   # --------------------
@@ -196,7 +201,7 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   attr(Y,"scaled:center") <- NULL
   
   ###Initilize mu1, S1, w1, error, ELBO, iterator, and progress
-  mu1_t    <- mu_init 
+  mu1_t    <- mu1_init 
   err      <- matrix(Inf, nrow=p, ncol=R)
   progress <- data.frame() 
   if(compute_ELBO)
@@ -382,47 +387,38 @@ mr.mash <- function(X, Y, V=NULL, S0, w0, mu_init=NULL, tol=1e-8,
   intercept <- muy - mux %*% mu1_t
   intercept <- drop(intercept)
   
-  if(compute_ELBO && update_V){
+  ###Assign names to outputs
+  rownames(mu1_t) <- colnames(X)
+  colnames(mu1_t) <- colnames(Y)
+  rownames(w1_t) <- colnames(X)
+  colnames(w1_t) <- names(S0)
+  rownames(V) <- colnames(Y)
+  colnames(V) <- colnames(Y)
+  rownames(fitted_vals) <- rownames(Y)
+  colnames(fitted_vals) <- colnames(Y)
+  
+  
+  if(compute_ELBO){
     colnames(progress) <- c("iter", "mu1_max.diff", "ELBO_diff", "ELBO")
     
     ###Return the posterior assignment probabilities (w1), the
     ###posterior mean of the coefficients (mu1), and the posterior
     ###covariance of the coefficients (S1), the residual covariance
-    ###(V), the intercept (intercept), the fitted values (fitted), the
-    ###Evidence Lower Bound (ELBO), and the progress data frame
-    ###(progress).
-    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, intercept=intercept,
-                fitted=fitted_vals, ELBO=ELBO, progress=progress)
-  } else if(compute_ELBO && !update_V){
-    colnames(progress) <- c("iter", "mu1_max.diff", "ELBO_diff", "ELBO")
-    
-    ###Return the posterior assignment probabilities (w1), the
-    ###posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), the intercept (intercept),
-    ###the fitted values (fitted), the Evidence Lower Bound (ELBO),
-    ###and the progress data frame (progress).
-    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept,
-                fitted=fitted_vals, ELBO=ELBO, progress=progress)
-  } else if(!compute_ELBO && update_V){
-    colnames(progress) <- c("iter", "mu1_max.diff")
-    
-    ###Return the posterior assignment probabilities (w1), the
-    ###posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), the residual covariance
-    ###(V), the intercept (intercept), the fitted values (fitted), and
-    ###the progress data frame (progress).
-    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, intercept=intercept,
-                fitted=fitted_vals, progress=progress)
+    ###(V), the prior weights (w0), the intercept (intercept), 
+    ###the fitted values (fitted), the Evidence Lower Bound (ELBO), 
+    ###the progress data frame (progress), and the prior covariance (S0).
+    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, w0=w0, S0=simplify2array_custom(S0),
+                intercept=intercept, fitted=fitted_vals, ELBO=ELBO, progress=progress)
   } else {
     colnames(progress) <- c("iter", "mu1_max.diff")
     
     ###Return the posterior assignment probabilities (w1), the
     ###posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), the intercept (intercept),
-    ###the fitted values (fitted), and the progress data frame
-    ###(progress).
-    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, intercept=intercept,
-                fitted=fitted_vals, progress=progress)
+    ###covariance of the coefficients (S1), the residual covariance (V),
+    ###the prior weights (w0), the intercept (intercept), the fitted values (fitted), 
+    ###and the progress data frame (progress), and the prior covariance (S0).
+    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, w0=w0, S0=simplify2array_custom(S0), 
+                intercept=intercept, fitted=fitted_vals, progress=progress)
   }  
   class(out) <- c("mr.mash", "list")
   

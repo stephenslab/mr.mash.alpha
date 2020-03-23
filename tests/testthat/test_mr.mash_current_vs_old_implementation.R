@@ -38,12 +38,12 @@ test_that("Current and old mr.mash return the same results",{
   
   ###Fit with current implementation
   capture.output(
-    fit_current <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE,
+    fit_current <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE,
                            update_w0_method="EM", compute_ELBO=TRUE, 
                            standardize=FALSE, verbose=FALSE, update_V=FALSE,
                            version="R"))
   capture.output(
-    fit_current_rcpp <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8,
+    fit_current_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8,
                                 update_w0=TRUE, update_w0_method="EM",
                                 compute_ELBO=TRUE, standardize=FALSE,
                                 verbose=FALSE, update_V=FALSE, version="Rcpp"))

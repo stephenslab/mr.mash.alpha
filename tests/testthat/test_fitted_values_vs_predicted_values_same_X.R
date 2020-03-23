@@ -36,9 +36,9 @@ test_that(paste("mr.mash outputted fitted vs predicted values with same X",
   V_est <- cov(Y)
   
   ###Fit the model
-  fit <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
+  fit <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
                  standardize=TRUE, verbose=FALSE, update_V=FALSE, version="R")
-  fit_rcpp <- mr.mash(X, Y, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
+  fit_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE, update_w0_method="EM", compute_ELBO=TRUE, 
                  standardize=TRUE, verbose=FALSE, update_V=FALSE, version="Rcpp")
   
   
