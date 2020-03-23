@@ -88,7 +88,8 @@ following elements:
 \item{S0}{r x r x K array of prior covariance matrices
   on the regression coefficients}.
 
-\item{intercept}{r-vector with the estimated intercepts.}
+\item{intercept}{r-vector containing posterior mean estimate of the
+  intercept.}
 
 \item{fitted}{n x r matrix of fitted values.}
 

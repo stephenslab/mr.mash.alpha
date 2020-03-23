@@ -66,7 +66,8 @@
 #' \item{S0}{r x r x K array of prior covariance matrices
 #'   on the regression coefficients}.
 #' 
-#' \item{intercept}{r-vector with the estimated intercepts.}
+#' \item{intercept}{r-vector containing posterior mean estimate of the
+#'   intercept.}
 #' 
 #' \item{fitted}{n x r matrix of fitted values.}
 #' 
@@ -190,12 +191,14 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   S0 <- lapply(S0, makePD, e=e)
   
   ###Center Y, and center (and, optionally, scale) X
-  Y   <- scale(Y, center=TRUE, scale=FALSE)
-  X   <- scale(X, center=TRUE, scale=standardize)
+  Y <- scale(Y, center=TRUE, scale=FALSE)
+  X <- scale(X, center=TRUE, scale=standardize)
   muy <- attr(Y,"scaled:center")
   mux <- attr(X,"scaled:center")
   if (standardize)
     sx <- attr(X,"scaled:scale")
+  else
+    sx <- rep(1,p)
   attr(X,"scaled:center") <- NULL
   attr(X,"scaled:scale")  <- NULL
   attr(Y,"scaled:center") <- NULL
@@ -230,6 +233,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   
   cat("Done!\n")
 
+  # PERFORM ONE UPDATE
+  # ------------------
   ###First iteration
   t <- 0
   if(verbose){
@@ -294,7 +299,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     
     ##Update iterator
     t <- t+1
-    
+
+    # CHECK CONVERGENCE
+    # -----------------
     ##Exit loop if maximum number of iterations is reached
     if(t>max_iter){
       warning("Max number of iterations reached. Try increasing max_iter.")
@@ -304,7 +311,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     ##Set last value of ELBO as ELBO0
     if(compute_ELBO)
       ELBO0 <- ELBO
-    
+
+    # M-STEP
+    # ------
     ##Update V if requested
     if(update_V){
       V     <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
@@ -332,7 +341,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                                       version=version)$w0
       }
     }
-    
+
+    # E-STEP
+    # ------
     ###Variational parameters
     ups <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
                                   ldetV=ldetV, w0=w0, S0=S0, 
@@ -371,21 +382,28 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   
   cat("Done!\n")
   cat("Processing the output... ")
-  
-  ###Compute fitted values
-  fitted_vals <- X %*% mu1_t
-  fitted_vals <- addtocols(fitted_vals,muy)
+
+  # PRE-PROCESSING STEPS
+  # --------------------
+  ###Compute the "fitted" values.
+  fitted_vals <- addtocols(X %*% mu1_t, muy)
 
   if(standardize){
-    ###Rescale posterior means and covariance of coefficients
+      
+    ###Rescale posterior means and covariance of coefficients. In the
+    ###context of predicting Y, this rescaling is equivalent to
+    ###rescaling each column j of a given matrix, Xnew, by sx[j].
     mu1_t <- mu1_t/sx
-    for(j in 1:dim(S1_t)[3])
-      S1_t[, , j] <- S1_t[, , j]/(sx[j]^2)
+    for(j in 1:p)
+      S1_t[, , j] <- S1_t[, , j]/sx[j]^2
   }
 
-  ###Compute intercept
-  intercept <- muy - mux %*% mu1_t
-  intercept <- drop(intercept)
+  ###Compute posterior mean estimate of intercept. Note that when
+  ###columns of X are standardized, the intercept should be computed
+  ###with respect to the *rescaled* coefficients to recover the
+  ###correct fitted values. This is why this is done after rescaling
+  ###the coefficients above.
+  intercept <- drop(muy - mux %*% mu1_t)
   
   ###Assign names to outputs
   rownames(mu1_t) <- colnames(X)
@@ -428,4 +446,65 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
       "minutes!\n")
   
   return(out)
+}
+
+###Precompute quantities in any case
+precompute_quants <- function(n, X, V, S0, standardize, version){
+  if(standardize){
+    ###Quantities that don't depend on S0
+    R <- chol(V)
+    S <- V/(n-1)
+    S_chol <- R/sqrt(n-1)
+    
+    ###Quantities that depend on S0
+    SplusS0_chol <- list()
+    S1 <- list()
+    for(i in 1:length(S0)){
+      SplusS0_chol[[i]] <- chol(S+S0[[i]])
+      S1[[i]] <- S0[[i]]%*%backsolve(SplusS0_chol[[i]], forwardsolve(t(SplusS0_chol[[i]]), S))
+    }
+    
+    if(version=="R"){
+      return(list(V_chol=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))      
+    } else if(version=="Rcpp"){
+      xtx <- c(0, 0) ##Vector
+      d <- matrix(0, nrow=1, ncol=1)
+      QtimesR <- array(0, c(1, 1, 1))
+      
+      return(list(V_chol=R, S=S, S1=simplify2array_custom(S1), S_chol=S_chol, SplusS0_chol=simplify2array_custom(SplusS0_chol), 
+                  xtx=xtx, d=d, QtimesV_chol=QtimesR))
+    }
+    
+  } else {
+    ###Quantities that don't depend on S0
+    #xtx <- diag(crossprod(X))
+    xtx <- colSums(X^2)
+    R <- chol(V)
+    #Rtinv <- solve(t(R))
+    #Rinv <- solve(R)
+    Rtinv <- forwardsolve(t(R), diag(nrow(R)))
+    Rinv <- backsolve(R, diag(nrow(R)))
+    
+    ###Quantities that depend on S0
+    d <- list()
+    QtimesR <- list()
+    for(i in 1:length(S0)){
+      U0  <- Rtinv %*% S0[[i]] %*% Rinv
+      out <- eigen(U0)
+      d[[i]]   <- out$values
+      QtimesR[[i]]   <- crossprod(out$vectors, R)   
+    }
+    
+    if(version=="R"){
+      return(list(xtx=xtx, V_chol=R, d=d, QtimesV_chol=QtimesR))
+    } else if(version=="Rcpp"){
+      S <- matrix(0, nrow=1, ncol=1)
+      S1 <- array(0, c(1, 1, 1))
+      S_chol <- matrix(0, nrow=1, ncol=1)
+      SplusS0_chol <- array(0, c(1, 1, 1))
+      
+      return(list(xtx=xtx, V_chol=R, d=simplify2array_custom(d), QtimesV_chol=simplify2array_custom(QtimesR), 
+                  S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))
+    }
+  }
 }
