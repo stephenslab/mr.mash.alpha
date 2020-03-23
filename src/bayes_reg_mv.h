@@ -6,7 +6,7 @@
 
 // FUNCTION DECLARATIONS
 // ---------------------
-double bayes_mvr_ridge_scaled_X (const arma::vec& b, const arma::mat& S0, const arma::mat& S,
+double bayes_mvr_ridge_standardized_X (const arma::vec& b, const arma::mat& S0, const arma::mat& S,
                                  const arma::mat& S1, const arma::mat& SplusS0_chol,
                                  const arma::mat& S_chol, arma::vec& mu1);
 
@@ -16,7 +16,7 @@ double bayes_mvr_ridge_centered_X (const arma::mat& V, const arma::vec& b, const
                                    const arma::vec& d, const arma::mat& QtimesV_chol,
                                    arma::vec& mu1, arma::mat& S1);
 
-double bayes_mvr_mix_scaled_X (const arma::vec& x, const arma::mat& Y, const arma::vec& w0,
+double bayes_mvr_mix_standardized_X (const arma::vec& x, const arma::mat& Y, const arma::vec& w0,
                                const arma::cube& S0, const arma::mat& S, const arma::cube& S1,
                                const arma::cube& SplusS0_chol, const arma::mat& S_chol,
                                arma::vec& mu1_mix, arma::mat& S1_mix, arma::vec& w1);

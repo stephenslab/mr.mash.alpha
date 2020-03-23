@@ -84,15 +84,15 @@ inner_loop_general_Rcpp <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quant
   
   ###Return output
   if(compute_ELBO && update_V){
-    return(list(Rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS, 
+    return(list(Rbar=out$Rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS, 
                 neg_KL=out$neg_KL, var_part_ERSS=out$var_part_ERSS))
   } else if(compute_ELBO && !update_V){
-    return(list(Rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS, 
+    return(list(Rbar=out$Rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS, 
                 neg_KL=out$neg_KL))
   } else if(!compute_ELBO && update_V) {
-    return(list(Rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_ERSS=out$var_part_ERSS))
+    return(list(Rbar=out$Rbar, mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_ERSS=out$var_part_ERSS))
   } else { 
-    return(list(Rbar=out$rbar, mu1=out$mu1, S1=out$S1, w1=out$w1))
+    return(list(Rbar=out$Rbar, mu1=out$mu1, S1=out$S1, w1=out$w1))
   }
 }
 

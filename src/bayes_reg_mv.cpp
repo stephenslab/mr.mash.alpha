@@ -6,16 +6,16 @@ using namespace arma;
 
 // FUNCTION DEFINITIONS
 // --------------------
-// // Bayesian multivariate simple regression with normal prior with scaled x.
+// // Bayesian multivariate simple regression with normal prior with standardized x.
 // // [[Rcpp::depends(RcppArmadillo)]]
 // // [[Rcpp::export]]
-// List bayes_mvr_ridge_scaled_X_rcpp (const arma::vec& b, const arma::mat& S0,
+// List bayes_mvr_ridge_standardized_X_rcpp (const arma::vec& b, const arma::mat& S0,
 //                                     const arma::mat& S, const arma::mat& S1,
 //                                     const arma::mat& SplusS0_chol,
 //                                     const arma::mat& S_chol) {
 //   unsigned int r = b.n_elem;
 //   vec    mu1(r);
-//   double logbf = bayes_mvr_ridge_scaled_X(b, S0, S, S1, SplusS0_chol, S_chol,
+//   double logbf = bayes_mvr_ridge_standardized_X(b, S0, S, S1, SplusS0_chol, S_chol,
 //                                           mu1);
 //   return List::create(Named("mu1")   = mu1,
 //                       Named("logbf") = logbf);
@@ -40,10 +40,10 @@ using namespace arma;
 // }
 // 
 // 
-// // Bayesian multivariate simple regression with mixture-of-normals prior with scaled x.
+// // Bayesian multivariate simple regression with mixture-of-normals prior with standardized x.
 // // [[Rcpp::depends(RcppArmadillo)]]
 // // [[Rcpp::export]]
-// List bayes_mvr_mix_scaled_X_rcpp (const arma::vec& x, const arma::mat& Y,
+// List bayes_mvr_mix_standardized_X_rcpp (const arma::vec& x, const arma::mat& Y,
 //                                   const arma::vec& w0, const arma::cube& S0,
 //                                   const arma::mat& S, const arma::cube& S1,
 //                                   const arma::cube& SplusS0_chol,
@@ -53,7 +53,7 @@ using namespace arma;
 //   vec mu1_mix(r);
 //   mat S1_mix(r,r);
 //   vec w1(k);
-//   double logbf_mix = bayes_mvr_mix_scaled_X(x,Y,w0,S0,S,S1,SplusS0_chol,
+//   double logbf_mix = bayes_mvr_mix_standardized_X(x,Y,w0,S0,S,S1,SplusS0_chol,
 //                                             S_chol, mu1_mix, S1_mix, w1);
 //   return List::create(Named("mu1")   = mu1_mix,
 //                       Named("S1")    = S1_mix,
@@ -84,8 +84,8 @@ using namespace arma;
 // }
 
 
-// Perform Bayesian multivariate simple regression with normal prior with scaled x.
-double bayes_mvr_ridge_scaled_X (const vec& b, const mat& S0, const mat& S,
+// Perform Bayesian multivariate simple regression with normal prior with standardized x.
+double bayes_mvr_ridge_standardized_X (const vec& b, const mat& S0, const mat& S,
                                  const mat& S1, const mat& SplusS0_chol,
                                  const mat& S_chol, vec& mu1) {
   
@@ -121,8 +121,8 @@ double bayes_mvr_ridge_centered_X (const mat& V, const vec& b, const mat& S,
 }
 
 
-// Perform Bayesian multivariate simple regression with mixture-of-normals prior with scaled x.
-double bayes_mvr_mix_scaled_X (const vec& x, const mat& Y, const vec& w0,
+// Perform Bayesian multivariate simple regression with mixture-of-normals prior with standardized x.
+double bayes_mvr_mix_standardized_X (const vec& x, const mat& Y, const vec& w0,
                                const cube& S0, const mat& S, const cube& S1,
                                const cube& SplusS0_chol, const mat& S_chol,
                                vec& mu1_mix, mat& S1_mix, vec& w1) {
@@ -139,7 +139,7 @@ double bayes_mvr_mix_scaled_X (const vec& x, const mat& Y, const vec& w0,
   
   // Compute the quantities separately for each mixture component.
   for (unsigned int i = 0; i < k; i++) {
-    logbfmix(i) = bayes_mvr_ridge_scaled_X(b, S0.slice(i), S, S1.slice(i),
+    logbfmix(i) = bayes_mvr_ridge_standardized_X(b, S0.slice(i), S, S1.slice(i),
              SplusS0_chol.slice(i), S_chol, mu1);
     mu1mix.col(i) = mu1;
   }

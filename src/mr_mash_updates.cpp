@@ -82,7 +82,7 @@ List inner_loop_general_rcpp (const arma::mat& X, arma::mat& Rbar, arma::mat& mu
   inner_loop_general(X, Rbar_new, mu1_new, V, Vinv, w0, S0, precomp_quants,
                      standardize, compute_ELBO, update_V, S1, w1, var_part_tr_wERSS, 
                      neg_KL, var_part_ERSS);
-  return List::create(Named("rbar")               = Rbar_new,
+  return List::create(Named("Rbar")               = Rbar_new,
                       Named("mu1")                = mu1_new,
                       Named("S1")                 = S1,
                       Named("w1")                 = w1,
@@ -129,7 +129,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
     // Update the posterior quantities for the jth
     // predictor.
     if (standardize)
-      logbf_mix = bayes_mvr_mix_scaled_X(x, Rbar_j, w0, S0, precomp_quants.S,
+      logbf_mix = bayes_mvr_mix_standardized_X(x, Rbar_j, w0, S0, precomp_quants.S,
                              precomp_quants.S1, precomp_quants.SplusS0_chol,
                              precomp_quants.S_chol, mu1_mix, S1_mix, w1_mix);
     else {
@@ -237,7 +237,7 @@ mat compute_mixsqp_update_loop (const mat& X, const mat& Rbar, const mat& V, con
       // Update the posterior quantities for the jth
       // predictor.
       if (standardize){
-        logbf = bayes_mvr_ridge_scaled_X(b, S0.slice(i), precomp_quants.S,
+        logbf = bayes_mvr_ridge_standardized_X(b, S0.slice(i), precomp_quants.S,
                                          precomp_quants.S1.slice(i), precomp_quants.SplusS0_chol.slice(i),
                                          precomp_quants.S_chol, mu1_ridge);
       }else {
