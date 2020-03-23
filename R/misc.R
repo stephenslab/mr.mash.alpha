@@ -184,3 +184,17 @@ compute_var_part_ERSS <- function(var_part_ERSS, bfit, xtx){
   return(var_part_ERSS)
 }
 
+###Rescale posterior mean and covariance of the regression coefficients when standardizing X
+rescale_post_mean_covar <- function(mu1, S1, sx){
+  p <- nrow(mu1)
+  r <- ncol(mu1)
+  
+  mu1_orig <- mu1/sx
+  
+  S1_orig <- array(0, c(r, r, p))
+  for(j in 1:p){
+    S1_orig[, , j] <- S1[, , j]/sx[j]^2
+  }
+  
+  return(list(mu1_orig=mu1_orig, S1_orig=S1_orig))
+}
