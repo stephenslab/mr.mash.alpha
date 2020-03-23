@@ -24,10 +24,3 @@ compute_ELBO_terms <- function(var_part_tr_wERSS, neg_KL, x_j, rbar_j, bfit, xtx
   return(list(var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL))
 }
 
-###Compute variance part of the ERSS
-compute_var_part_ERSS <- function(var_part_ERSS, bfit, xtx){
-  var_part_ERSS <- var_part_ERSS + (bfit$S1*xtx)
-  
-  return(var_part_ERSS)
-}
-

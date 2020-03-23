@@ -35,7 +35,7 @@ test_that("bayes_mvr_mix and bayes_mvr_mix_centered_X return the same results", 
   fit_mix <- bayes_mvr_mix(X[, 1], Y, V, w0, S0mix)
   
   ###Fit BMR with transformed X
-  comps1 <- precompute_quants(n, X, V, S0mix, standardize=FALSE, version="R")
+  comps1 <- precompute_quants(X, V, S0mix, standardize=FALSE, version="R")
   fit_mix_centered <- bayes_mvr_mix_centered_X(X[, 1], Y, V, w0, S0mix, comps1$xtx[1], solve(V), comps1$V_chol, comps1$d, comps1$QtimesV_chol)
   
   ###Tests

@@ -211,13 +211,11 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     ELBO <- -Inf
   
   ###Precompute quantities
-  comps <- precompute_quants(n, X, V, S0, standardize, version)
+  comps <- precompute_quants(X, V, S0, standardize, version)
   
   if(compute_ELBO || !standardize)
     ###Compute inverse of V (needed for the ELBO and unstandardized X)
-    #Vinv <- chol2inv(comps$V_chol)
-    Vinv <- backsolve(comps$V_chol, forwardsolve(t(comps$V_chol),
-                                                 diag(nrow(comps$V_chol))))
+    Vinv <- chol2inv(comps$V_chol)
   else {
     if(version=="R")
       Vinv <- NULL
@@ -317,11 +315,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     ##Update V if requested
     if(update_V){
       V     <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
-      comps <- precompute_quants(n, X, V, S0, standardize, version)
+      comps <- precompute_quants(X, V, S0, standardize, version)
       if(compute_ELBO || !standardize)
-        Vinv <- backsolve(comps$V_chol,
-                          forwardsolve(t(comps$V_chol),
-                                       diag(nrow(comps$V_chol))))
+        Vinv <- chol2inv(comps$V_chol)
       
       ###Compute log determinant of V (needed for the ELBO)
       if(compute_ELBO)
@@ -446,65 +442,4 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
       "minutes!\n")
   
   return(out)
-}
-
-###Precompute quantities in any case
-precompute_quants <- function(n, X, V, S0, standardize, version){
-  if(standardize){
-    ###Quantities that don't depend on S0
-    R <- chol(V)
-    S <- V/(n-1)
-    S_chol <- R/sqrt(n-1)
-    
-    ###Quantities that depend on S0
-    SplusS0_chol <- list()
-    S1 <- list()
-    for(i in 1:length(S0)){
-      SplusS0_chol[[i]] <- chol(S+S0[[i]])
-      S1[[i]] <- S0[[i]]%*%backsolve(SplusS0_chol[[i]], forwardsolve(t(SplusS0_chol[[i]]), S))
-    }
-    
-    if(version=="R"){
-      return(list(V_chol=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))      
-    } else if(version=="Rcpp"){
-      xtx <- c(0, 0) ##Vector
-      d <- matrix(0, nrow=1, ncol=1)
-      QtimesR <- array(0, c(1, 1, 1))
-      
-      return(list(V_chol=R, S=S, S1=simplify2array_custom(S1), S_chol=S_chol, SplusS0_chol=simplify2array_custom(SplusS0_chol), 
-                  xtx=xtx, d=d, QtimesV_chol=QtimesR))
-    }
-    
-  } else {
-    ###Quantities that don't depend on S0
-    #xtx <- diag(crossprod(X))
-    xtx <- colSums(X^2)
-    R <- chol(V)
-    #Rtinv <- solve(t(R))
-    #Rinv <- solve(R)
-    Rtinv <- forwardsolve(t(R), diag(nrow(R)))
-    Rinv <- backsolve(R, diag(nrow(R)))
-    
-    ###Quantities that depend on S0
-    d <- list()
-    QtimesR <- list()
-    for(i in 1:length(S0)){
-      U0  <- Rtinv %*% S0[[i]] %*% Rinv
-      out <- eigen(U0)
-      d[[i]]   <- out$values
-      QtimesR[[i]]   <- crossprod(out$vectors, R)   
-    }
-    
-    if(version=="R"){
-      return(list(xtx=xtx, V_chol=R, d=d, QtimesV_chol=QtimesR))
-    } else if(version=="Rcpp"){
-      S <- matrix(0, nrow=1, ncol=1)
-      S1 <- array(0, c(1, 1, 1))
-      S_chol <- matrix(0, nrow=1, ncol=1)
-      SplusS0_chol <- array(0, c(1, 1, 1))
-      
-      return(list(xtx=xtx, V_chol=R, d=simplify2array_custom(d), QtimesV_chol=simplify2array_custom(QtimesR), 
-                  S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))
-    }
-  }
 }

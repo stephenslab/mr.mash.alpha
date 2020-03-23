@@ -54,14 +54,14 @@ test_that(paste("mr.mash with standardize=TRUE and old mr.mash.scaled.X",
   fit_old <- readRDS("mr.mash.scaled.X_fit.rds")
   
   ###Tests
-  expect_equal(fit_current$mu1, fit_old$mu1, tolerance = 1e-6, scale = 1)
-  expect_equal(fit_current$S1, fit_old$S1, tolerance = 1e-6, scale = 1)
-  expect_equal(fit_current$w1, fit_old$w1, tolerance = 1e-6, scale = 1)
-  expect_equal(fit_current$ELBO, fit_old$ELBO, tolerance = 9.99e-5, scale = 1)
+  expect_equivalent(fit_current$mu1, fit_old$mu1, tolerance = 1e-6, scale = 1)
+  expect_equivalent(fit_current$S1, fit_old$S1, tolerance = 1e-6, scale = 1)
+  expect_equivalent(fit_current$w1, fit_old$w1, tolerance = 1e-6, scale = 1)
+  expect_equivalent(fit_current$ELBO, fit_old$ELBO, tolerance = 9.99e-5, scale = 1)
   
-  expect_equal(fit_current_rcpp$mu1, fit_old$mu1, tolerance = 1e-6, scale = 1)
-  expect_equal(fit_current_rcpp$S1, fit_old$S1, tolerance = 1e-6, scale = 1)
-  expect_equal(fit_current_rcpp$w1, fit_old$w1, tolerance = 1e-6, scale = 1)
-  expect_equal(fit_current_rcpp$ELBO, fit_old$ELBO, tolerance = 9.99e-5,
+  expect_equivalent(fit_current_rcpp$mu1, fit_old$mu1, tolerance = 1e-6, scale = 1)
+  expect_equivalent(fit_current_rcpp$S1, fit_old$S1, tolerance = 1e-6, scale = 1)
+  expect_equivalent(fit_current_rcpp$w1, fit_old$w1, tolerance = 1e-6, scale = 1)
+  expect_equivalent(fit_current_rcpp$ELBO, fit_old$ELBO, tolerance = 9.99e-5,
                scale = 1)
 })
