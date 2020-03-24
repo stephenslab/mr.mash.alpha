@@ -191,17 +191,16 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   S0 <- lapply(S0, makePD, e=e)
   
   ###Center Y, and center (and, optionally, scale) X
-  Y <- scale(Y, center=TRUE, scale=FALSE)
-  X <- scale(X, center=TRUE, scale=standardize)
-  muy <- attr(Y,"scaled:center")
-  mux <- attr(X,"scaled:center")
+  outY <- scale_fast2(Y, scale=FALSE)
+  outX <- scale_fast2(X, scale=standardize)
+  muy <- outY$means
+  mux <- outX$means
   if (standardize)
-    sx <- attr(X,"scaled:scale")
-  # else
-  #   sx <- rep(1,p)
-  attr(X,"scaled:center") <- NULL
-  attr(X,"scaled:scale")  <- NULL
-  attr(Y,"scaled:center") <- NULL
+    sx <- outX$sds
+  Y <- outY$M
+  rm(outY)
+  X <- outX$M
+  rm(outX)
   
   ###Initilize mu1, S1, w1, error, ELBO, iterator, and progress
   mu1_t    <- mu1_init 
