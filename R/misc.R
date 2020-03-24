@@ -202,17 +202,20 @@ rescale_post_mean_covar <- function(mu1, S1, sx){
 ###Scale a matrix (similar to but faster than base::scale())
 #' @importFrom matrixStats colSds colMeans2
 #' 
-scale_fast <- function(M, center=TRUE, scale=TRUE, na.rm=TRUE){
+scale_fast <- function(M, scale=TRUE, na.rm=TRUE){
   col_names <- colnames(M)
   row_names <- rownames(M)
   
   ###Compute column means and sds
   a <- colMeans2(M, na.rm=na.rm)
   names(a) <- col_names
-  if(scale)
+  if(scale){  
     b <- colSds(M, na.rm=na.rm)
-  else
+    if(any(b==0))
+      stop("Some column(s) have 0 standard deviation")
+  } else{
     b <- rep(1, ncol(M))
+  }
   names(b) <- col_names
   
   ###Scale
@@ -223,3 +226,23 @@ scale_fast <- function(M, center=TRUE, scale=TRUE, na.rm=TRUE){
   return(list(M=M, means=a, sds=b))
 }
 
+###Scale a matrix (similar to the above but does not use R to compute means and sds)
+scale_fast2 <- function(M, scale=TRUE, na.rm=TRUE){
+  col_names <- colnames(M)
+  row_names <- rownames(M)
+  
+  ###Scale
+  out <- scale2_rcpp(M, scale=scale, na_rm=na.rm)
+  means <- drop(out$means)
+  sds <- drop(out$sds)
+  M <- out$M
+  rm(out)
+  
+  ###Attach dimension names
+  colnames(M) <- col_names
+  rownames(M) <- row_names
+  names(means) <- col_names
+  names(sds) <- col_names
+  
+  return(list(M=M, means=means, sds=sds))
+}
