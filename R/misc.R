@@ -198,3 +198,28 @@ rescale_post_mean_covar <- function(mu1, S1, sx){
   
   return(list(mu1_orig=mu1_orig, S1_orig=S1_orig))
 }
+
+###Scale a matrix (similar to but faster than base::scale())
+#' @importFrom matrixStats colSds colMeans2
+#' 
+scale_fast <- function(M, center=TRUE, scale=TRUE, na.rm=TRUE){
+  col_names <- colnames(M)
+  row_names <- rownames(M)
+  
+  ###Compute column means and sds
+  a <- colMeans2(M, na.rm=na.rm)
+  names(a) <- col_names
+  if(scale)
+    b <- colSds(M, na.rm=na.rm)
+  else
+    b <- rep(1, ncol(M))
+  names(b) <- col_names
+  
+  ###Scale
+  M <- scale_rcpp(M, a, b)
+  colnames(M) <- col_names
+  rownames(M) <- row_names
+  
+  return(list(M=M, means=a, sds=b))
+}
+
