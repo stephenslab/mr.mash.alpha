@@ -45,10 +45,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// scale_rcpp
+arma::mat scale_rcpp(const arma::mat& M, const arma::vec& a, const arma::vec& b);
+RcppExport SEXP _mr_mash_alpha_scale_rcpp(SEXP MSEXP, SEXP aSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(scale_rcpp(M, a, b));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_mr_mash_alpha_inner_loop_general_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rcpp, 11},
     {"_mr_mash_alpha_compute_mixsqp_update_loop_rcpp", (DL_FUNC) &_mr_mash_alpha_compute_mixsqp_update_loop_rcpp, 8},
+    {"_mr_mash_alpha_scale_rcpp", (DL_FUNC) &_mr_mash_alpha_scale_rcpp, 3},
     {NULL, NULL, 0}
 };
 

@@ -9,3 +9,7 @@ compute_mixsqp_update_loop_rcpp <- function(X, Rbar, V, S0, mu1, Vinv, precomp_q
     .Call('_mr_mash_alpha_compute_mixsqp_update_loop_rcpp', PACKAGE = 'mr.mash.alpha', X, Rbar, V, S0, mu1, Vinv, precomp_quants_list, standardize)
 }
 
+scale_rcpp <- function(M, a, b) {
+    .Call('_mr_mash_alpha_scale_rcpp', PACKAGE = 'mr.mash.alpha', M, a, b)
+}
+
