@@ -58,11 +58,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// scale2_rcpp
+List scale2_rcpp(const arma::mat& M, bool scale, bool na_rm);
+RcppExport SEXP _mr_mash_alpha_scale2_rcpp(SEXP MSEXP, SEXP scaleSEXP, SEXP na_rmSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type M(MSEXP);
+    Rcpp::traits::input_parameter< bool >::type scale(scaleSEXP);
+    Rcpp::traits::input_parameter< bool >::type na_rm(na_rmSEXP);
+    rcpp_result_gen = Rcpp::wrap(scale2_rcpp(M, scale, na_rm));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_mr_mash_alpha_inner_loop_general_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rcpp, 11},
     {"_mr_mash_alpha_compute_mixsqp_update_loop_rcpp", (DL_FUNC) &_mr_mash_alpha_compute_mixsqp_update_loop_rcpp, 8},
     {"_mr_mash_alpha_scale_rcpp", (DL_FUNC) &_mr_mash_alpha_scale_rcpp, 3},
+    {"_mr_mash_alpha_scale2_rcpp", (DL_FUNC) &_mr_mash_alpha_scale2_rcpp, 3},
     {NULL, NULL, 0}
 };
 

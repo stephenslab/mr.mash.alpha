@@ -13,3 +13,7 @@ scale_rcpp <- function(M, a, b) {
     .Call('_mr_mash_alpha_scale_rcpp', PACKAGE = 'mr.mash.alpha', M, a, b)
 }
 
+scale2_rcpp <- function(M, scale, na_rm) {
+    .Call('_mr_mash_alpha_scale2_rcpp', PACKAGE = 'mr.mash.alpha', M, scale, na_rm)
+}
+
