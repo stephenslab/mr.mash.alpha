@@ -27,7 +27,8 @@ simulate_mr_mash_data <- function(n, p, p_causal, r,
   Sigma <- create_cov_canonical(r, singletons=FALSE, hetgrid=Sigma_cor_offdiag)[[1]]*Sigma_scale
   B_causal <- rmvnorm(n=p_causal, mean=rep(0, r), sigma=Sigma)
   B <- matrix(0, ncol=r, nrow=p)
-  B[1:p_causal, ] <- B_causal
+  causal_variables <- sample(x=(1:p), size=p_causal)
+  B[causal_variables, ] <- B_causal
   
   ##Simulate X from N_r(0, Gamma) where Gamma is a given covariance matrix across variables
   Gamma <- create_cov_canonical(p, singletons=FALSE, hetgrid=Gamma_cor_offdiag)[[1]]*Gamma_scale
@@ -37,5 +38,5 @@ simulate_mr_mash_data <- function(n, p, p_causal, r,
   ##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix and V is the residual covariance  
   Y <- sim_mvr(X, B, V)
   
-  return(list(X=X, Y=Y, B=B, V=V, Sigma=Sigma, Gamma=Gamma))
+  return(list(X=X, Y=Y, B=B, causal_variables=causal_variables, V=V, Sigma=Sigma, Gamma=Gamma))
 }
