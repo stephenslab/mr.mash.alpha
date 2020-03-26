@@ -141,7 +141,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                     mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-8,
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                     compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
-                    update_V=FALSE, version=c("R", "Rcpp"), e=1e-8) {
+                    update_V=FALSE, version=c("Rcpp", "R"), e=1e-8) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -152,7 +152,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   ###will be used)
   update_w0_method <- match.arg(update_w0_method)
   
-  ###Select version of the inner loop (if not specified by user, R
+  ###Select version of the inner loop (if not specified by user, Rcpp
   ###will be used)
   version <- match.arg(version)
   
@@ -202,16 +202,16 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   X <- outX$M
   rm(outX)
   
-  ###Initilize mu1, S1, w1, error, ELBO, iterator, and progress
-  mu1_t    <- mu1_init 
-  err      <- matrix(Inf, nrow=p, ncol=r)
+  ###Initilize mu1, S1, w1, delta_mu1, ELBO, iterator, and progress
+  mu1_t <- mu1_init 
+  delta_mu1 <- matrix(Inf, nrow=p, ncol=r)
   ELBO <- -Inf
-  if(compute_ELBO)
-    progress <- as.data.frame(matrix(NA, nrow=max_iter, ncol=4))
-  else
-    progress <- as.data.frame(matrix(NA, nrow=max_iter, ncol=2))
-  
-  
+  progress <- as.data.frame(matrix(NA, nrow=max_iter, ncol=2))
+  colnames(progress) <- c("iter", "mu1_max.diff")
+  if(compute_ELBO){
+    progress$ELBO_diff <- NA
+    progress$ELBO <- NA
+  }
   ###Precompute quantities
   comps <- precompute_quants(X, V, S0, standardize, version)
   
@@ -237,14 +237,15 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   # ------------------
   ###First iteration
   t <- 0
+  cat("Fitting the optimization algorithm... ")
   if(verbose){
-    cat("Fitting the optimization algorithm... \n")
+    cat("\n")
+    cat(" iter    mu1_max.diff")
     if(compute_ELBO)
-      cat(" iter    mu1_max.diff     ELBO_diff               ELBO\n")
+      cat("     ELBO_diff               ELBO\n")
     else 
-      cat(" iter    mu1_max.diff\n")
-  } else 
-    cat("Fitting the optimization algorithm... ")
+      cat("\n")
+  }
   
   ##Save current estimates.
   mu1_tminus1 <- mu1_t   
@@ -274,24 +275,24 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     if(verbose)
       ##Print out useful info
       cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n",
-                  t, max(err), ELBO - ELBO0, ELBO))
+                  t, max(delta_mu1), ELBO - ELBO0, ELBO))
 
     ##Update progress data.frame 
-    progress[t, ] <- c(t, max(err), ELBO - ELBO0, ELBO)
+    progress[t, ] <- c(t, max(delta_mu1), ELBO - ELBO0, ELBO)
   } else {
     if(verbose)
       ##Print out useful info
-      cat(sprintf("%4d      %9.2e\n", t, max(err)))
+      cat(sprintf("%4d      %9.2e\n", t, max(delta_mu1)))
     
     ##Update progress data.frame 
-    progress[t, ] <- c(t, max(err))
+    progress[t, ] <- c(t, max(delta_mu1))
   }
   
   # MAIN LOOP
   # ---------
   ###Repeat the following until convergence, or until maximum number
   ###of iterations is reached.
-  while(any(err>tol)){
+  while(any(delta_mu1>tol)){
       
     ##Save current estimates.
     mu1_tminus1 <- mu1_t   
@@ -299,8 +300,6 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     ##Update iterator
     t <- t+1
 
-    # CHECK CONVERGENCE
-    # -----------------
     ##Exit loop if maximum number of iterations is reached
     if(t>max_iter){
       warning("Max number of iterations reached. Try increasing max_iter.")
@@ -340,7 +339,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
 
     # E-STEP
     # ------
-    ###Variational parameters
+    ###Update variational parameters
     ups <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
                                   ldetV=ldetV, w0=w0, S0=S0, 
                                   precomp_quants=comps,
@@ -356,30 +355,30 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
       var_part_ERSS <- ups$var_part_ERSS
     
     ##Compute distance in mu1 between two successive iterations
-    err <- abs(mu1_t - mu1_tminus1)
+    delta_mu1 <- abs(mu1_t - mu1_tminus1)
     
     if(compute_ELBO){
       if(verbose)
         ##Print out useful info
         cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n",
-                    t, max(err), ELBO - ELBO0, ELBO))
+                    t, max(delta_mu1), ELBO - ELBO0, ELBO))
 
       ##Update progress data.frame 
-      progress[t, ] <- c(t, max(err), ELBO - ELBO0, ELBO)
+      progress[t, ] <- c(t, max(delta_mu1), ELBO - ELBO0, ELBO)
     } else {
       if(verbose)
         ##Print out useful info
-        cat(sprintf("%4d      %9.2e\n", t, max(err)))
+        cat(sprintf("%4d      %9.2e\n", t, max(delta_mu1)))
 
       ##Update progress data.frame 
-      progress[t, ] <- c(t, max(err))
+      progress[t, ] <- c(t, max(delta_mu1))
     }
   }
   
   cat("Done!\n")
-  cat("Processing the output... ")
+  cat("Processing the outputs... ")
 
-  # PRE-PROCESSING STEPS
+  # POST-PROCESSING STEPS
   # --------------------
   ###Compute the "fitted" values.
   fitted_vals <- addtocols(X %*% mu1_t, muy)
@@ -416,28 +415,18 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   ###Remove unused rows of progress
   progress <- progress[rowSums(is.na(progress)) != ncol(progress), ]
   
-  if(compute_ELBO){
-    colnames(progress) <- c("iter", "mu1_max.diff", "ELBO_diff", "ELBO")
-    
-    ###Return the posterior assignment probabilities (w1), the
-    ###posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), the residual covariance
-    ###(V), the prior weights (w0), the intercept (intercept), 
-    ###the fitted values (fitted), the Evidence Lower Bound (ELBO), 
-    ###the progress data frame (progress), and the prior covariance (S0).
-    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, w0=w0, S0=simplify2array_custom(S0),
-                intercept=intercept, fitted=fitted_vals, ELBO=ELBO, progress=progress)
-  } else {
-    colnames(progress) <- c("iter", "mu1_max.diff")
-    
-    ###Return the posterior assignment probabilities (w1), the
-    ###posterior mean of the coefficients (mu1), and the posterior
-    ###covariance of the coefficients (S1), the residual covariance (V),
-    ###the prior weights (w0), the intercept (intercept), the fitted values (fitted), 
-    ###and the progress data frame (progress), and the prior covariance (S0).
-    out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, w0=w0, S0=simplify2array_custom(S0), 
-                intercept=intercept, fitted=fitted_vals, progress=progress)
-  }  
+  ###Return the posterior assignment probabilities (w1), the
+  ###posterior mean of the coefficients (mu1), and the posterior
+  ###covariance of the coefficients (S1), the residual covariance (V),
+  ###the prior weights (w0), the intercept (intercept), the fitted values (fitted), 
+  ###and the progress data frame (progress), and the prior covariance (S0) and,
+  ###if computed, the Evidence Lower Bound (ELBO).
+  out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, w0=w0, S0=simplify2array_custom(S0), 
+              intercept=intercept, fitted=fitted_vals, progress=progress)
+  if(compute_ELBO)
+    ###Append ELBO to the output
+    out$ELBO <- ELBO
+
   class(out) <- c("mr.mash", "list")
   
   cat("Done!\n")
