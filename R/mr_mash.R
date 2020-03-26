@@ -271,21 +271,18 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   if(update_V)
     var_part_ERSS <- ups$var_part_ERSS
   
-  if(compute_ELBO){
-    if(verbose)
-      ##Print out useful info
-      cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n",
-                  t, max(delta_mu1), ELBO - ELBO0, ELBO))
-
-    ##Update progress data.frame 
-    progress[t, ] <- c(t, max(delta_mu1), ELBO - ELBO0, ELBO)
-  } else {
-    if(verbose)
-      ##Print out useful info
-      cat(sprintf("%4d      %9.2e\n", t, max(delta_mu1)))
-    
-    ##Update progress data.frame 
-    progress[t, ] <- c(t, max(delta_mu1))
+  ##Update progress data.frame 
+  progress[t, c(1, 2)] <- c(t, max(delta_mu1))
+  if(compute_ELBO)
+    progress[t, c(3, 4)] <- c(ELBO - ELBO0, ELBO)
+  
+  if(verbose){
+    ##Print out useful info
+    cat(sprintf("%4d      %9.2e", t, max(delta_mu1)))
+    if(compute_ELBO)
+      cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO0, ELBO))
+    else
+      cat("\n")
   }
   
   # MAIN LOOP
@@ -357,21 +354,18 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     ##Compute distance in mu1 between two successive iterations
     delta_mu1 <- abs(mu1_t - mu1_tminus1)
     
-    if(compute_ELBO){
-      if(verbose)
-        ##Print out useful info
-        cat(sprintf("%4d      %9.2e      %9.2e      %0.20e\n",
-                    t, max(delta_mu1), ELBO - ELBO0, ELBO))
-
-      ##Update progress data.frame 
-      progress[t, ] <- c(t, max(delta_mu1), ELBO - ELBO0, ELBO)
-    } else {
-      if(verbose)
-        ##Print out useful info
-        cat(sprintf("%4d      %9.2e\n", t, max(delta_mu1)))
-
-      ##Update progress data.frame 
-      progress[t, ] <- c(t, max(delta_mu1))
+    ##Update progress data.frame 
+    progress[t, c(1, 2)] <- c(t, max(delta_mu1))
+    if(compute_ELBO)
+      progress[t, c(3, 4)] <- c(ELBO - ELBO0, ELBO)
+    
+    if(verbose){
+      ##Print out useful info
+      cat(sprintf("%4d      %9.2e", t, max(delta_mu1)))
+      if(compute_ELBO)
+        cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO0, ELBO))
+      else
+        cat("\n")
     }
   }
   
