@@ -381,7 +381,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     ###Rescale posterior means and covariance of coefficients. In the
     ###context of predicting Y, this rescaling is equivalent to
     ###rescaling each column j of a given matrix, Xnew, by sx[j].
-    post_rescaled <- rescale_post_mean_covar(mu1_t, S1_t, sx)
+    post_rescaled <- rescale_post_mean_covar_fast(mu1_t, S1_t, sx)
     mu1_t <- post_rescaled$mu1_orig
     S1_t <- post_rescaled$S1_orig
   }
