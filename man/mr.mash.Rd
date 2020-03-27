@@ -19,7 +19,7 @@ mr.mash(
   standardize = TRUE,
   verbose = TRUE,
   update_V = FALSE,
-  version = c("R", "Rcpp"),
+  version = c("Rcpp", "R"),
   e = 1e-08
 )
 }
