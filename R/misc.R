@@ -231,6 +231,12 @@ rescale_post_mean_covar <- function(mu1, S1, sx){
   return(list(mu1_orig=mu1_orig, S1_orig=S1_orig))
 }
 
+###Faster version of rescale_post_mean_covar()
+rescale_post_mean_covar_fast <- function(mu1, S1, sx){
+  rescale_post_mean_covar_rcpp(mu1, S1, sx)
+}
+  
+
 ###Scale a matrix (similar to but faster than base::scale())
 #' @importFrom matrixStats colSds colMeans2
 #' 

@@ -16,6 +16,8 @@ using namespace arma;
 // 
 void scale (arma::mat& M, const arma::vec& a, const arma::vec& b);
 
+void rescale_post_mean_covar (arma::mat& mu1, arma::cube& S1, const arma::vec& sx);
+
 // FUNCTION DEFINITIONS
 // --------------------
 // Scale a matrix providing column means and sds externally
@@ -75,3 +77,27 @@ List scale2_rcpp (const arma::mat& M, bool scale, bool na_rm) {
                       Named("means") = a,
                       Named("sds")   = b);
 }
+
+
+// Rescale posterior means and covariances
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+List rescale_post_mean_covar_rcpp(const arma::mat& mu1, const arma::cube& S1, const arma::vec& sx){
+  mat mu1_orig = mu1;
+  cube S1_orig = S1;
+  
+  rescale_post_mean_covar(mu1_orig, S1_orig, sx);
+  
+  return List::create(Named("mu1_orig")  = mu1_orig,
+                      Named("S1_orig")   = S1_orig);
+}
+
+void rescale_post_mean_covar (arma::mat& mu1, arma::cube& S1, const arma::vec& sx) {
+  unsigned int p = S1.n_slices;
+  
+  for (unsigned int j = 0; j < p; j++){
+    mu1.row(j) /= sx(j);
+    S1.slice(j) /= pow(sx(j), 2);
+  }
+}
+
