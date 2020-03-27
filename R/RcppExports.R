@@ -17,3 +17,7 @@ scale2_rcpp <- function(M, scale, na_rm) {
     .Call('_mr_mash_alpha_scale2_rcpp', PACKAGE = 'mr.mash.alpha', M, scale, na_rm)
 }
 
+rescale_post_mean_covar_rcpp <- function(mu1, S1, sx) {
+    .Call('_mr_mash_alpha_rescale_post_mean_covar_rcpp', PACKAGE = 'mr.mash.alpha', mu1, S1, sx)
+}
+

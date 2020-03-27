@@ -71,12 +71,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rescale_post_mean_covar_rcpp
+List rescale_post_mean_covar_rcpp(const arma::mat& mu1, const arma::cube& S1, const arma::vec& sx);
+RcppExport SEXP _mr_mash_alpha_rescale_post_mean_covar_rcpp(SEXP mu1SEXP, SEXP S1SEXP, SEXP sxSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type mu1(mu1SEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type S1(S1SEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type sx(sxSEXP);
+    rcpp_result_gen = Rcpp::wrap(rescale_post_mean_covar_rcpp(mu1, S1, sx));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_mr_mash_alpha_inner_loop_general_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rcpp, 11},
     {"_mr_mash_alpha_compute_mixsqp_update_loop_rcpp", (DL_FUNC) &_mr_mash_alpha_compute_mixsqp_update_loop_rcpp, 8},
     {"_mr_mash_alpha_scale_rcpp", (DL_FUNC) &_mr_mash_alpha_scale_rcpp, 3},
     {"_mr_mash_alpha_scale2_rcpp", (DL_FUNC) &_mr_mash_alpha_scale2_rcpp, 3},
+    {"_mr_mash_alpha_rescale_post_mean_covar_rcpp", (DL_FUNC) &_mr_mash_alpha_rescale_post_mean_covar_rcpp, 3},
     {NULL, NULL, 0}
 };
 
