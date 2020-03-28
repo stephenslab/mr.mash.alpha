@@ -241,6 +241,11 @@ rescale_post_mean_covar_fast <- function(mu1, S1, sx){
 #' @importFrom matrixStats colSds colMeans2
 #' 
 scale_fast <- function(M, scale=TRUE, na.rm=TRUE){
+  ##Check whether M is a matrix. If not, coerce into it. 
+  if(!is.matrix(M))
+    M <- as.matrix(M)
+  
+  ##Store dimnames
   col_names <- colnames(M)
   row_names <- rownames(M)
   
@@ -258,6 +263,8 @@ scale_fast <- function(M, scale=TRUE, na.rm=TRUE){
   
   ###Scale
   M <- scale_rcpp(M, a, b)
+  
+  ###Attach dimension names
   colnames(M) <- col_names
   rownames(M) <- row_names
   
@@ -266,6 +273,11 @@ scale_fast <- function(M, scale=TRUE, na.rm=TRUE){
 
 ###Scale a matrix (similar to the above but does not use R to compute means and sds)
 scale_fast2 <- function(M, scale=TRUE, na.rm=TRUE){
+  ##Check whether M is a matrix. If not, coerce into it. 
+  if(!is.matrix(M))
+    M <- as.matrix(M)
+  
+  ##Store dimnames
   col_names <- colnames(M)
   row_names <- rownames(M)
   
