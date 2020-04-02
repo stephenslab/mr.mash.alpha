@@ -45,6 +45,9 @@
 #' 
 #' @param e A small number to add to the diagonal elements of the
 #'   prior matrices to improve numerical stability of the updates.
+#'   
+#' @param ca_update_order The order with which coordinated are updated.
+#'   So far, only "consecutive" is supported.
 #' 
 #' @return A mr.mash fit, stored as a list with some or all of the
 #' following elements:
@@ -141,7 +144,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                     mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-8,
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                     compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
-                    update_V=FALSE, version=c("Rcpp", "R"), e=1e-8) {
+                    update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
+                    ca_update_order=c("consecutive")) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -155,6 +159,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   ###Select version of the inner loop (if not specified by user, Rcpp
   ###will be used)
   version <- match.arg(version)
+  
+  ###Select ordering of the coordinate ascent updates (if not specified by user,
+  ###consecutive will be used
+  ca_update_order <- match.arg(ca_update_order)
   
   ###Check that the inputs are in the correct format
   if(!is.matrix(Y))
@@ -235,6 +243,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   else
     ldetV <- NULL
   
+  ###Setup the ordering of the coordinate ascent updates
+  if(ca_update_order=="consecutive")
+    update_order <- 1:p
+  
   cat("Done!\n")
 
   # PERFORM ONE UPDATE
@@ -266,7 +278,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                                 precomp_quants=comps,
                                 compute_ELBO=compute_ELBO,
                                 standardize=standardize, 
-                                update_V=update_V, version=version)
+                                update_V=update_V, version=version,
+                                update_order=update_order)
   mu1_t <- ups$mu1_t
   S1_t  <- ups$S1_t
   w1_t  <- ups$w1_t
@@ -336,7 +349,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                                       ldetV=ldetV, w0em=w0em, S0=S0,
                                       precomp_quants=comps,
                                       standardize=standardize,
-                                      version=version)$w0
+                                      version=version, update_order=update_order)$w0
       }
     }
 
@@ -348,7 +361,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                                   precomp_quants=comps,
                                   compute_ELBO=compute_ELBO,
                                   standardize=standardize,
-                                  update_V=update_V, version=version)
+                                  update_V=update_V, version=version, 
+                                  update_order=update_order)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t

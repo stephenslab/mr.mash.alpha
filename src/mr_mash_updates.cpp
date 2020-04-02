@@ -40,14 +40,15 @@ struct mr_mash_precomputed_quantities {
 void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
                          const mat& Vinv, const vec& w0, const cube& S0,
                          const mr_mash_precomputed_quantities& precomp_quants,
-                         bool standardize, bool compute_ELBO, bool update_V, 
+                         bool standardize, bool compute_ELBO, bool update_V,
+                         const vec& update_order,
                          cube& S1, mat& w1, double& var_part_tr_wERSS, 
                          double& neg_KL, mat& var_part_ERSS);
 
 // Loop to compute mixsqp update
 arma::mat compute_mixsqp_update_loop (const arma::mat& X, const arma::mat& Rbar, const arma::mat& V, const arma::cube& S0,
                                  const arma::mat& mu1, const arma::mat& Vinv, const mr_mash_precomputed_quantities& precomp_quants,
-                                 bool standardize);
+                                 bool standardize, const vec& update_order);
 
 
 // FUNCTION DEFINITIONS
@@ -59,7 +60,8 @@ arma::mat compute_mixsqp_update_loop (const arma::mat& X, const arma::mat& Rbar,
 List inner_loop_general_rcpp (const arma::mat& X, arma::mat& Rbar, arma::mat& mu1,
                               const arma::mat& V, const arma::mat& Vinv, const arma::vec& w0,
                               const arma::cube& S0, const List& precomp_quants_list,
-                              bool standardize, bool compute_ELBO, bool update_V) {
+                              bool standardize, bool compute_ELBO, bool update_V,
+                              const arma::vec& update_order) {
   unsigned int r = Rbar.n_cols;
   unsigned int p = X.n_cols;
   unsigned int k = w0.n_elem;
@@ -80,8 +82,8 @@ List inner_loop_general_rcpp (const arma::mat& X, arma::mat& Rbar, arma::mat& mu
      as<cube>(precomp_quants_list["QtimesV_chol"]),
      as<vec>(precomp_quants_list["xtx"]));
   inner_loop_general(X, Rbar_new, mu1_new, V, Vinv, w0, S0, precomp_quants,
-                     standardize, compute_ELBO, update_V, S1, w1, var_part_tr_wERSS, 
-                     neg_KL, var_part_ERSS);
+                     standardize, compute_ELBO, update_V, update_order, S1, w1, 
+                     var_part_tr_wERSS, neg_KL, var_part_ERSS);
   return List::create(Named("Rbar")               = Rbar_new,
                       Named("mu1")                = mu1_new,
                       Named("S1")                 = S1,
@@ -96,10 +98,11 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
                          const mat& Vinv, const vec& w0, const cube& S0,
                          const mr_mash_precomputed_quantities& precomp_quants,
                          bool standardize, bool compute_ELBO, bool update_V, 
+                         const vec& update_order,
                          cube& S1, mat& w1, double& var_part_tr_wERSS, 
                          double& neg_KL, mat& var_part_ERSS) {
   unsigned int n = X.n_rows;
-  unsigned int p = X.n_cols;
+  // unsigned int p = X.n_cols;
   unsigned int r = Rbar.n_cols;
   unsigned int k = w0.n_elem;
   vec x(n);
@@ -119,7 +122,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
   var_part_ERSS.zeros(r,r);
   
   // Repeat for each predictor.
-  for (unsigned int j = 0; j < p; j++) {
+  for (unsigned int j : update_order) {
     x = X.col(j);
     mu1_j = trans(mu1.row(j));
     
@@ -175,7 +178,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
 // [[Rcpp::export]]
 arma::mat compute_mixsqp_update_loop_rcpp (const arma::mat& X, const arma::mat& Rbar, const arma::mat& V, const arma::cube& S0,
                                            const arma::mat& mu1, const arma::mat& Vinv, const List& precomp_quants_list,
-                                           bool standardize) {
+                                           bool standardize, const arma::vec& update_order) {
 
   mr_mash_precomputed_quantities precomp_quants
   (as<mat>(precomp_quants_list["S"]),
@@ -188,13 +191,13 @@ arma::mat compute_mixsqp_update_loop_rcpp (const arma::mat& X, const arma::mat& 
    as<vec>(precomp_quants_list["xtx"]));
 
 
-  return compute_mixsqp_update_loop(X, Rbar, V, S0, mu1, Vinv, precomp_quants, standardize);
+  return compute_mixsqp_update_loop(X, Rbar, V, S0, mu1, Vinv, precomp_quants, standardize, update_order);
 }
 
 // Loop to compute mixsqp update in Rcpp
 mat compute_mixsqp_update_loop (const mat& X, const mat& Rbar, const mat& V, const cube& S0,
                                  const mat& mu1, const mat& Vinv, const mr_mash_precomputed_quantities& precomp_quants,
-                                 bool standardize) {
+                                 bool standardize, const vec& update_order) {
   unsigned int n = X.n_rows;
   unsigned int p = X.n_cols;
   unsigned int r = Rbar.n_cols;
@@ -212,7 +215,7 @@ mat compute_mixsqp_update_loop (const mat& X, const mat& Rbar, const mat& V, con
   mat L(p,k);
 
   // Repeat for each predictor.
-  for (unsigned int j = 0; j < p; j++) {
+  for (unsigned int j : update_order) {
     x = X.col(j);
     mu1_j = trans(mu1.row(j));
 
