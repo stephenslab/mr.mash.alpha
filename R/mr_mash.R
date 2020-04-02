@@ -47,7 +47,7 @@
 #'   prior matrices to improve numerical stability of the updates.
 #'   
 #' @param ca_update_order The order with which coordinated are updated.
-#'   So far, only "consecutive" is supported.
+#'   So far, "consecutive" and "decreasing_logBF" are supported.
 #' 
 #' @return A mr.mash fit, stored as a list with some or all of the
 #' following elements:

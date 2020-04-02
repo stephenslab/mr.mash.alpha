@@ -11,7 +11,7 @@ mr.mash(
   w0 = rep(1/(length(S0)), length(S0)),
   V = cov(Y),
   mu1_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)),
-  tol = 1e-08,
+  tol = 1e-04,
   max_iter = 5000,
   update_w0 = TRUE,
   update_w0_method = c("EM", "mixsqp"),
@@ -21,7 +21,7 @@ mr.mash(
   update_V = FALSE,
   version = c("Rcpp", "R"),
   e = 1e-08,
-  ca_update_order = c("consecutive")
+  ca_update_order = c("consecutive", "decreasing_logBF")
 )
 }
 \arguments{
@@ -69,7 +69,7 @@ coordinate ascent updates.}
 prior matrices to improve numerical stability of the updates.}
 
 \item{ca_update_order}{The order with which coordinated are updated.
-So far, only "consecutive" is supported.}
+So far, "consecutive" and "decreasing_logBF" are supported.}
 }
 \value{
 A mr.mash fit, stored as a list with some or all of the

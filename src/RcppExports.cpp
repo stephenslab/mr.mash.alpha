@@ -86,6 +86,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_logbf_rcpp
+arma::vec compute_logbf_rcpp(const arma::mat& X, const arma::mat& Y, const arma::mat& V, const arma::mat& Vinv, const arma::vec& w0, const arma::cube& S0, const List& precomp_quants_list, bool standardize);
+RcppExport SEXP _mr_mash_alpha_compute_logbf_rcpp(SEXP XSEXP, SEXP YSEXP, SEXP VSEXP, SEXP VinvSEXP, SEXP w0SEXP, SEXP S0SEXP, SEXP precomp_quants_listSEXP, SEXP standardizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type V(VSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Vinv(VinvSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type w0(w0SEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type S0(S0SEXP);
+    Rcpp::traits::input_parameter< const List& >::type precomp_quants_list(precomp_quants_listSEXP);
+    Rcpp::traits::input_parameter< bool >::type standardize(standardizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_logbf_rcpp(X, Y, V, Vinv, w0, S0, precomp_quants_list, standardize));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_mr_mash_alpha_inner_loop_general_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rcpp, 12},
@@ -93,6 +111,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_mr_mash_alpha_scale_rcpp", (DL_FUNC) &_mr_mash_alpha_scale_rcpp, 3},
     {"_mr_mash_alpha_scale2_rcpp", (DL_FUNC) &_mr_mash_alpha_scale2_rcpp, 3},
     {"_mr_mash_alpha_rescale_post_mean_covar_rcpp", (DL_FUNC) &_mr_mash_alpha_rescale_post_mean_covar_rcpp, 3},
+    {"_mr_mash_alpha_compute_logbf_rcpp", (DL_FUNC) &_mr_mash_alpha_compute_logbf_rcpp, 8},
     {NULL, NULL, 0}
 };
 
