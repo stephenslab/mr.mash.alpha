@@ -177,8 +177,6 @@ precompute_quants <- function(X, V, S0, standardize, version){
     
   } else {
     ###Quantities that don't depend on S0
-    #xtx <- diag(crossprod(X))
-    xtx <- colSums(X^2)
     R <- chol(V)
     #Rtinv <- solve(t(R))
     #Rinv <- solve(R)
@@ -196,14 +194,14 @@ precompute_quants <- function(X, V, S0, standardize, version){
     }
     
     if(version=="R"){
-      return(list(xtx=xtx, V_chol=R, d=d, QtimesV_chol=QtimesR))
+      return(list(V_chol=R, d=d, QtimesV_chol=QtimesR))
     } else if(version=="Rcpp"){
       S <- matrix(0, nrow=1, ncol=1)
       S1 <- array(0, c(1, 1, 1))
       S_chol <- matrix(0, nrow=1, ncol=1)
       SplusS0_chol <- array(0, c(1, 1, 1))
       
-      return(list(xtx=xtx, V_chol=R, d=simplify2array_custom(d), QtimesV_chol=simplify2array_custom(QtimesR), 
+      return(list(V_chol=R, d=simplify2array_custom(d), QtimesV_chol=simplify2array_custom(QtimesR), 
                   S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))
     }
   }

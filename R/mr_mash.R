@@ -214,6 +214,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   }
   ###Precompute quantities
   comps <- precompute_quants(X, V, S0, standardize, version)
+  if(!standardize){
+    xtx <- colSums(X^2)
+    comps$xtx <- xtx
+  }
   
   if(compute_ELBO || !standardize)
     ###Compute inverse of V (needed for the ELBO and unstandardized X)
@@ -311,11 +315,13 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     ##Update V if requested
     if(update_V){
       V     <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
+      
+      #Recompute precomputed quantities after updating V
       comps <- precompute_quants(X, V, S0, standardize, version)
+      if(!standardize)
+        comps$xtx <- xtx
       if(compute_ELBO || !standardize)
         Vinv <- chol2inv(comps$V_chol)
-      
-      ###Compute log determinant of V (needed for the ELBO)
       if(compute_ELBO)
         ldetV <- chol2ldet(comps$V_chol)
     }
