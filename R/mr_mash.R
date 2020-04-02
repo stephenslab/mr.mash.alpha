@@ -141,11 +141,11 @@
 #' @export
 #' 
 mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y), 
-                    mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-8,
+                    mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4,
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                     compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
-                    ca_update_order=c("consecutive")) {
+                    ca_update_order=c("consecutive", "decreasing_logBF")) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -243,9 +243,12 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   else
     ldetV <- NULL
   
-  ###Setup the ordering of the coordinate ascent updates
-  if(ca_update_order=="consecutive")
+  ###Set the ordering of the coordinate ascent updates
+  if(ca_update_order=="consecutive"){
     update_order <- 1:p
+  } else if(ca_update_order=="decreasing_logBF"){
+    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version)
+  }
   
   cat("Done!\n")
 
