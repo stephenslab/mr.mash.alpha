@@ -20,7 +20,8 @@ mr.mash(
   verbose = TRUE,
   update_V = FALSE,
   version = c("Rcpp", "R"),
-  e = 1e-08
+  e = 1e-08,
+  ca_update_order = c("consecutive")
 )
 }
 \arguments{
@@ -66,6 +67,9 @@ coordinate ascent updates.}
 
 \item{e}{A small number to add to the diagonal elements of the
 prior matrices to improve numerical stability of the updates.}
+
+\item{ca_update_order}{The order with which coordinated are updated.
+So far, only "consecutive" is supported.}
 }
 \value{
 A mr.mash fit, stored as a list with some or all of the
