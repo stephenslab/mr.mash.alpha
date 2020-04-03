@@ -78,6 +78,10 @@
 #' 
 #' \item{progress}{A data frame including information regarding
 #'   convergence criteria at each iteration.}
+#'   
+#' \item{converged}{\code{TRUE} or \code{FALSE}, indicating whether
+#'   the optimization algorithm converged to a solution within the chosen tolerance
+#'   level.}
 #'  
 #' 
 #' @examples 
@@ -214,8 +218,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   mu1_t <- mu1_init 
   delta_mu1 <- matrix(Inf, nrow=p, ncol=r)
   ELBO <- -Inf
-  progress <- as.data.frame(matrix(NA, nrow=max_iter, ncol=2))
-  colnames(progress) <- c("iter", "mu1_max.diff")
+  t <- 0
+  progress <- as.data.frame(matrix(NA, nrow=max_iter, ncol=3))
+  colnames(progress) <- c("iter", "timing", "mu1_max.diff")
   if(compute_ELBO){
     progress$ELBO_diff <- NA
     progress$ELBO <- NA
@@ -255,7 +260,6 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   # PERFORM ONE UPDATE
   # ------------------
   ###First iteration
-  t <- 0
   cat("Fitting the optimization algorithm... ")
   if(verbose){
     cat("\n")
@@ -265,6 +269,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     else 
       cat("\n")
   }
+  
+  ##Start timing
+  time1 <- proc.time()
   
   ##Save current estimates.
   mu1_tminus1 <- mu1_t   
@@ -291,10 +298,13 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   if(update_V)
     var_part_ERSS <- ups$var_part_ERSS
   
+  ##End timing
+  time2 <- proc.time()
+  
   ##Update progress data.frame 
-  progress[t, c(1, 2)] <- c(t, max(delta_mu1))
+  progress[t, c(1:3)] <- c(t, time2["elapsed"] - time1["elapsed"], max(delta_mu1))
   if(compute_ELBO)
-    progress[t, c(3, 4)] <- c(ELBO - ELBO0, ELBO)
+    progress[t, c(4, 5)] <- c(ELBO - ELBO0, ELBO)
   
   if(verbose){
     ##Print out useful info
@@ -310,6 +320,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   ###Repeat the following until convergence, or until maximum number
   ###of iterations is reached.
   while(any(delta_mu1>tol)){
+    
+    ##Start timing
+    time1 <- proc.time()
       
     ##Save current estimates.
     mu1_tminus1 <- mu1_t   
@@ -374,13 +387,16 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     if(update_V)
       var_part_ERSS <- ups$var_part_ERSS
     
+    ##End timing
+    time2 <- proc.time()
+    
     ##Compute distance in mu1 between two successive iterations
     delta_mu1 <- abs(mu1_t - mu1_tminus1)
     
     ##Update progress data.frame 
-    progress[t, c(1, 2)] <- c(t, max(delta_mu1))
+    progress[t, c(1:3)] <- c(t, time2["elapsed"] - time1["elapsed"], max(delta_mu1))
     if(compute_ELBO)
-      progress[t, c(3, 4)] <- c(ELBO - ELBO0, ELBO)
+      progress[t, c(4, 5)] <- c(ELBO - ELBO0, ELBO)
     
     if(verbose){
       ##Print out useful info
@@ -391,6 +407,12 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
         cat("\n")
     }
   }
+  
+  ###Record convergence status
+  if(t>max_iter)
+    converged <- FALSE
+  else
+    converged <- TRUE
   
   cat("Done!\n")
   cat("Processing the outputs... ")
@@ -436,10 +458,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   ###posterior mean of the coefficients (mu1), and the posterior
   ###covariance of the coefficients (S1), the residual covariance (V),
   ###the prior weights (w0), the intercept (intercept), the fitted values (fitted), 
-  ###and the progress data frame (progress), and the prior covariance (S0) and,
-  ###if computed, the Evidence Lower Bound (ELBO).
+  ###and the progress data frame (progress), the prior covariance (S0), convergence
+  ### status and, if computed, the Evidence Lower Bound (ELBO).
   out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, w0=w0, S0=simplify2array_custom(S0), 
-              intercept=intercept, fitted=fitted_vals, progress=progress)
+              intercept=intercept, fitted=fitted_vals, progress=progress, converged=converged)
   if(compute_ELBO)
     ###Append ELBO to the output
     out$ELBO <- ELBO
@@ -448,7 +470,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   
   cat("Done!\n")
   toc <- Sys.time()
-  cat("mr.mash successfully executed in", difftime(toc,tic, units="mins"),
+  cat("mr.mash successfully executed in", difftime(toc, tic, units="mins"),
       "minutes!\n")
   
   return(out)
