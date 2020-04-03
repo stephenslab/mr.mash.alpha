@@ -101,6 +101,10 @@ following elements:
 
 \item{progress}{A data frame including information regarding
   convergence criteria at each iteration.}
+  
+\item{converged}{\code{TRUE} or \code{FALSE}, indicating whether
+  the optimization algorithm converged to a solution within the chosen tolerance
+  level.}
 }
 \description{
 Performs multivariate multiple regression with
