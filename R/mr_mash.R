@@ -47,7 +47,7 @@
 #'   prior matrices to improve numerical stability of the updates.
 #'   
 #' @param ca_update_order The order with which coordinated are updated.
-#'   So far, "consecutive" and "decreasing_logBF" are supported.
+#'   So far, "consecutive", "decreasing_logBF", "increasing_logBF" are supported.
 #' 
 #' @return A mr.mash fit, stored as a list with some or all of the
 #' following elements:
@@ -149,7 +149,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                     compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
-                    ca_update_order=c("consecutive", "decreasing_logBF")) {
+                    ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF")) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -252,7 +252,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   if(ca_update_order=="consecutive"){
     update_order <- 1:p
   } else if(ca_update_order=="decreasing_logBF"){
-    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version)
+    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, decreasing=TRUE)
+  } else if(ca_update_order=="increasing_logBF"){
+    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, decreasing=FALSE)
   }
   
   cat("Done!\n")

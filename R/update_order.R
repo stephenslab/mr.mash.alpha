@@ -21,7 +21,7 @@ compute_logbf_R <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize){
 }
 
 ###Compute rank of logbf from Bayesian multivariate simple regression with mixture prior
-compute_rank_variables_BFmix <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, version){
+compute_rank_variables_BFmix <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, version, decreasing){
   if(version=="R"){
     logbfs <- compute_logbf_R(X, Y, V, Vinv, w0, S0, precomp_quants, standardize)
   } else if(version=="Rcpp"){
@@ -29,9 +29,13 @@ compute_rank_variables_BFmix <- function(X, Y, V, Vinv, w0, S0, precomp_quants, 
     logbfs <- drop(logbfs)
   }
   
-  ##Negative sign is needed because rank() by default ranks from smallest to largest
-  ##while we want from largest to smallest
-  rank_variables_BFmix <- rank(-logbfs, ties.method="first", na.last="keep")
+  if(decreasing){
+    ##Negative sign is needed because rank() by default ranks from smallest to largest
+    ##while we want from largest to smallest
+    rank_variables_BFmix <- rank(-logbfs, ties.method="first", na.last="keep")
+  } else {
+    rank_variables_BFmix <- rank(logbfs, ties.method="first", na.last="keep")
+  }
   
   return(rank_variables_BFmix)
 }
