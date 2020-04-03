@@ -21,7 +21,7 @@ mr.mash(
   update_V = FALSE,
   version = c("Rcpp", "R"),
   e = 1e-08,
-  ca_update_order = c("consecutive", "decreasing_logBF")
+  ca_update_order = c("consecutive", "decreasing_logBF", "increasing_logBF")
 )
 }
 \arguments{
@@ -69,7 +69,7 @@ coordinate ascent updates.}
 prior matrices to improve numerical stability of the updates.}
 
 \item{ca_update_order}{The order with which coordinated are updated.
-So far, "consecutive" and "decreasing_logBF" are supported.}
+So far, "consecutive", "decreasing_logBF", "increasing_logBF" are supported.}
 }
 \value{
 A mr.mash fit, stored as a list with some or all of the
