@@ -6,7 +6,9 @@
 #' 
 #' @return Matrix of predicted values.
 #' 
+#' @method predict mr.mash
 #' @export
+#' @export predict.mr.mash
 #' 
 predict.mr.mash <- function(object, newx){
   if(!is.matrix(newx))
