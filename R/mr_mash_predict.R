@@ -6,7 +6,6 @@
 #' 
 #' @return Matrix of predicted values.
 #' 
-#' @method predict mr.mash
 #' @export
 #' @export predict.mr.mash
 #' 
