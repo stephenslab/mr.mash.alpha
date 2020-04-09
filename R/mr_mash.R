@@ -46,7 +46,7 @@
 #' @param e A small number to add to the diagonal elements of the
 #'   prior matrices to improve numerical stability of the updates.
 #'   
-#' @param ca_update_order The order with which coordinated are updated.
+#' @param ca_update_order The order with which coordinates are updated.
 #'   So far, "consecutive", "decreasing_logBF", "increasing_logBF" are supported.
 #' 
 #' @return A mr.mash fit, stored as a list with some or all of the
@@ -187,6 +187,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     stop("Elements of w0 must sum to 1.")
   if(length(S0)!=length(w0))
     stop("S0 and w0 must have the same length.")
+  if(!is.matrix(mu1_init))
+    stop("mu1_init must be a matrix.")
   if(update_w0_method=="mixsqp" && !compute_ELBO)
     stop("ELBO needs to be computed with update_w0_method=\"mixsqp\".")
 
