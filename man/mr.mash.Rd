@@ -4,13 +4,25 @@
 \alias{mr.mash}
 \title{Multiple Regression with Multivariate Adaptive Shrinkage.}
 \usage{
-mr.mash(X, Y, S0, w0 = rep(1/(length(S0)), length(S0)), V = cov(Y),
-  mu1_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)), tol = 1e-04,
-  max_iter = 5000, update_w0 = TRUE, update_w0_method = c("EM",
-  "mixsqp"), compute_ELBO = TRUE, standardize = TRUE, verbose = TRUE,
-  update_V = FALSE, version = c("Rcpp", "R"), e = 1e-08,
-  ca_update_order = c("consecutive", "decreasing_logBF",
-  "increasing_logBF"))
+mr.mash(
+  X,
+  Y,
+  S0,
+  w0 = rep(1/(length(S0)), length(S0)),
+  V = cov(Y),
+  mu1_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)),
+  tol = 1e-04,
+  max_iter = 5000,
+  update_w0 = TRUE,
+  update_w0_method = c("EM", "mixsqp"),
+  compute_ELBO = TRUE,
+  standardize = TRUE,
+  verbose = TRUE,
+  update_V = FALSE,
+  version = c("Rcpp", "R"),
+  e = 1e-08,
+  ca_update_order = c("consecutive", "decreasing_logBF", "increasing_logBF")
+)
 }
 \arguments{
 \item{X}{n x p matrix of covariates.}
@@ -56,7 +68,7 @@ coordinate ascent updates.}
 \item{e}{A small number to add to the diagonal elements of the
 prior matrices to improve numerical stability of the updates.}
 
-\item{ca_update_order}{The order with which coordinated are updated.
+\item{ca_update_order}{The order with which coordinates are updated.
 So far, "consecutive", "decreasing_logBF", "increasing_logBF" are supported.}
 }
 \value{
