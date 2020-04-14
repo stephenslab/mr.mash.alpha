@@ -1,7 +1,7 @@
 ###Compute logbf from Bayesian multivariate simple regression with mixture prior
 compute_logbf_R <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize){
   p <- ncol(X)
-  logbf <- rep(NA, p)
+  logbf <- rep(0, p)
   
   for(j in 1:p){
     #Run Bayesian SLR
