@@ -81,13 +81,13 @@ test_that("ELBO does not decrease over iterations", {
                                  verbose=FALSE, update_V=TRUE, version="Rcpp"))
   
   ###Tests
-  expect_nondecreasing(fit$progress[, 4], tolerance=1e-10, scale=1)
-  expect_nondecreasing(fit_scaled$progress[, 4], tolerance=1e-10, scale=1)
-  expect_nondecreasing(fit_V$progress[, 4], tolerance=1e-10, scale=1)
-  expect_nondecreasing(fit_scaled_V$progress[, 4], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_scaled$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_V$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_scaled_V$progress[, "ELBO"], tolerance=1e-10, scale=1)
   
-  expect_nondecreasing(fit_rcpp$progress[, 4], tolerance=1e-10, scale=1)
-  expect_nondecreasing(fit_scaled_rcpp$progress[, 4], tolerance=1e-10, scale=1)
-  expect_nondecreasing(fit_V_rcpp$progress[, 4], tolerance=1e-10, scale=1)
-  expect_nondecreasing(fit_scaled_V_rcpp$progress[, 4],tolerance=1e-10,scale=1)
+  expect_nondecreasing(fit_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_scaled_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_V_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_scaled_V_rcpp$progress[, "ELBO"],tolerance=1e-10,scale=1)
 })
