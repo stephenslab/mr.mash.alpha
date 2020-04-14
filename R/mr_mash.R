@@ -221,12 +221,13 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   delta_mu1 <- matrix(Inf, nrow=p, ncol=r)
   ELBO <- -Inf
   t <- 0
-  progress <- as.data.frame(matrix(NA, nrow=max_iter, ncol=3))
+  progress <- as.data.frame(matrix(as.numeric(NA), nrow=max_iter, ncol=3))
   colnames(progress) <- c("iter", "timing", "mu1_max.diff")
   if(compute_ELBO){
-    progress$ELBO_diff <- NA
-    progress$ELBO <- NA
+    progress$ELBO_diff <- as.numeric(NA)
+    progress$ELBO <- as.numeric(NA)
   }
+  
   ###Precompute quantities
   comps <- precompute_quants(X, V, S0, standardize, version)
   if(!standardize){
