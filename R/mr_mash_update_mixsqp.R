@@ -13,9 +13,7 @@ compute_mixsqp_update <- function (X, Y, V, S0, mu1, Vinv, precomp_quants,
   
   # Run mixsqp
   out <- mixsqp(L,log = TRUE,control = list(verbose = FALSE))
-  if (out$status != "converged to optimal solution")
-    warning("mixsqp did not converge to optimal solution")
-  
+
   # Return the updated mixture weights ("w0") and the number of
   # mix-SQP iterations performed.
   return(list(w0=out$x, numiter=nrow(out$progress)))
