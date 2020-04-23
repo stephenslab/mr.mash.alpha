@@ -376,8 +376,6 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                                       standardize=standardize,
                                       version=version, update_order=update_order)
         w0 <- mixsqp_update$w0
-        progress[t, 6] <- mixsqp_update$bls_niter
-        progress[t, 7] <- mixsqp_update$bls_stepsize
       }
     }
 
@@ -409,7 +407,11 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     progress[t, c(1:3)] <- c(t, time2["elapsed"] - time1["elapsed"], max(delta_mu1))
     if(compute_ELBO)
       progress[t, c(4, 5)] <- c(ELBO - ELBO0, ELBO)
-    
+    if(update_w0_method=="mixsqp"){
+      progress[t, 6] <- mixsqp_update$bls_niter
+      progress[t, 7] <- mixsqp_update$bls_stepsize
+    }
+
     if(verbose){
       ##Print out useful info
       cat(sprintf("%4d      %9.2e", t, max(delta_mu1)))

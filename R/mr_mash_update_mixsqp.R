@@ -155,7 +155,7 @@ update_weights_mixsqp <- function (X, Y, mu1, V, Vinv, ldetV, w0em, S0,
   # iterations performed ("numiter"), and the step size determined by the
   # backtracking line search ("a").
   return(list(w0      = out2$w0,
-              numiter = out2$bls_niter,
-              a       = out2$bls_stepsize))
+              bls_niter = out2$bls_niter,
+              bls_stepsize       = out2$bls_stepsize))
 }
 
