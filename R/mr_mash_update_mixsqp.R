@@ -139,7 +139,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mix
 update_weights_mixsqp <- function (X, Y, mu1, V, Vinv, ldetV, w0em, S0,
                                    precomp_quants, standardize,
                                    compute_ELBO=TRUE, update_V=FALSE, version, update_order,
-                                   stepsize.reduce = 0.5, stepsize.min = 1e-8) {
+                                   stepsize.reduce=stepsize.reduce, stepsize.min=stepsize.min) {
   
   # Compute the mix-SQP update for the mixture weights. Note that this
   # update is not guaranteed to increase the ELBO.

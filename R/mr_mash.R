@@ -149,7 +149,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                     compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
-                    ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF")) {
+                    ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
+                    stepsize.reduce = 0.5, stepsize.min = 1e-8) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -370,12 +371,17 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
         w0 <- update_weights_em(w1_t)
       else if(update_w0_method=="mixsqp"){
         w0em <- update_weights_em(w1_t)
-        mixsqp_update   <- update_weights_mixsqp(X=X, Y=Y, mu1=mu1_t, V=V, Vinv=Vinv,
-                                      ldetV=ldetV, w0em=w0em, S0=S0,
-                                      precomp_quants=comps,
-                                      standardize=standardize,
-                                      version=version, update_order=update_order)
-        w0 <- mixsqp_update$w0
+        if(t<15)
+          w0 <- w0em
+        else{
+          mixsqp_update   <- update_weights_mixsqp(X=X, Y=Y, mu1=mu1_t, V=V, Vinv=Vinv,
+                                                   ldetV=ldetV, w0em=w0em, S0=S0,
+                                                   precomp_quants=comps,
+                                                   standardize=standardize,
+                                                   version=version, update_order=update_order,
+                                                   stepsize.reduce=stepsize.reduce, stepsize.min=stepsize.min)
+          w0 <- mixsqp_update$w0
+        }
       }
     }
 
