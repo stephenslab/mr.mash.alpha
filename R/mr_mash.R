@@ -229,8 +229,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     progress$ELBO <- as.numeric(NA)
   }
   if(update_w0_method=="mixsqp"){
-    progress$bls_niter <- as.numeric(NA)
+    progress$bls_niter     <- as.numeric(NA)
     progress$bls_stepsize <- as.numeric(NA)
+    progress$w0_max.diff  <- as.numeric(NA)
   }
 
   ###Precompute quantities
@@ -336,6 +337,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
       
     ##Save current estimates.
     mu1_tminus1 <- mu1_t   
+    w0_old <- w0
     
     ##Update iterator
     t <- t+1
@@ -417,7 +419,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
       progress[t, 6] <- mixsqp_update$bls_niter
       progress[t, 7] <- mixsqp_update$bls_stepsize
     }
-
+    progress[t,8] <- max(abs(w0 - w0_old))
+    
     if(verbose){
       ##Print out useful info
       cat(sprintf("%4d      %9.2e", t, max(delta_mu1)))
