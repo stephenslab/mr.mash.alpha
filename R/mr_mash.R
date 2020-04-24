@@ -418,8 +418,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     if(update_w0_method=="mixsqp" && t>15){
       progress[t, 6] <- mixsqp_update$bls_niter
       progress[t, 7] <- mixsqp_update$bls_stepsize
+      progress[t, 8] <- max(abs(w0 - w0_old))
     }
-    progress[t,8] <- max(abs(w0 - w0_old))
     
     if(verbose){
       ##Print out useful info
