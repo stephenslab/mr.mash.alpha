@@ -229,9 +229,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     progress$ELBO <- as.numeric(NA)
   }
   if(update_w0_method=="mixsqp"){
-    progress$bls_niter     <- as.numeric(NA)
-    progress$bls_stepsize <- as.numeric(NA)
     progress$w0_max.diff  <- as.numeric(NA)
+    progress$bls_niter    <- as.numeric(NA)
+    progress$bls_stepsize <- as.numeric(NA)
   }
 
   ###Precompute quantities
@@ -416,11 +416,11 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     if(compute_ELBO)
       progress[t, c(4, 5)] <- c(ELBO - ELBO0, ELBO)
     if(update_w0_method=="mixsqp"){
+      progress[t, 6] <- max(abs(w0 - w0_old))
       if(t>15){
-        progress[t, 6] <- mixsqp_update$bls_niter
-        progress[t, 7] <- mixsqp_update$bls_stepsize
+        progress[t, 7] <- mixsqp_update$bls_niter
+        progress[t, 8] <- mixsqp_update$bls_stepsize
       }
-      progress[t, 8] <- max(abs(w0 - w0_old))
     }
     
     if(verbose){
