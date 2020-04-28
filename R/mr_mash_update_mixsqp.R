@@ -169,6 +169,7 @@ forwardtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0
     # Check whether the new candidate increases the ELBO.
     if(fnew <= f){
       if(iter==1)
+        a <- 0
         w0new <- w0em
       else{
         a <- a / stepsize.increase
