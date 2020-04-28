@@ -22,6 +22,9 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, intercepts=rep(1, r),
                                   pve=0.2, B_cor=0, B_scale=0.8,
                                   X_cor=0.5, X_scale=0.8, V_cor=0.25){
   
+  if(length(intercepts)!=r)
+    stop("intercepts must be of length equalt to r.")
+  
   ##Simulate true effects from N_r(0, Sigma) where Sigma is a given covariance matrix across traits
   Sigma_offdiag <- B_scale*B_cor
   Sigma <- matrix(Sigma_offdiag, nrow=r, ncol=r)
@@ -52,7 +55,7 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, intercepts=rep(1, r),
   ##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix and V is the residual covariance  
   Y <- matrix.normal(G + matrix(intercepts, n, r, byrow=TRUE), diag(n), V)
   
-  return(list(X=X, Y=Y, B=B, causal_variables=sort(causal_variables), V=V, Sigma=Sigma, Gamma=Gamma))
+  return(list(X=X, Y=Y, B=B, causal_variables=sort(causal_variables), V=V, Sigma=Sigma, Gamma=Gamma, intercepts=intercepts))
 }
 
 
