@@ -138,7 +138,8 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mix
 # mixture weights update that increases the ELBO.
 forwardtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mixsqp,
                                           precomp_quants, standardize, compute_ELBO, update_V, 
-                                          version, update_order, stepsize.increase, stepsize.min) {
+                                          version, update_order, stepsize.increase, stepsize.min, 
+                                         stepsize.max) {
   
   # Compute the objective (ELBO) at the current iterate.
   ##Update variational parameters, expected residuals, and ELBO components
@@ -178,10 +179,25 @@ forwardtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0
       break
     }
 
-    # If we cannot increase the step size further, terminate the
+    # If we cannot increase the step size further, try the max step size, and terminate the
     # forwardtracking line search.
-    else if (a * stepsize.increase > 1)
+    else if (a * stepsize.increase > stepsize.max){
+      a_max <- stepsize.max
+      iter <- iter+1
+      w0max <- a_max*w0mixsqp + (1 - a_max)*w0em
+      updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1, V=V, Vinv=Vinv, w0=w0max, S0=S0, 
+                                    precomp_quants=precomp_quants, standardize=standardize,
+                                    compute_ELBO=compute_ELBO, update_V=update_V, version=version,
+                                    update_order=update_order) 
+      
+      fmax <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=updates$var_part_tr_wERSS, neg_KL=updates$neg_KL)
+      if(fmax > f){
+        a <- a_max
+        w0new <- w0max
+      }
       break
+    }
+      
     
     # The new candidate increases the ELBO, so we need to try
     # with a larger step size.
@@ -199,7 +215,8 @@ forwardtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0
 update_weights_mixsqp <- function (X, Y, mu1, V, Vinv, ldetV, w0em, S0,
                                    precomp_quants, standardize,
                                    compute_ELBO=TRUE, update_V=FALSE, version, update_order,
-                                   stepsize.increase=stepsize.increase, stepsize.min=stepsize.min) {
+                                   stepsize.increase=stepsize.increase,
+                                   stepsize.min=stepsize.min, stepsize.max=stepsize.max) {
   
   # Compute the mix-SQP update for the mixture weights. Note that this
   # update is not guaranteed to increase the ELBO.
@@ -209,7 +226,8 @@ update_weights_mixsqp <- function (X, Y, mu1, V, Vinv, ldetV, w0em, S0,
   # increases the ELBO.
   out2 <- forwardtracking_line_search(X, Y, V, Vinv, ldetV, S0, mu1, w0em, out1$w0,
                                    precomp_quants, standardize, compute_ELBO, update_V, 
-                                   version, update_order, stepsize.increase, stepsize.min)
+                                   version, update_order, stepsize.increase, 
+                                   stepsize.min, stepsize.max)
   
   # Return the updated mixture weights ("w0"), the number of mix-SQP
   # iterations performed ("numiter"), and the step size determined by the

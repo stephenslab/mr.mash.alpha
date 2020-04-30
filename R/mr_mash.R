@@ -150,7 +150,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                     compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
                     ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
-                    stepsize.increase = 2, stepsize.min = 1e-6) {
+                    stepsize.increase = 2, stepsize.min = 1e-6, stepsize.max = 1) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -381,7 +381,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                                                    precomp_quants=comps,
                                                    standardize=standardize,
                                                    version=version, update_order=update_order,
-                                                   stepsize.increase=stepsize.increase, stepsize.min=stepsize.min)
+                                                   stepsize.increase=stepsize.increase, stepsize.min=stepsize.min,
+                                                   stepsize.max=stepsize.max)
           w0 <- mixsqp_update$w0
         }
       }
