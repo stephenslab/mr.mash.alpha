@@ -294,3 +294,7 @@ scale_fast2 <- function(M, scale=TRUE, na.rm=TRUE){
   
   return(list(M=M, means=means, sds=sds))
 }
+
+###Check whether a number is an odd number
+is.odd <- function(x) 
+  x %% 2 != 0

@@ -230,8 +230,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   }
   if(update_w0_method=="mixsqp"){
     progress$w0_max.diff  <- as.numeric(NA)
-    progress$bls_niter    <- as.numeric(NA)
-    progress$bls_stepsize <- as.numeric(NA)
+    progress$ls_niter    <- as.numeric(NA)
+    progress$ls_stepsize <- as.numeric(NA)
   }
 
   ###Precompute quantities
@@ -372,18 +372,20 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
       if(update_w0_method=="EM")
         w0 <- update_weights_em(w1_t)
       else if(update_w0_method=="mixsqp"){
-        w0em <- update_weights_em(w1_t)
-        if(t<=15)
-          w0 <- w0em
+        if(is.odd(t) || t<=15)
+          w0 <- update_weights_em(w1_t)
         else{
           mixsqp_update   <- update_weights_mixsqp(X=X, Y=Y, mu1=mu1_t, V=V, Vinv=Vinv,
-                                                   ldetV=ldetV, w0em=w0em, S0=S0,
+                                                   ldetV=ldetV, w0old=w0, S0=S0,
                                                    precomp_quants=comps,
                                                    standardize=standardize,
                                                    version=version, update_order=update_order,
                                                    stepsize.increase=stepsize.increase, stepsize.min=stepsize.min,
-                                                   stepsize.max=stepsize.max)
-          w0 <- mixsqp_update$w0
+                                                   stepsize.max=stepsize.max, ELBOold=ELBO0)
+          if(mixsqp_update$ls_stepsize!=0)
+            w0 <- mixsqp_update$w0
+          else
+            w0 <- update_weights_em(w1_t)
         }
       }
     }
@@ -418,9 +420,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
       progress[t, c(4, 5)] <- c(ELBO - ELBO0, ELBO)
     if(update_w0_method=="mixsqp"){
       progress[t, 6] <- max(abs(w0 - w0_old))
-      if(t>15){
-        progress[t, 7] <- mixsqp_update$bls_niter
-        progress[t, 8] <- mixsqp_update$bls_stepsize
+      if(!is.odd(t) && t>15 && mixsqp_update$ls_stepsize!=0){
+        progress[t, 7] <- mixsqp_update$ls_niter
+        progress[t, 8] <- mixsqp_update$ls_stepsize
       }
     }
     
