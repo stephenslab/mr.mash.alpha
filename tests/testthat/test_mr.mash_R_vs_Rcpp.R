@@ -39,55 +39,55 @@ test_that("mr.mash R version and Rcpp version return the same results", {
   
   ###Fit with current implementation (R version)
   capture.output(
-    fit <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE,
+    fit <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
                    update_w0_method="EM", compute_ELBO=TRUE, standardize=FALSE,
                    verbose=FALSE, update_V=FALSE, version="R"))
   fit$progress <- fit$progress[, -2] ##This line is needed to remove the timing column --> clearly different between R and Rcpp
   
   capture.output(
-    fit_scaled <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE,
+    fit_scaled <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
                           update_w0_method="EM", compute_ELBO=TRUE, 
                           standardize=TRUE, verbose=FALSE, update_V=FALSE,
                           version="R"))
   fit_scaled$progress <- fit_scaled$progress[, -2]
   
   capture.output(
-    fit_V <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE,
+    fit_V <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
                      update_w0_method="EM", compute_ELBO=TRUE, 
                      standardize=FALSE, verbose=FALSE, update_V=TRUE,
                      version="R"))
   fit_V$progress <- fit_V$progress[, -2]
   
   capture.output(
-    fit_scaled_V <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE,
+    fit_scaled_V <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
                             update_w0_method="EM", compute_ELBO=TRUE, 
                             standardize=TRUE, verbose=FALSE, update_V=TRUE,
                             version="R"))
   fit_scaled_V$progress <- fit_scaled_V$progress[, -2]
   
   capture.output(
-    fit_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-7, update_w0=TRUE,
+    fit_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
                           update_w0_method="mixsqp", compute_ELBO=TRUE, 
                           standardize=FALSE, verbose=FALSE, update_V=FALSE,
                           version="R"))
   fit_mixsqp$progress <- fit_mixsqp$progress[, -2]
   
   capture.output(
-    fit_scaled_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-7,
+    fit_scaled_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est,
                                  update_w0=TRUE, update_w0_method="mixsqp",
                                  compute_ELBO=TRUE, standardize=TRUE,
                                  verbose=FALSE, update_V=FALSE, version="R"))
   fit_scaled_mixsqp$progress <- fit_scaled_mixsqp$progress[, -2]
   
   capture.output(
-    fit_V_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-7, update_w0=TRUE,
+    fit_V_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
                             update_w0_method="mixsqp", compute_ELBO=TRUE, 
                             standardize=FALSE, verbose=FALSE, update_V=TRUE,
                             version="R"))
   fit_V_mixsqp$progress <- fit_V_mixsqp$progress[, -2]
   
   capture.output(
-    fit_scaled_V_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-7,
+    fit_scaled_V_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est,
                                    update_w0=TRUE, update_w0_method="mixsqp",
                                    compute_ELBO=TRUE, standardize=TRUE,
                                    verbose=FALSE, update_V=TRUE, version="R"))
@@ -96,42 +96,42 @@ test_that("mr.mash R version and Rcpp version return the same results", {
 
     ###Fit with current implementation (Rcpp version)
   capture.output(
-    fit_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE,
+    fit_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
                         update_w0_method="EM", compute_ELBO=TRUE, 
                         standardize=FALSE, verbose=FALSE, update_V=FALSE,
                         version="Rcpp"))
   fit_rcpp$progress <- fit_rcpp$progress[, -2]
   
   capture.output(
-    fit_scaled_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8,
+    fit_scaled_rcpp <- mr.mash(X, Y, S0mix, w0, V_est,
                                update_w0=TRUE, update_w0_method="EM",
                                compute_ELBO=TRUE, standardize=TRUE,
                                verbose=FALSE, update_V=FALSE, version="Rcpp"))
   fit_scaled_rcpp$progress <- fit_scaled_rcpp$progress[, -2]
   
   capture.output(
-    fit_V_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE,
+    fit_V_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
                           update_w0_method="EM", compute_ELBO=TRUE, 
                           standardize=FALSE, verbose=FALSE, update_V=TRUE,
                           version="Rcpp"))
   fit_V_rcpp$progress <- fit_V_rcpp$progress[, -2]
   
   capture.output(
-    fit_scaled_V_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8,
+    fit_scaled_V_rcpp <- mr.mash(X, Y, S0mix, w0, V_est,
                                  update_w0=TRUE, update_w0_method="EM",
                                  compute_ELBO=TRUE, standardize=TRUE,
                                  verbose=FALSE, update_V=TRUE, version="Rcpp"))
   fit_scaled_V_rcpp$progress <- fit_scaled_V_rcpp$progress[, -2]
   
   capture.output(
-    fit_rcpp_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-7,
+    fit_rcpp_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est,
                                update_w0=TRUE, update_w0_method="mixsqp",
                                compute_ELBO=TRUE, standardize=FALSE,
                                verbose=FALSE, update_V=FALSE, version="Rcpp"))
   fit_rcpp_mixsqp$progress <- fit_rcpp_mixsqp$progress[, -2]
   
   capture.output(
-    fit_scaled_rcpp_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-7,
+    fit_scaled_rcpp_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est,
                                       update_w0=TRUE,
                                       update_w0_method="mixsqp",
                                       compute_ELBO=TRUE, standardize=TRUE,
@@ -140,14 +140,14 @@ test_that("mr.mash R version and Rcpp version return the same results", {
   fit_scaled_rcpp_mixsqp$progress <- fit_scaled_rcpp_mixsqp$progress[, -2]
   
   capture.output(
-    fit_V_rcpp_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-7,
+    fit_V_rcpp_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est,
                                  update_w0=TRUE, update_w0_method="mixsqp",
                                  compute_ELBO=TRUE, standardize=FALSE,
                                  verbose=FALSE, update_V=TRUE, version="Rcpp"))
   fit_V_rcpp_mixsqp$progress <- fit_V_rcpp_mixsqp$progress[, -2]
   
   capture.output(
-    fit_scaled_V_rcpp_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-7,
+    fit_scaled_V_rcpp_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est,
                                         update_w0=TRUE,
                                         update_w0_method="mixsqp",
                                         compute_ELBO=TRUE, standardize=TRUE,
