@@ -274,12 +274,11 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   cat("Fitting the optimization algorithm... ")
   if(verbose){
     cat("\n")
-    cat("iter mu1_max.diff ")
+    cat(" iter    mu1_max.diff")
     if(compute_ELBO)
-      cat("ELBO_diff                ELBO ")
-    if (update_w0_method == "mixsqp")
-      cat("nls stepsize")
-    cat("\n")
+      cat("     ELBO_diff               ELBO\n")
+    else 
+      cat("\n")
   }
   
   ##Start timing
@@ -320,9 +319,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   
   if(verbose){
     ##Print out useful info
-    cat(sprintf("%4d          Inf ", t, max(delta_mu1)))
+    cat(sprintf("%4d      %9.2e", t, max(delta_mu1)))
     if(compute_ELBO)
-      cat("      Inf                 Inf\n")
+      cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO0, ELBO))
     else
       cat("\n")
   }
@@ -439,14 +438,11 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     
     if(verbose){
       ##Print out useful info
-      cat(sprintf("%4d %9.6e ", t, max(delta_mu1)))
+      cat(sprintf("%4d      %9.2e", t, max(delta_mu1)))
       if(compute_ELBO)
-        cat(sprintf("%6.3e %+0.12e ", ELBO - ELBO0, ELBO))
-      if (update_w0_method == "mixsqp" & t > 15)
-        cat(sprintf("%3d %0.2e",ls_niter,ls_stepsize))
+        cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO0, ELBO))
       else
-        cat("--- --------")
-      cat("\n")
+        cat("\n")
     }
   }
   
