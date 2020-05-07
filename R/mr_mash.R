@@ -285,13 +285,13 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   time1 <- proc.time()
   
   ##Save current estimates.
-  mu1_tminus1 <- mu1_t   
+  mu1_old <- mu1_t   
   
   ##Update iterator
   t <- t+1
   
-  ##Set last value of ELBO as ELBO0
-  ELBO0 <- ELBO
+  ##Set last value of ELBO as ELBO_old
+  ELBO_old <- ELBO
   
   ###Update variational parameters
   ups <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
@@ -315,13 +315,13 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   ##Update progress data.frame 
   progress[t, c(1:4)] <- c(t, time2["elapsed"] - time1["elapsed"], max(delta_mu1), max(delta_w0))
   if(compute_ELBO)
-    progress[t, c(5, 6)] <- c(ELBO - ELBO0, ELBO)
+    progress[t, c(5, 6)] <- c(ELBO - ELBO_old, ELBO)
   
   if(verbose){
     ##Print out useful info
     cat(sprintf("%4d      %9.2e", t, max(delta_mu1)))
     if(compute_ELBO)
-      cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO0, ELBO))
+      cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO_old, ELBO))
     else
       cat("\n")
   }
@@ -336,7 +336,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     time1 <- proc.time()
       
     ##Save current estimates.
-    mu1_tminus1 <- mu1_t   
+    mu1_old <- mu1_t   
     w0_old <- w0
     
     ##Update iterator
@@ -348,8 +348,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
       break
     }
     
-    ##Set last value of ELBO as ELBO0
-    ELBO0 <- ELBO
+    ##Set last value of ELBO as ELBO_old
+    ELBO_old <- ELBO
 
     # M-STEP
     # ------
@@ -372,28 +372,26 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
       if(update_w0_method=="EM")
         w0 <- update_weights_em(w1_t)
       else if(update_w0_method=="mixsqp"){
-        if((is.odd(t) || t<=15) && max(delta_w0)>1e-5)
+        if((is.odd(t) || t<=15))
           w0 <- update_weights_em(w1_t)
-        else if(!is.odd(t) && t>15 && max(delta_w0)>1e-5){
+        else if(!is.odd(t) && t>15){
           mixsqp_update   <- update_weights_mixsqp(X=X, Y=Y, mu1=mu1_t, V=V, Vinv=Vinv,
                                                    ldetV=ldetV, w0old=w0, S0=S0,
                                                    precomp_quants=comps,
                                                    standardize=standardize,
                                                    version=version, update_order=update_order,
                                                    stepsize.increase=stepsize.increase, stepsize.min=stepsize.min,
-                                                   stepsize.max=stepsize.max, ELBOold=ELBO0)
+                                                   stepsize.max=stepsize.max, ELBOold=ELBO_old)
+          #If the line search succeded, use mixsqp update
           if(mixsqp_update$ls_stepsize!=0){
             w0 <- mixsqp_update$w0
             ls_niter <- mixsqp_update$ls_niter
             ls_stepsize <- mixsqp_update$ls_stepsize
-          }else{
+          }else{  #If the line search failed, compute EM update
             w0 <- update_weights_em(w1_t)
             ls_niter <- mixsqp_update$ls_niter
             ls_stepsize <- NA
           }
-        } else if(max(delta_w0)<1e-5){
-          ls_niter <- NA
-          ls_stepsize <- NA
         }
       }
     }
@@ -420,7 +418,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     time2 <- proc.time()
     
     ##Compute distance in mu1 between two successive iterations
-    delta_mu1 <- abs(mu1_t - mu1_tminus1)
+    delta_mu1 <- abs(mu1_t - mu1_old)
     
     ##Compute distance in w0 between two successive iterations
     delta_w0 <- abs(w0 - w0_old)
@@ -428,7 +426,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     ##Update progress data.frame 
     progress[t, c(1:4)] <- c(t, time2["elapsed"] - time1["elapsed"], max(delta_mu1), max(delta_w0))
     if(compute_ELBO)
-      progress[t, c(5, 6)] <- c(ELBO - ELBO0, ELBO)
+      progress[t, c(5, 6)] <- c(ELBO - ELBO_old, ELBO)
     if(update_w0_method=="mixsqp"){
       if(!is.odd(t) && t>15){
         progress[t, 7] <- ls_niter
@@ -440,7 +438,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
       ##Print out useful info
       cat(sprintf("%4d      %9.2e", t, max(delta_mu1)))
       if(compute_ELBO)
-        cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO0, ELBO))
+        cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO_old, ELBO))
       else
         cat("\n")
     }
