@@ -184,7 +184,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     stop("S0 must be a list.")
   if(!is.vector(w0))
     stop("w0 must be a vector.")
-  if(sum(w0)!=1)
+  if(abs(sum(w0) - 1) > 1e-10)
     stop("Elements of w0 must sum to 1.")
   if(length(S0)!=length(w0))
     stop("S0 and w0 must have the same length.")
