@@ -2,6 +2,7 @@
 
 S3method(predict,mr.mash)
 export(mr.mash)
+export(mr.mash.daar)
 export(predict.mr.mash)
 importFrom(MBSP,matrix.normal)
 importFrom(Rcpp,evalCpp)
