@@ -111,8 +111,8 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                    standardize=standardize, update_V=update_V, version=version, update_order=update_order,
                    control = list(maxiter = max_iter, order = 10, tol = tol,
                                     mon.tol = 0.01,kappa = 20,alpha = 1.1)))
-  mu1_t <- out_daar$par
-  progress <- out_daar$objfn.track[-1]
+  mu1_t <- matrix(out_daar$par, nrow=p, ncol=r)
+  progress <- out_daar$objfn.track
   converged <- out_daar$convergence
   
   cat("Done!\n")
@@ -140,12 +140,12 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   intercept <- drop(muy - mux %*% mu1_t)
   
   ###Assign names to outputs dimensions
-  # rownames(mu1_t) <- colnames(X)
-  # colnames(mu1_t) <- colnames(Y)
-  # rownames(V) <- colnames(Y)
-  # colnames(V) <- colnames(Y)
-  # rownames(fitted_vals) <- rownames(Y)
-  # colnames(fitted_vals) <- colnames(Y)
+  rownames(mu1_t) <- colnames(X)
+  colnames(mu1_t) <- colnames(Y)
+  rownames(V) <- colnames(Y)
+  colnames(V) <- colnames(Y)
+  rownames(fitted_vals) <- rownames(Y)
+  colnames(fitted_vals) <- colnames(Y)
   
   
   ###Return the posterior assignment probabilities (w1), the
@@ -174,19 +174,21 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
 mr_mash_update_general_mu1_daar <- function(mu1_t, X, Y, V, Vinv, ldetV, w0, S0,
                                             precomp_quants, compute_ELBO, standardize, 
                                             update_V, version, update_order){
+  mu1_t <- matrix(mu1_t, nrow=ncol(X), ncol=ncol(Y))
   
   out <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0,
                                 precomp_quants=precomp_quants, compute_ELBO=compute_ELBO, standardize=standardize, 
                                 update_V=update_V, version=version, update_order=update_order)
   mu1_t <- out$mu1_t
   
-  return(mu1_t)
+  return(c(mu1_t))
 }
 
 ###Perform one iteration of the outer loop with or without scaling X
 mr_mash_update_general_ELBO_daar <- function(mu1_t, X, Y, V, Vinv, ldetV, w0, S0,
                                              precomp_quants, compute_ELBO, standardize, 
                                              update_V, version, update_order){
+  mu1_t <- matrix(mu1_t, nrow=ncol(X), ncol=ncol(Y))
 
   out <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0,
                                 precomp_quants=precomp_quants, compute_ELBO=compute_ELBO, standardize=standardize, 
