@@ -3,7 +3,7 @@
 mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y), 
                         mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4,
                         max_iter=5000,
-                        compute_ELBO=TRUE, standardize=TRUE,
+                        compute_ELBO=TRUE, standardize=TRUE, update_w0=TRUE, update_w0_method="EM",
                         update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
                         ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF")) {
   
@@ -104,14 +104,24 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   # MAIN LOOP
   # ---------
   cat("Fitting the optimization algorithm... ")
-  mu1_t <- mu1_init
-  out_daar <- suppressWarnings(
-    daarem::daarem(par=mu1_t, fixptfn=mr_mash_update_general_mu1_daar, objfn=mr_mash_update_general_ELBO_daar,
+  if(update_w0)
+    params_t <- c(c(mu1_init), w0)
+  else
+    params_t <- c(mu1_init)
+  out_daar <-
+    daarem::daarem(par=params_t, fixptfn=mr_mash_update_general_params_daar, objfn=mr_mash_update_general_objective_daar,
                    X=X, Y=Y, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, precomp_quants=comps, compute_ELBO=compute_ELBO, 
                    standardize=standardize, update_V=update_V, version=version, update_order=update_order,
+                   update_w0=update_w0, update_w0_method=update_w0_method,
                    control = list(maxiter = max_iter, order = 10, tol = tol,
-                                    mon.tol = 0.01,kappa = 20,alpha = 1.1)))
-  mu1_t <- matrix(out_daar$par, nrow=p, ncol=r)
+                                    mon.tol = 0.01,kappa = 20,alpha = 1.1))
+  
+  if(update_w0){
+    mu1_t <- matrix(out_daar$par[1:(p*r)], nrow=p, ncol=r)
+    w0 <- tail(out_daar$par, K)
+  } else 
+    mu1_t <- matrix(out_daar$par, nrow=p, ncol=r)
+
   progress <- out_daar$objfn.track
   converged <- out_daar$convergence
   
@@ -154,8 +164,9 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   ###the prior weights (w0), the intercept (intercept), the fitted values (fitted), 
   ###and the progress data frame (progress), the prior covariance (S0), convergence
   ### status and, if computed, the Evidence Lower Bound (ELBO).
-  out <- list(mu1=mu1_t, S0=simplify2array_custom(S0), 
-              intercept=intercept, fitted=fitted_vals, progress=progress, converged=converged)
+  out <- list(mu1=mu1_t, S1=S1_t, S0=simplify2array_custom(S0), w0=w0, w1=w1_t,
+              intercept=intercept, fitted=fitted_vals, progress=progress, converged=converged,
+              ELBO=max(progress))
 
   class(out) <- c("mr.mash", "list")
   
@@ -171,29 +182,63 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
 
 
 ###Perform one iteration of the outer loop with or without scaling X
-mr_mash_update_general_mu1_daar <- function(mu1_t, X, Y, V, Vinv, ldetV, w0, S0,
+mr_mash_update_general_params_daar <- function(params_t, X, Y, V, Vinv, ldetV, w0, S0,
                                             precomp_quants, compute_ELBO, standardize, 
-                                            update_V, version, update_order){
-  mu1_t <- matrix(mu1_t, nrow=ncol(X), ncol=ncol(Y))
-  
+                                            update_V, version, update_order,
+                                            update_w0, update_w0_method){
+  if(update_w0){
+    p <- ncol(X)
+    r <- ncol(Y)
+    K <- length(S0)
+    
+    mu1_t <- matrix(params_t[1:(p*r)], nrow=p, ncol=r)
+    w0 <- tail(params_t, K)    
+  } else {
+    mu1_t <- matrix(params_t, nrow=p, ncol=r)
+  }
+
   out <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0,
                                 precomp_quants=precomp_quants, compute_ELBO=compute_ELBO, standardize=standardize, 
                                 update_V=update_V, version=version, update_order=update_order)
-  mu1_t <- out$mu1_t
   
-  return(c(mu1_t))
+  if(update_w0){
+    if(update_w0_method=="EM")
+      w0 <- update_weights_em(out$w1_t)
+    B_t <- c(out$mu1_t)
+    params_t <- c(B_t, w0)
+  } else {
+    params_t <- c(out$mu1_t)
+  }
+  
+  ###Assign some quantities to the mr.mash.daar environment
+  assign("mu1_t", out$mu1_t, pos=3)
+  assign("S1_t", out$S1_t, pos=3)
+  assign("w1_t", out$w1_t, pos=3)
+  
+  return(params_t)
 }
 
 ###Perform one iteration of the outer loop with or without scaling X
-mr_mash_update_general_ELBO_daar <- function(mu1_t, X, Y, V, Vinv, ldetV, w0, S0,
+mr_mash_update_general_objective_daar <- function(params_t, X, Y, V, Vinv, ldetV, w0, S0,
                                              precomp_quants, compute_ELBO, standardize, 
-                                             update_V, version, update_order){
-  mu1_t <- matrix(mu1_t, nrow=ncol(X), ncol=ncol(Y))
-
+                                             update_V, version, update_order,
+                                             update_w0, update_w0_method){
+  if(update_w0){
+    p <- ncol(X)
+    r <- ncol(Y)
+    K <- length(S0)
+    
+    mu1_t <- matrix(params_t[1:(p*r)], nrow=p, ncol=r)
+    w0 <- tail(params_t, K)    
+  } else {
+    mu1_t <- matrix(params_t, nrow=p, ncol=r)
+  }
+  
   out <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0,
                                 precomp_quants=precomp_quants, compute_ELBO=compute_ELBO, standardize=standardize, 
                                 update_V=update_V, version=version, update_order=update_order)
-  ELBO <- out$ELBO
   
-  return(ELBO)
+  objective <- out$ELBO
+  
+  return(objective)
 }
