@@ -5,13 +5,18 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                         max_iter=5000,
                         compute_ELBO=TRUE, standardize=TRUE, update_w0=TRUE, update_w0_method="EM",
                         update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
-                        ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF")) {
+                        ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
+                        mon_tol = 0.01, kappa = 20, alpha = 1.1) {
   
   tic <- Sys.time()
   cat("Processing the inputs... ")
   
   # CHECK AND PROCESS INPUTS
   # ------------------------
+  ###Select method to update the weights (if not specified by user, EM
+  ###will be used)
+  update_w0_method <- match.arg(update_w0_method)
+  
   ###Select version of the inner loop (if not specified by user, Rcpp
   ###will be used)
   version <- match.arg(version)
@@ -35,13 +40,15 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     stop("S0 must be a list.")
   if(!is.vector(w0))
     stop("w0 must be a vector.")
-  if(abs(sum(w0) - 1) > 1e-10)
+  if(sum(w0)!=1)
     stop("Elements of w0 must sum to 1.")
   if(length(S0)!=length(w0))
     stop("S0 and w0 must have the same length.")
   if(!is.matrix(mu1_init))
     stop("mu1_init must be a matrix.")
-
+  if(update_w0_method=="mixsqp" && !compute_ELBO)
+    stop("ELBO needs to be computed with update_w0_method=\"mixsqp\".")
+  
   ###Obtain dimensions needed from inputs
   p <- ncol(X)
   n <- nrow(X)
@@ -114,7 +121,7 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                    standardize=standardize, update_V=update_V, version=version, update_order=update_order,
                    update_w0=update_w0, update_w0_method=update_w0_method,
                    control = list(maxiter = max_iter, order = 10, tol = tol,
-                                    mon.tol = 0.01,kappa = 20,alpha = 1.1))
+                                    mon.tol = mon_tol, kappa = kappa, alpha = alpha))
   
   if(update_w0){
     mu1_t <- matrix(out_daar$par[1:(p*r)], nrow=p, ncol=r)
@@ -192,7 +199,10 @@ mr_mash_update_general_params_daar <- function(params_t, X, Y, V, Vinv, ldetV, w
     K <- length(S0)
     
     mu1_t <- matrix(params_t[1:(p*r)], nrow=p, ncol=r)
-    w0 <- tail(params_t, K)    
+    w0 <- tail(params_t, K)
+    # w0 <- softmax(w0)
+    w0 <- pmax(0, w0)
+    w0 <- w0/sum(w0)
   } else {
     mu1_t <- matrix(params_t, nrow=p, ncol=r)
   }
@@ -229,7 +239,10 @@ mr_mash_update_general_objective_daar <- function(params_t, X, Y, V, Vinv, ldetV
     K <- length(S0)
     
     mu1_t <- matrix(params_t[1:(p*r)], nrow=p, ncol=r)
-    w0 <- tail(params_t, K)    
+    w0 <- tail(params_t, K)
+    # w0 <- softmax(w0)
+    w0 <- pmax(0, w0)
+    w0 <- w0/sum(w0)
   } else {
     mu1_t <- matrix(params_t, nrow=p, ncol=r)
   }
