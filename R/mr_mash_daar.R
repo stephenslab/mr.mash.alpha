@@ -111,24 +111,48 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   # MAIN LOOP
   # ---------
   cat("Fitting the optimization algorithm... ")
+  
+  ###Obtain initial values of the parameters to be optimized
+  params_t <- c(mu1_init)
   if(update_w0)
-    params_t <- c(c(mu1_init), w0)
-  else
-    params_t <- c(mu1_init)
+    params_t <- c(params_t, w0)
+  if(update_V){
+    R <- comps$V_chol
+    R_uptri <- R[upper.tri(R, diag = TRUE)]
+    params_t <- c(params_t, R_uptri)
+  }
+  
+  ###Fit mr.mash.daar  
   out_daar <-
     daarem::daarem(par=params_t, fixptfn=mr_mash_update_general_params_daar, objfn=mr_mash_update_general_objective_daar,
                    X=X, Y=Y, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, precomp_quants=comps, compute_ELBO=compute_ELBO, 
                    standardize=standardize, update_V=update_V, version=version, update_order=update_order,
-                   update_w0=update_w0, update_w0_method=update_w0_method,
+                   update_w0=update_w0, update_w0_method=update_w0_method, xtx=xtx,
                    control = list(maxiter = max_iter, order = 10, tol = tol,
                                     mon.tol = mon_tol, kappa = kappa, alpha = alpha))
+  params_t <- out_daar$par
   
+  ###Obtain updated mu1_t
+  mu1_t <- matrix(params_t[1:(p*r)], nrow=p, ncol=r)
+  
+  ###Obtain w0 (if updated)
   if(update_w0){
-    mu1_t <- matrix(out_daar$par[1:(p*r)], nrow=p, ncol=r)
-    w0 <- tail(out_daar$par, K)
-  } else 
-    mu1_t <- matrix(out_daar$par, nrow=p, ncol=r)
-
+    w0 <- params_t[((p*r)+1):((p*r)+K)]
+    # w0 <- softmax(w0)
+    w0 <- pmax(0, w0)
+    w0 <- w0/sum(w0)
+  }
+  
+  ###Obtain V and recompute precomputed quantities (if updated)
+  if(update_V){  
+    R_uptri_length <- r*(r+1)/2
+    R_uptri <- tail(params_t, R_uptri_length)
+    R <- matrix(0, nrow=r, ncol=r)
+    R[upper.tri(R, diag = TRUE)] <- R_uptri
+    V <- crossprod(R)
+  }
+  
+  ###Obtain ELBO sequence and convergence status
   progress <- out_daar$objfn.track
   converged <- out_daar$convergence
   
@@ -171,7 +195,7 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   ###the prior weights (w0), the intercept (intercept), the fitted values (fitted), 
   ###and the progress data frame (progress), the prior covariance (S0), convergence
   ### status and, if computed, the Evidence Lower Bound (ELBO).
-  out <- list(mu1=mu1_t, S1=S1_t, S0=simplify2array_custom(S0), w0=w0, w1=w1_t,
+  out <- list(mu1=mu1_t, S1=S1_t, V=V, S0=simplify2array_custom(S0), w0=w0, w1=w1_t,
               intercept=intercept, fitted=fitted_vals, progress=progress, converged=converged,
               ELBO=max(progress))
 
@@ -192,38 +216,68 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
 mr_mash_update_general_params_daar <- function(params_t, X, Y, V, Vinv, ldetV, w0, S0,
                                             precomp_quants, compute_ELBO, standardize, 
                                             update_V, version, update_order,
-                                            update_w0, update_w0_method){
+                                            update_w0, update_w0_method, xtx){
+  
+  p <- ncol(X)
+  r <- ncol(Y)
+  K <- length(S0)
+  
+  ###Obtain updated mu1_t
+  mu1_t <- matrix(params_t[1:(p*r)], nrow=p, ncol=r)
+  
+  ###Obtain w0 (if updated)
   if(update_w0){
-    p <- ncol(X)
-    r <- ncol(Y)
-    K <- length(S0)
-    
-    mu1_t <- matrix(params_t[1:(p*r)], nrow=p, ncol=r)
-    w0 <- tail(params_t, K)
+    w0 <- params_t[((p*r)+1):((p*r)+K)]
     # w0 <- softmax(w0)
     w0 <- pmax(0, w0)
     w0 <- w0/sum(w0)
-  } else {
-    mu1_t <- matrix(params_t, nrow=p, ncol=r)
   }
-
+  
+  ###Obtain V and recompute precomputed quantities (if updated)
+  if(update_V){  
+    R_uptri_length <- r*(r+1)/2
+    R_uptri <- tail(params_t, R_uptri_length)
+    R <- matrix(0, nrow=r, ncol=r)
+    R[upper.tri(R, diag = TRUE)] <- R_uptri
+    V <- crossprod(R)
+    
+    precomp_quants <- precompute_quants(X, V, S0, standardize, version)
+    if(!standardize)
+      precomp_quants$xtx <- xtx
+    if(compute_ELBO || !standardize)
+      Vinv <- chol2inv(precomp_quants$V_chol)
+    if(compute_ELBO)
+      ldetV <- chol2ldet(precomp_quants$V_chol)
+  }  
+  
+  ###Update variational parameters (E-step)
   out <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0,
                                 precomp_quants=precomp_quants, compute_ELBO=compute_ELBO, standardize=standardize, 
                                 update_V=update_V, version=version, update_order=update_order)
+  params_t <- c(out$mu1_t)
   
+  ###Update model parameters (M-step)
+  ##Update weights
   if(update_w0){
     if(update_w0_method=="EM")
       w0 <- update_weights_em(out$w1_t)
-    B_t <- c(out$mu1_t)
-    params_t <- c(B_t, w0)
-  } else {
-    params_t <- c(out$mu1_t)
+    params_t <- c(params_t, w0)
+  }
+  ##Update V
+  if(update_V){
+    V <- update_V_fun(Y, X, out$mu1_t, out$var_part_ERSS)
+    R <- chol(V)
+    R_uptri <- R[upper.tri(R, diag = TRUE)]
+    
+    params_t <- c(params_t, R_uptri)
   }
   
   ###Assign some quantities to the mr.mash.daar environment
   assign("mu1_t", out$mu1_t, pos=3)
   assign("S1_t", out$S1_t, pos=3)
   assign("w1_t", out$w1_t, pos=3)
+  assign("w0", w0, pos=3)
+  assign("V", V, pos=3)
   
   return(params_t)
 }
@@ -232,20 +286,38 @@ mr_mash_update_general_params_daar <- function(params_t, X, Y, V, Vinv, ldetV, w
 mr_mash_update_general_objective_daar <- function(params_t, X, Y, V, Vinv, ldetV, w0, S0,
                                              precomp_quants, compute_ELBO, standardize, 
                                              update_V, version, update_order,
-                                             update_w0, update_w0_method){
+                                             update_w0, update_w0_method, xtx){
+  p <- ncol(X)
+  r <- ncol(Y)
+  K <- length(S0)
+  
+  ###Obtain updated mu1_t
+  mu1_t <- matrix(params_t[1:(p*r)], nrow=p, ncol=r)
+  
+  ###Obtain w0 (if updated)
   if(update_w0){
-    p <- ncol(X)
-    r <- ncol(Y)
-    K <- length(S0)
-    
-    mu1_t <- matrix(params_t[1:(p*r)], nrow=p, ncol=r)
-    w0 <- tail(params_t, K)
+    w0 <- params_t[((p*r)+1):((p*r)+K)]
     # w0 <- softmax(w0)
     w0 <- pmax(0, w0)
     w0 <- w0/sum(w0)
-  } else {
-    mu1_t <- matrix(params_t, nrow=p, ncol=r)
   }
+  
+  ###Obtain V and recompute precomputed quantities (if updated)
+  if(update_V){  
+    R_uptri_length <- r*(r+1)/2
+    R_uptri <- tail(params_t, R_uptri_length)
+    R <- matrix(0, nrow=r, ncol=r)
+    R[upper.tri(R, diag = TRUE)] <- R_uptri
+    V <- crossprod(R)
+    
+    precomp_quants <- precompute_quants(X, V, S0, standardize, version)
+    if(!standardize)
+      precomp_quants$xtx <- xtx
+    if(compute_ELBO || !standardize)
+      Vinv <- chol2inv(precomp_quants$V_chol)
+    if(compute_ELBO)
+      ldetV <- chol2ldet(precomp_quants$V_chol)
+  }  
   
   out <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0,
                                 precomp_quants=precomp_quants, compute_ELBO=compute_ELBO, standardize=standardize, 
