@@ -131,6 +131,7 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                    control = list(maxiter = max_iter, order = 10, tol = tol,
                                     mon.tol = mon_tol, kappa = kappa, alpha = alpha))
   params_t <- out_daar$par
+  out_daar$par <- NULL
   
   ###Obtain updated mu1_t
   mu1_t <- matrix(params_t[1:(p*r)], nrow=p, ncol=r)
@@ -153,8 +154,10 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   }
   
   ###Obtain ELBO sequence and convergence status
-  progress <- out_daar$objfn.track
+  progress <- data.frame(iter=1:length(out_daar$objfn.track), ELBO_diff=c(Inf, diff(out_daar$objfn.track)),
+                         ELBO=out_daar$objfn.track)
   converged <- out_daar$convergence
+  ELBO <- out_daar$value.objfn
   
   cat("Done!\n")
   cat("Processing the outputs... ")
@@ -197,7 +200,7 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   ### status and, if computed, the Evidence Lower Bound (ELBO).
   out <- list(mu1=mu1_t, S1=S1_t, V=V, S0=simplify2array_custom(S0), w0=w0, w1=w1_t,
               intercept=intercept, fitted=fitted_vals, progress=progress, converged=converged,
-              ELBO=max(progress))
+              ELBO=ELBO, daarem_obj=out_daar)
 
   class(out) <- c("mr.mash", "list")
   
