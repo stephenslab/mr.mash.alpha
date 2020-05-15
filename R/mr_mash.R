@@ -16,7 +16,9 @@
 #'   the respective covariance matrix in \code{S0}.
 #' 
 #' @param mu1_init p x r matrix of initial estimates of the posterior
-#'   mean regression coefficients.
+#'   mean regression coefficients. These should be on the same scale as
+#'   the X provided. If \code{standardize=TRUE}, mu1_init will be scaled
+#'   appropriately after standardizing X.
 #' 
 #' @param tol Convergence tolerance.
 #' 
@@ -144,7 +146,7 @@
 #' 
 #' @export
 #' 
-mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y), 
+mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
                     mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4,
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                     compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
@@ -177,8 +179,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     stop("Y must not contain missing values.")
   if(any(is.na(X)))
     stop("X must not contain missing values.")
-  if(!is.matrix(V) || !isSymmetric(V))
-    stop("V must be a symmetric matrix.")
+  if(!is.null(V)){
+    if(!is.matrix(V) || !isSymmetric(V))
+      stop("V must be a symmetric matrix.")
+  }
   if(!is.list(S0))
     stop("S0 must be a list.")
   if(!is.vector(w0))
@@ -215,6 +219,14 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   rm(outY)
   X <- outX$M
   rm(outX)
+  
+  ###Scale mu1_init, if X is standardized 
+  if(standardize)
+    mu1_init <- mu1_init*sx 
+  
+  ###Compute V, if not provided by the user
+  if(is.null(V))
+    V <- compute_V_init(X, Y, mu1_init)
   
   ###Initilize mu1, S1, w1, delta_mu1, ELBO, iterator, and progress
   mu1_t <- mu1_init 

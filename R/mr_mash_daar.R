@@ -1,12 +1,12 @@
 #' @export
 #' 
-mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y), 
-                        mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4,
-                        max_iter=5000,
-                        compute_ELBO=TRUE, standardize=TRUE, update_w0=TRUE, update_w0_method="EM",
-                        update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
-                        ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
-                        mon_tol = 0.01, kappa = 20, alpha = 1.1) {
+mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
+                         mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4,
+                         max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
+                         compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
+                         update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
+                         ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
+                         mon_tol = 0.01, kappa = 20, alpha = 1.1) {
   
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -34,8 +34,10 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     stop("Y must not contain missing values.")
   if(any(is.na(X)))
     stop("X must not contain missing values.")
-  if(!is.matrix(V) || !isSymmetric(V))
-    stop("V must be a symmetric matrix.")
+  if(!is.null(V)){
+    if(!is.matrix(V) || !isSymmetric(V))
+      stop("V must be a symmetric matrix.")
+  }
   if(!is.list(S0))
     stop("S0 must be a list.")
   if(!is.vector(w0))
@@ -46,8 +48,9 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     stop("S0 and w0 must have the same length.")
   if(!is.matrix(mu1_init))
     stop("mu1_init must be a matrix.")
-  if(update_w0_method=="mixsqp" && !compute_ELBO)
-    stop("ELBO needs to be computed with update_w0_method=\"mixsqp\".")
+  if(update_w0_method=="mixsqp")
+    stop("update_w0_method=\"mixsqp\" not yet implemented in mr.mash.daar")
+  
   
   ###Obtain dimensions needed from inputs
   p <- ncol(X)
@@ -72,6 +75,14 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   rm(outY)
   X <- outX$M
   rm(outX)
+  
+  ###Scale mu1_init, if X is standardized 
+  if(standardize)
+    mu1_init <- mu1_init*sx 
+  
+  ###Compute V, if not provided by the user
+  if(is.null(V))
+    V <- compute_V_init(X, Y, mu1_init)
   
   ###Precompute quantities
   comps <- precompute_quants(X, V, S0, standardize, version)

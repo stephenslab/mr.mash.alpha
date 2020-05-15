@@ -294,3 +294,11 @@ scale_fast2 <- function(M, scale=TRUE, na.rm=TRUE){
   
   return(list(M=M, means=means, sds=sds))
 }
+
+###Compute initial estimate of V
+compute_V_init <- function(X, Y, B){
+  R <- Y - X%*%B
+  V <- cov(R)
+  
+  return(V)
+}
