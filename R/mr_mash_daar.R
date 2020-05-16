@@ -133,12 +133,15 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     params_t <- c(params_t, R_uptri)
   }
   
+  ###Obtain mr.mash.daar environment
+  mr_mash_daar_env <- environment()
+  
   ###Fit mr.mash.daar  
   out_daar <-
     daarem::daarem(par=params_t, fixptfn=mr_mash_update_general_params_daar, objfn=mr_mash_update_general_objective_daar,
                    X=X, Y=Y, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, precomp_quants=comps, compute_ELBO=compute_ELBO, 
                    standardize=standardize, update_V=update_V, version=version, update_order=update_order,
-                   update_w0=update_w0, update_w0_method=update_w0_method, xtx=xtx,
+                   update_w0=update_w0, update_w0_method=update_w0_method, xtx=xtx, env=mr_mash_daar_env,
                    control = list(maxiter = max_iter, order = 10, tol = tol,
                                     mon.tol = mon_tol, kappa = kappa, alpha = alpha))
   params_t <- out_daar$par
@@ -197,11 +200,15 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ###Assign names to outputs dimensions
   rownames(mu1_t) <- colnames(X)
   colnames(mu1_t) <- colnames(Y)
+  dimnames(S1_t)[[1]] <- colnames(Y)
+  dimnames(S1_t)[[2]] <- colnames(Y)
+  dimnames(S1_t)[[3]] <- colnames(X)
+  rownames(w1_t) <- colnames(X)
+  colnames(w1_t) <- names(S0)
   rownames(V) <- colnames(Y)
   colnames(V) <- colnames(Y)
   rownames(fitted_vals) <- rownames(Y)
   colnames(fitted_vals) <- colnames(Y)
-  
   
   ###Return the posterior assignment probabilities (w1), the
   ###posterior mean of the coefficients (mu1), and the posterior
@@ -230,7 +237,7 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
 mr_mash_update_general_params_daar <- function(params_t, X, Y, V, Vinv, ldetV, w0, S0,
                                             precomp_quants, compute_ELBO, standardize, 
                                             update_V, version, update_order,
-                                            update_w0, update_w0_method, xtx){
+                                            update_w0, update_w0_method, xtx, env){
   
   p <- ncol(X)
   r <- ncol(Y)
@@ -287,11 +294,11 @@ mr_mash_update_general_params_daar <- function(params_t, X, Y, V, Vinv, ldetV, w
   }
   
   ###Assign some quantities to the mr.mash.daar environment
-  assign("mu1_t", out$mu1_t, pos=3)
-  assign("S1_t", out$S1_t, pos=3)
-  assign("w1_t", out$w1_t, pos=3)
-  assign("w0", w0, pos=3)
-  assign("V", V, pos=3)
+  #assign("mu1_t", out$mu1_t, pos=env)
+  assign("S1_t", out$S1_t, pos=env)
+  assign("w1_t", out$w1_t, pos=env)
+  assign("w0", w0, pos=env)
+  assign("V", V, pos=env)
   
   return(params_t)
 }
@@ -300,7 +307,7 @@ mr_mash_update_general_params_daar <- function(params_t, X, Y, V, Vinv, ldetV, w
 mr_mash_update_general_objective_daar <- function(params_t, X, Y, V, Vinv, ldetV, w0, S0,
                                              precomp_quants, compute_ELBO, standardize, 
                                              update_V, version, update_order,
-                                             update_w0, update_w0_method, xtx){
+                                             update_w0, update_w0_method, xtx, env){
   p <- ncol(X)
   r <- ncol(Y)
   K <- length(S0)
