@@ -217,6 +217,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
   X <- outX$M
   rm(outX)
   
+  ###Scale mu1_init, if X is standardized 
+  if(standardize)
+    mu1_init <- mu1_init*sx 
+  
   ###Initilize mu1, S1, w1, delta_mu1, ELBO, iterator, and progress
   mu1_t <- mu1_init 
   delta_mu1 <- matrix(Inf, nrow=p, ncol=r)
