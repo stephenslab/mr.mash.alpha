@@ -432,7 +432,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     if(compute_ELBO)
       progress[t, c(5, 6)] <- c(ELBO - ELBO_old, ELBO)
     if(update_w0_method=="mixsqp"){
-      if(t==16){
+      if(t %% 16==0){
         progress[t, 7] <- ls_niter
         progress[t, 8] <- ls_stepsize
       }
