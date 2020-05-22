@@ -36,7 +36,8 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=r, intercepts=rep(
   B <- matrix(0, ncol=r, nrow=p)
   causal_variables <- sample(x=(1:p), size=p_causal)
   if(r_causal<r){
-    causal_responses <- sample(x=(1:r), size=r_causal)
+    #causal_responses <- sample(x=(1:r), size=r_causal)
+    causal_responses <- 1:r_causal
     B[causal_variables, causal_responses] <- B_causal
   } else {
     B[causal_variables, ] <- B_causal
