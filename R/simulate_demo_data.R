@@ -35,13 +35,10 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=r, intercepts=rep(
   B_causal <- rmvnorm(n=p_causal, mean=rep(0, r_causal), sigma=Sigma)
   B <- matrix(0, ncol=r, nrow=p)
   causal_variables <- sample(x=(1:p), size=p_causal)
-  if(r_causal<r){
-    #causal_responses <- sample(x=(1:r), size=r_causal)
-    causal_responses <- 1:r_causal
-    B[causal_variables, causal_responses] <- B_causal
-  } else {
-    B[causal_variables, ] <- B_causal
-  }
+  #causal_responses <- sample(x=(1:r), size=r_causal)
+  causal_responses <- 1:r_causal
+  B[causal_variables, causal_responses] <- B_causal
+
     
   ##Simulate X from N_r(0, Gamma) where Gamma is a given covariance matrix across variables
   Gamma_offdiag <- X_scale*X_cor
