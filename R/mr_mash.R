@@ -187,7 +187,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     stop("S0 must be a list.")
   if(!is.vector(w0))
     stop("w0 must be a vector.")
-  if(sum(w0)!=1)
+  if(abs(sum(w0) - 1) > 1e-10)
     stop("Elements of w0 must sum to 1.")
   if(length(S0)!=length(w0))
     stop("S0 and w0 must have the same length.")
@@ -291,13 +291,13 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   time1 <- proc.time()
   
   ##Save current estimates.
-  mu1_tminus1 <- mu1_t   
+  mu1_old <- mu1_t   
   
   ##Update iterator
   t <- t+1
   
-  ##Set last value of ELBO as ELBO0
-  ELBO0 <- ELBO
+  ##Set last value of ELBO as ELBO_old
+  ELBO_old <- ELBO
   
   ###Update variational parameters
   ups <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
@@ -321,13 +321,13 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ##Update progress data.frame 
   progress[t, c(1:3)] <- c(t, time2["elapsed"] - time1["elapsed"], max(delta_mu1))
   if(compute_ELBO)
-    progress[t, c(4, 5)] <- c(ELBO - ELBO0, ELBO)
+    progress[t, c(4, 5)] <- c(ELBO - ELBO_old, ELBO)
   
   if(verbose){
     ##Print out useful info
     cat(sprintf("%4d      %9.2e", t, max(delta_mu1)))
     if(compute_ELBO)
-      cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO0, ELBO))
+      cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO_old, ELBO))
     else
       cat("\n")
   }
@@ -342,7 +342,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     time1 <- proc.time()
       
     ##Save current estimates.
-    mu1_tminus1 <- mu1_t   
+    mu1_old <- mu1_t   
     
     ##Update iterator
     t <- t+1
@@ -353,8 +353,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
       break
     }
     
-    ##Set last value of ELBO as ELBO0
-    ELBO0 <- ELBO
+    ##Set last value of ELBO as ELBO_old
+    ELBO_old <- ELBO
 
     # M-STEP
     # ------
@@ -408,18 +408,18 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     time2 <- proc.time()
     
     ##Compute distance in mu1 between two successive iterations
-    delta_mu1 <- abs(mu1_t - mu1_tminus1)
+    delta_mu1 <- abs(mu1_t - mu1_old)
     
     ##Update progress data.frame 
     progress[t, c(1:3)] <- c(t, time2["elapsed"] - time1["elapsed"], max(delta_mu1))
     if(compute_ELBO)
-      progress[t, c(4, 5)] <- c(ELBO - ELBO0, ELBO)
+      progress[t, c(4, 5)] <- c(ELBO - ELBO_old, ELBO)
     
     if(verbose){
       ##Print out useful info
       cat(sprintf("%4d      %9.2e", t, max(delta_mu1)))
       if(compute_ELBO)
-        cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO0, ELBO))
+        cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO_old, ELBO))
       else
         cat("\n")
     }
