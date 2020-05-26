@@ -78,7 +78,7 @@ compute_mixsqp_update_loop_general <- function(X, Rbar, V, S0, mu1, Vinv, precom
 
 # Perform backtracking line search to identify a step size for the
 # mixture weights update that increases the ELBO.
-backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mixsqp,
+backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0old, w0mixsqp,
                                       precomp_quants, standardize, compute_ELBO, update_V, 
                                       version, update_order, stepsize.reduce, stepsize.min) {
   
@@ -86,7 +86,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mix
   ##Update variational parameters, expected residuals, and ELBO components
   Rbar <- Y - X%*%mu1
   
-  updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1, V=V, Vinv=Vinv, w0=w0em, S0=S0, 
+  updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1, V=V, Vinv=Vinv, w0=w0old, S0=S0, 
                                 precomp_quants=precomp_quants, standardize=standardize, 
                                 compute_ELBO=compute_ELBO, update_V=update_V, version=version,
                                 update_order=update_order)
@@ -100,7 +100,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mix
   iter <- 0
   while (TRUE) {
     iter <- iter+1
-    w0new <- a*w0mixsqp + (1 - a)*w0em
+    w0new <- a*w0mixsqp + (1 - a)*w0old
     updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1, V=V, Vinv=Vinv, w0=w0new, S0=S0, 
                                   precomp_quants=precomp_quants, standardize=standardize,
                                   compute_ELBO=compute_ELBO, update_V=update_V, version=version,
@@ -120,7 +120,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mix
       # We need to terminate backtracking line search because we have
       # arrived at the smallest allowable step size.
       a     <- 0
-      w0new <- w0em
+      w0new <- w0old
       break
     }
     
@@ -131,7 +131,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mix
   
   # Return the updated mixture weights ("w0") and the step size
   # determined by the backtracking line search ("a").
-  return(list(w0 = w0new,ls_stepsize = a, ls_niter=iter))
+  return(list(w0 = w0new, ls_stepsize = a, ls_niter=iter))
 }
 
 # Perform forwardtracking line search to identify a step size for the
@@ -208,7 +208,8 @@ forwardtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0old, w
 update_weights_mixsqp <- function (X, Y, mu1, V, Vinv, ldetV, w0old, S0,
                                    precomp_quants, standardize,
                                    compute_ELBO=TRUE, update_V=FALSE, version, update_order,
-                                   stepsize.increase, stepsize.min, stepsize.max, ELBOold) {
+                                   stepsize.reduce, stepsize.min){ 
+                                   #stepsize.increase, stepsize.min, stepsize.max, ELBOold) {
   
   # Compute the mix-SQP update for the mixture weights. Note that this
   # update is not guaranteed to increase the ELBO.
@@ -216,10 +217,14 @@ update_weights_mixsqp <- function (X, Y, mu1, V, Vinv, ldetV, w0old, S0,
   
   # Perform backtracking/forwardtracking line search to identify a step size that
   # increases the ELBO.
-  out2 <- forwardtracking_line_search(X, Y, V, Vinv, ldetV, S0, mu1, w0old, out1$w0,
+  # out2 <- forwardtracking_line_search(X, Y, V, Vinv, ldetV, S0, mu1, w0old, out1$w0,
+  #                                  precomp_quants, standardize, compute_ELBO, update_V, 
+  #                                  version, update_order, stepsize.increase, 
+  #                                  stepsize.min, stepsize.max, ELBOold)
+  
+  out2 <- backtracking_line_search(X, Y, V, Vinv, ldetV, S0, mu1, w0old, out1$w0,
                                    precomp_quants, standardize, compute_ELBO, update_V, 
-                                   version, update_order, stepsize.increase, 
-                                   stepsize.min, stepsize.max, ELBOold)
+                                   version, update_order, stepsize.reduce, stepsize.min)
   
   # Return the updated mixture weights ("w0"), the number of mix-SQP
   # iterations performed ("numiter"), and the step size determined by the

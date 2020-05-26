@@ -150,7 +150,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
                     compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
                     ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
-                    stepsize.increase = 2, stepsize.min = 1e-6, stepsize.max = 1) {
+                    stepsize.reduce = 0.5, stepsize.min = 1e-6) {
+                    # stepsize.increase = 2, stepsize.min = 1e-6, stepsize.max = 1) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -376,27 +377,18 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
       if(update_w0_method=="EM")
         w0 <- update_weights_em(w1_t)
       else if(update_w0_method=="mixsqp"){
-        if(t %% 16!=0)
-          w0 <- update_weights_em(w1_t)
-        else if(t %% 16==0){
-          mixsqp_update   <- update_weights_mixsqp(X=X, Y=Y, mu1=mu1_t, V=V, Vinv=Vinv,
-                                                   ldetV=ldetV, w0old=w0, S0=S0,
-                                                   precomp_quants=comps,
-                                                   standardize=standardize,
-                                                   version=version, update_order=update_order,
-                                                   stepsize.increase=stepsize.increase, stepsize.min=stepsize.min,
-                                                   stepsize.max=stepsize.max, ELBOold=ELBO_old)
-          #If the line search succeded, use mixsqp update
-          if(mixsqp_update$ls_stepsize!=0){
-            w0 <- mixsqp_update$w0
-            ls_niter <- mixsqp_update$ls_niter
-            ls_stepsize <- mixsqp_update$ls_stepsize
-          }else{  #If the line search failed, compute EM update
-            w0 <- update_weights_em(w1_t)
-            ls_niter <- mixsqp_update$ls_niter
-            ls_stepsize <- NA
-          }
-        }
+        mixsqp_update   <- update_weights_mixsqp(X=X, Y=Y, mu1=mu1_t, V=V, Vinv=Vinv,
+                                                 ldetV=ldetV, w0old=w0, S0=S0,
+                                                 precomp_quants=comps,
+                                                 standardize=standardize,
+                                                 version=version, update_order=update_order,
+                                                 stepsize.reduce=stepsize.reduce, stepsize.min=stepsize.min)
+                                                 # stepsize.increase=stepsize.increase, stepsize.min=stepsize.min,
+                                                 # stepsize.max=stepsize.max, ELBOold=ELBO_old)
+
+        w0 <- mixsqp_update$w0
+        ls_niter <- mixsqp_update$ls_niter
+        ls_stepsize <- mixsqp_update$ls_stepsize
       }
     }
 
@@ -432,10 +424,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=cov(Y),
     if(compute_ELBO)
       progress[t, c(5, 6)] <- c(ELBO - ELBO_old, ELBO)
     if(update_w0_method=="mixsqp"){
-      if(t %% 16==0){
-        progress[t, 7] <- ls_niter
-        progress[t, 8] <- ls_stepsize
-      }
+      progress[t, 7] <- ls_niter
+      progress[t, 8] <- ls_stepsize
     }
     
     if(verbose){
