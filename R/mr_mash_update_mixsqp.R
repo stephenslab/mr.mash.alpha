@@ -78,7 +78,7 @@ compute_mixsqp_update_loop_general <- function(X, Rbar, V, S0, mu1, Vinv, precom
 
 # Perform backtracking line search to identify a step size for the
 # mixture weights update that increases the ELBO.
-backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mixsqp,
+backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0old, w0mixsqp,
                                       precomp_quants, standardize, compute_ELBO, update_V, 
                                       version, update_order, stepsize.reduce, stepsize.min) {
   
@@ -86,7 +86,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mix
   ##Update variational parameters, expected residuals, and ELBO components
   Rbar <- Y - X%*%mu1
   
-  updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1, V=V, Vinv=Vinv, w0=w0em, S0=S0, 
+  updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1, V=V, Vinv=Vinv, w0=w0old, S0=S0, 
                                 precomp_quants=precomp_quants, standardize=standardize, 
                                 compute_ELBO=compute_ELBO, update_V=update_V, version=version,
                                 update_order=update_order)
@@ -98,7 +98,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mix
   # increases the ELBO.
   a <- 1
   while (TRUE) {
-    w0new <- a*w0mixsqp + (1 - a)*w0em
+    w0new <- a*w0mixsqp + (1 - a)*w0old
     updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1, V=V, Vinv=Vinv, w0=w0new, S0=S0, 
                                   precomp_quants=precomp_quants, standardize=standardize,
                                   compute_ELBO=compute_ELBO, update_V=update_V, version=version,
@@ -118,7 +118,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mix
       # We need to terminate backtracking line search because we have
       # arrived at the smallest allowable step size.
       a     <- 0
-      w0new <- w0em
+      w0new <- w0old
       break
     }
     
@@ -134,7 +134,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0em, w0mix
 
 # Update the mixture weights with mix-SQP, following by backtracking
 # line search to ensure that the ELBO does not decrease.
-update_weights_mixsqp <- function (X, Y, mu1, V, Vinv, ldetV, w0em, S0,
+update_weights_mixsqp <- function (X, Y, mu1, V, Vinv, ldetV, w0old, S0,
                                    precomp_quants, standardize,
                                    compute_ELBO=TRUE, update_V=FALSE, version, update_order,
                                    stepsize.reduce = 0.5, stepsize.min = 1e-8) {
@@ -145,7 +145,7 @@ update_weights_mixsqp <- function (X, Y, mu1, V, Vinv, ldetV, w0em, S0,
   
   # Perform backtracking line search to identify a step size that
   # increases the ELBO.
-  out2 <- backtracking_line_search(X, Y, V, Vinv, ldetV, S0, mu1, w0em, out1$w0,
+  out2 <- backtracking_line_search(X, Y, V, Vinv, ldetV, S0, mu1, w0old, out1$w0,
                                    precomp_quants, standardize, compute_ELBO, update_V, 
                                    version, update_order, stepsize.reduce, stepsize.min)
   
