@@ -39,11 +39,11 @@ test_that("mr.mash fitted vs predicted values with same X are equal", {
   
   ###Fit the model
   capture.output(
-    fit <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE,
+    fit <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
                    update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE,
                    verbose=FALSE, update_V=FALSE, version="R"))
   capture.output(
-    fit_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE,
+    fit_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
                         update_w0_method="EM", compute_ELBO=TRUE,
                         standardize=TRUE, verbose=FALSE, update_V=FALSE,
                         version="Rcpp"))
