@@ -377,9 +377,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
       if(update_w0_method=="EM")
         w0 <- update_weights_em(w1_t)
       else if(update_w0_method=="mixsqp"){
-        w0em <- update_weights_em(w1_t)
         w0   <- update_weights_mixsqp(X=X, Y=Y, mu1=mu1_t, V=V, Vinv=Vinv,
-                                      ldetV=ldetV, w0em=w0em, S0=S0,
+                                      ldetV=ldetV, w0old=w0, S0=S0,
                                       precomp_quants=comps,
                                       standardize=standardize,
                                       version=version, update_order=update_order)$w0
