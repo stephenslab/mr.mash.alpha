@@ -207,6 +207,29 @@ precompute_quants <- function(X, V, S0, standardize, version){
   }
 }
 
+###Filter out quantities corresponding to components that are dropped by w0_threshold
+filter_precomputed_quants <- function(precomp_quants, to_keep, standardize, version){
+  if(standardize){
+    if(version=="R"){
+      precomp_quants$SplusS0_chol <- precomp_quants$SplusS0_chol[to_keep]
+      precomp_quants$S1 <- precomp_quants$S1[to_keep]
+    } else if(version=="Rcpp"){
+      precomp_quants$SplusS0_chol <- precomp_quants$SplusS0_chol[, , to_keep]
+      precomp_quants$S1 <- precomp_quants$S1[, , to_keep]
+    }
+  } else {
+    if(version=="R"){
+      precomp_quants$d <- precomp_quants$d[to_keep]
+      precomp_quants$QtimesV_chol <- precomp_quants$QtimesV_chol[to_keep]
+    } else if(version=="Rcpp"){
+      precomp_quants$d <- precomp_quants$d[, to_keep]
+      precomp_quants$QtimesV_chol <- precomp_quants$QtimesV_chol[, , to_keep]
+    }
+  }
+  
+  return(precomp_quants)
+}
+
 ###Compute variance part of the ERSS
 compute_var_part_ERSS <- function(var_part_ERSS, bfit, xtx){
   var_part_ERSS <- var_part_ERSS + (bfit$S1*xtx)

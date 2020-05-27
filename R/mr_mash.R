@@ -29,6 +29,8 @@
 #' 
 #' @param update_w0_method Method to update prior weights.
 #' 
+#' @param w0_threshold Drop mixture components with weight less than this value.
+#' 
 #' @param update_V if \code{TRUE}, residual covariance is updated.
 #' 
 #' @param compute_ELBO If \code{TRUE}, ELBO is computed.
@@ -149,7 +151,7 @@
 mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
                     mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4,
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
-                    compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
+                    w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
                     ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF")) {
 
@@ -383,6 +385,15 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                                       standardize=standardize,
                                       version=version, update_order=update_order)$w0
       }
+      
+      #Drop components with mixture weight <= w0_threshold
+      if(any(w0 < w0_threshold)){
+        to_keep <- which(w0 >= w0_threshold)
+        w0 <- w0[to_keep]
+        w0 <- w0/sum(w0)
+        S0 <- S0[to_keep]
+        comps <- filter_precomputed_quants(comps, to_keep, standardize, version)
+      }
     }
 
     # E-STEP
@@ -462,6 +473,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   dimnames(S1_t)[[3]] <- colnames(X)
   rownames(w1_t) <- colnames(X)
   colnames(w1_t) <- names(S0)
+  names(w0) <- names(S0)
   rownames(V) <- colnames(Y)
   colnames(V) <- colnames(Y)
   rownames(fitted_vals) <- rownames(Y)
