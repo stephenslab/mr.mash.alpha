@@ -67,7 +67,7 @@ test_that(paste("ELBO does not decrease over iterations with mixsqp weights",
                         standardize=FALSE, verbose=FALSE, update_V=FALSE,
                         version="Rcpp"))
   capture.output(
-    fit_scaled_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-7,
+    fit_scaled_rcpp <- mr.mash(X, Y, S0mix, w0, V_est,
                                update_w0=TRUE, update_w0_method="mixsqp",
                                compute_ELBO=TRUE, standardize=TRUE,
                                verbose=FALSE, update_V=FALSE, version="Rcpp"))
@@ -77,7 +77,7 @@ test_that(paste("ELBO does not decrease over iterations with mixsqp weights",
                           standardize=FALSE, verbose=FALSE, update_V=TRUE,
                           version="Rcpp"))
   capture.output(
-    fit_scaled_V_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-7,
+    fit_scaled_V_rcpp <- mr.mash(X, Y, S0mix, w0, V_est,
                                  update_w0=TRUE, update_w0_method="mixsqp",
                                  compute_ELBO=TRUE, standardize=TRUE,
                                  verbose=FALSE, update_V=TRUE, version="Rcpp"))
