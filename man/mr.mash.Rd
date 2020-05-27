@@ -12,9 +12,11 @@ mr.mash(
   V = NULL,
   mu1_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)),
   tol = 1e-04,
+  convergence_criterion = c("mu1", "ELBO"),
   max_iter = 5000,
   update_w0 = TRUE,
   update_w0_method = c("EM", "mixsqp"),
+  w0_threshold = 0,
   compute_ELBO = TRUE,
   standardize = TRUE,
   verbose = TRUE,
@@ -44,12 +46,19 @@ appropriately after standardizing X.}
 
 \item{tol}{Convergence tolerance.}
 
+\item{convergence_criterion}{Criterion to use for convergence check.}
+
 \item{max_iter}{Maximum number of iterations for the optimization
 algorithm.}
 
 \item{update_w0}{If \code{TRUE}, prior weights are updated.}
 
 \item{update_w0_method}{Method to update prior weights.}
+
+\item{w0_threshold}{Drop mixture components with weight less than this value.
+Components are dropped at each iteration after 15 initial iterations.
+This is done to prevent from dropping some poetentially importnat 
+components prematurely.}
 
 \item{compute_ELBO}{If \code{TRUE}, ELBO is computed.}
 

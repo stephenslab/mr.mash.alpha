@@ -19,6 +19,8 @@
 #'   mean regression coefficients. These should be on the same scale as
 #'   the X provided. If \code{standardize=TRUE}, mu1_init will be scaled
 #'   appropriately after standardizing X.
+#'   
+#' @param convergence_criterion Criterion to use for convergence check.
 #' 
 #' @param tol Convergence tolerance.
 #' 
@@ -30,6 +32,9 @@
 #' @param update_w0_method Method to update prior weights.
 #' 
 #' @param w0_threshold Drop mixture components with weight less than this value.
+#'   Components are dropped at each iteration after 15 initial iterations.
+#'   This is done to prevent from dropping some poetentially importnat 
+#'   components prematurely.
 #' 
 #' @param update_V if \code{TRUE}, residual covariance is updated.
 #' 
@@ -149,7 +154,7 @@
 #' @export
 #' 
 mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
-                    mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4,
+                    mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                     w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
@@ -160,6 +165,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
 
   # CHECK AND PROCESS INPUTS
   # ------------------------
+  ###Select method to check for convergence (if not specified by user, mu1
+  ###will be used)
+  convergence_criterion <- match.arg(convergence_criterion)
+  
   ###Select method to update the weights (if not specified by user, EM
   ###will be used)
   update_w0_method <- match.arg(update_w0_method)
@@ -197,6 +206,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     stop("mu1_init must be a matrix.")
   if(update_w0_method=="mixsqp" && !compute_ELBO)
     stop("ELBO needs to be computed with update_w0_method=\"mixsqp\".")
+  if(convergence_criterion=="ELBO" && !compute_ELBO)
+    stop("ELBO needs to be computed with convergence_criterion=\"ELBO\".")
 
   ###Obtain dimensions needed from inputs
   p <- ncol(X)
@@ -230,9 +241,14 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   if(is.null(V))
     V <- compute_V_init(X, Y, mu1_init)
   
-  ###Initilize mu1, S1, w1, delta_mu1, ELBO, iterator, and progress
+  ###Initilize mu1, S1, w1, delta_mu1, delta_ELBO, delta_conv, ELBO, iterator, and progress
   mu1_t <- mu1_init 
   delta_mu1 <- matrix(Inf, nrow=p, ncol=r)
+  delta_ELBO <- Inf
+  if(convergence_criterion=="mu1")
+    delta_conv <- max(delta_mu1)
+  else if(convergence_criterion=="ELBO")
+    delta_conv <- delta_ELBO
   ELBO <- -Inf
   t <- 0
   progress <- as.data.frame(matrix(as.numeric(NA), nrow=max_iter, ncol=3))
@@ -241,6 +257,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     progress$ELBO_diff <- as.numeric(NA)
     progress$ELBO <- as.numeric(NA)
   }
+
   
   ###Precompute quantities
   comps <- precompute_quants(X, V, S0, standardize, version)
@@ -295,11 +312,11 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ##Save current estimates.
   mu1_old <- mu1_t   
   
-  ##Update iterator
-  t <- t+1
-  
   ##Set last value of ELBO as ELBO_old
   ELBO_old <- ELBO
+  
+  ##Update iterator
+  t <- t+1
   
   ###Update variational parameters
   ups <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
@@ -323,13 +340,13 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ##Update progress data.frame 
   progress[t, c(1:3)] <- c(t, time2["elapsed"] - time1["elapsed"], max(delta_mu1))
   if(compute_ELBO)
-    progress[t, c(4, 5)] <- c(ELBO - ELBO_old, ELBO)
+    progress[t, c(4, 5)] <- c(delta_ELBO, ELBO)
   
   if(verbose){
     ##Print out useful info
     cat(sprintf("%4d      %9.2e", t, max(delta_mu1)))
     if(compute_ELBO)
-      cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO_old, ELBO))
+      cat(sprintf("      %9.2e      %0.20e\n", delta_ELBO, ELBO))
     else
       cat("\n")
   }
@@ -338,13 +355,16 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   # ---------
   ###Repeat the following until convergence, or until maximum number
   ###of iterations is reached.
-  while(any(delta_mu1>tol)){
+  while(delta_conv>tol){
     
     ##Start timing
     time1 <- proc.time()
       
     ##Save current estimates.
     mu1_old <- mu1_t   
+    
+    ##Set last value of ELBO as ELBO_old
+    ELBO_old <- ELBO
     
     ##Update iterator
     t <- t+1
@@ -354,9 +374,6 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
       warning("Max number of iterations reached. Try increasing max_iter.")
       break
     }
-    
-    ##Set last value of ELBO as ELBO_old
-    ELBO_old <- ELBO
 
     # M-STEP
     # ------
@@ -387,7 +404,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
       }
       
       #Drop components with mixture weight <= w0_threshold
-      if(any(w0 < w0_threshold)){
+      if(t>15 && any(w0 < w0_threshold)){
         to_keep <- which(w0 >= w0_threshold)
         w0 <- w0[to_keep]
         w0 <- w0/sum(w0)
@@ -417,19 +434,25 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     ##End timing
     time2 <- proc.time()
     
-    ##Compute distance in mu1 between two successive iterations
+    ##Compute difference in mu1 and ELBO between two successive iterations,
+    ##and assign the requested criterion to delta_conv
     delta_mu1 <- abs(mu1_t - mu1_old)
+    delta_ELBO <- ELBO - ELBO_old
+    if(convergence_criterion=="mu1")
+      delta_conv <- max(delta_mu1)
+    else if(convergence_criterion=="ELBO")
+      delta_conv <- delta_ELBO
     
     ##Update progress data.frame 
     progress[t, c(1:3)] <- c(t, time2["elapsed"] - time1["elapsed"], max(delta_mu1))
     if(compute_ELBO)
-      progress[t, c(4, 5)] <- c(ELBO - ELBO_old, ELBO)
+      progress[t, c(4, 5)] <- c(delta_ELBO, ELBO)
     
     if(verbose){
       ##Print out useful info
       cat(sprintf("%4d      %9.2e", t, max(delta_mu1)))
       if(compute_ELBO)
-        cat(sprintf("      %9.2e      %0.20e\n", ELBO - ELBO_old, ELBO))
+        cat(sprintf("      %9.2e      %0.20e\n", delta_ELBO, ELBO))
       else
         cat("\n")
     }
