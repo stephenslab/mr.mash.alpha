@@ -38,6 +38,9 @@
 #' 
 #' @param update_V if \code{TRUE}, residual covariance is updated.
 #' 
+#' @param update_V_method Method to update residual covariance. So far,
+#'   "full" and "diagonal" are supported
+#' 
 #' @param compute_ELBO If \code{TRUE}, ELBO is computed.
 #' 
 #' @param standardize If \code{TRUE}, X is "standardized" using the
@@ -157,7 +160,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                     mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                     w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
-                    update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
+                    update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
                     ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF")) {
 
   tic <- Sys.time()
@@ -172,6 +175,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ###Select method to update the weights (if not specified by user, EM
   ###will be used)
   update_w0_method <- match.arg(update_w0_method)
+  
+  ###Select method to update the residual covariance (if not specified by user, full
+  ###will be used)
+  update_V_method <- match.arg(update_V_method)
   
   ###Select version of the inner loop (if not specified by user, Rcpp
   ###will be used)
@@ -238,8 +245,11 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     mu1_init <- mu1_init*sx 
   
   ###Compute V, if not provided by the user
-  if(is.null(V))
+  if(is.null(V)){
     V <- compute_V_init(X, Y, mu1_init)
+    if(update_V_method=="diagonal")
+      V <- diag(diag(V))
+  }
   
   ###Initilize mu1, S1, w1, delta_mu1, delta_ELBO, delta_conv, ELBO, iterator, and progress
   mu1_t <- mu1_init 
@@ -380,6 +390,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     ##Update V if requested
     if(update_V){
       V     <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
+      if(update_V_method=="diagonal")
+        V <- diag(diag(V))
       
       #Recompute precomputed quantities after updating V
       comps <- precompute_quants(X, V, S0, standardize, version)

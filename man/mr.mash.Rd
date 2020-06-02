@@ -21,6 +21,7 @@ mr.mash(
   standardize = TRUE,
   verbose = TRUE,
   update_V = FALSE,
+  update_V_method = c("full", "diagonal"),
   version = c("Rcpp", "R"),
   e = 1e-08,
   ca_update_order = c("consecutive", "decreasing_logBF", "increasing_logBF")
@@ -72,6 +73,9 @@ original scale.}
 algorithm's process is printed at each iteration.}
 
 \item{update_V}{if \code{TRUE}, residual covariance is updated.}
+
+\item{update_V_method}{Method to update residual covariance. So far,
+"full" and "diagonal" are supported}
 
 \item{version}{Whether to use R or C++ code to perform the
 coordinate ascent updates.}
