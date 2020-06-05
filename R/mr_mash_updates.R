@@ -105,7 +105,7 @@ inner_loop_general <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants,
     out <- inner_loop_general_R(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
                                 standardize, compute_ELBO, update_V, update_order)
   } else if(version=="Rcpp"){
-    update_order <- update_order-1
+    update_order <- as.integer(update_order-1)
     out <- inner_loop_general_Rcpp(X, Rbar, mu1, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, 
                                    standardize, compute_ELBO, update_V, update_order)
   }

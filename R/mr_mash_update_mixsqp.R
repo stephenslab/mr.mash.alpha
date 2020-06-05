@@ -68,7 +68,7 @@ compute_mixsqp_update_loop_general <- function(X, Rbar, V, S0, mu1, Vinv, precom
   if(version=="R"){
     out <- compute_mixsqp_update_loop_R(X, Rbar, V, S0, mu1, Vinv, precomp_quants, standardize, update_order)
   } else if(version=="Rcpp"){
-    update_order <- update_order-1
+    update_order <- as.integer(update_order-1)
     out <- compute_mixsqp_update_loop_rcpp(X, Rbar, V, simplify2array_custom(S0), mu1, Vinv, precomp_quants, standardize,
                                            update_order)
   }
