@@ -5,64 +5,125 @@
 \title{Multiple Regression with Multivariate Adaptive Shrinkage.}
 \usage{
 mr.mash(
-  Y,
   X,
-  V,
+  Y,
   S0,
-  w0,
-  mu_init = NULL,
-  tol = 1e-08,
-  max_iter = 1e+05,
+  w0 = rep(1/(length(S0)), length(S0)),
+  V = NULL,
+  mu1_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)),
+  tol = 1e-04,
+  convergence_criterion = c("mu1", "ELBO"),
+  max_iter = 5000,
   update_w0 = TRUE,
+  update_w0_method = c("EM", "mixsqp"),
+  w0_threshold = 0,
   compute_ELBO = TRUE,
   standardize = TRUE,
-  verbose = TRUE
+  verbose = TRUE,
+  update_V = FALSE,
+  update_V_method = c("full", "diagonal"),
+  version = c("Rcpp", "R"),
+  e = 1e-08,
+  ca_update_order = c("consecutive", "decreasing_logBF", "increasing_logBF")
 )
 }
 \arguments{
-\item{Y}{an n x r matrix of responses.}
+\item{X}{n x p matrix of covariates.}
 
-\item{X}{an n x p matrix of covariates.}
+\item{Y}{n x r matrix of responses.}
 
-\item{V}{an r x r residual covariance matrix.}
+\item{S0}{List of length K containing the desired r x r prior
+covariance matrices on the regression coefficients.}
 
-\item{S0}{a list of length K containing the desired r x r prior covariance matrices 
-on the regression coefficients.}
+\item{w0}{K-vector with prior mixture weights, each associated with
+the respective covariance matrix in \code{S0}.}
 
-\item{w0}{a K-vector with prior mixture weights, each associated with the 
-respective covariance matrix in \code{S0}.}
+\item{V}{r x r residual covariance matrix.}
 
-\item{mu_init}{a p x r matrix of initial estimates for the regression coefficients.}
+\item{mu1_init}{p x r matrix of initial estimates of the posterior
+mean regression coefficients. These should be on the same scale as
+the X provided. If \code{standardize=TRUE}, mu1_init will be scaled
+appropriately after standardizing X.}
 
-\item{tol}{convergence tolerance.}
+\item{tol}{Convergence tolerance.}
 
-\item{max_iter}{maximum number of iterations for the optimization algorithm.}
+\item{convergence_criterion}{Criterion to use for convergence check.}
 
-\item{update_w0}{if TRUE, prior weights are updated.}
+\item{max_iter}{Maximum number of iterations for the optimization
+algorithm.}
 
-\item{compute_ELBO}{if TRUE, ELBO is computed.}
+\item{update_w0}{If \code{TRUE}, prior weights are updated.}
 
-\item{standardize}{if TRUE, X is standardized using the sample means and sample standard deviations. 
-Standardizing X allows a faster implementation, but the prior has a different interpretation.
-Coefficients and covariances are returned on the original scale.}
+\item{update_w0_method}{Method to update prior weights.}
 
-\item{verbose}{if TRUE, some information is printed to screen at each iteration.}
+\item{w0_threshold}{Drop mixture components with weight less than this value.
+Components are dropped at each iteration after 15 initial iterations.
+This is done to prevent from dropping some poetentially importnat 
+components prematurely.}
+
+\item{compute_ELBO}{If \code{TRUE}, ELBO is computed.}
+
+\item{standardize}{If \code{TRUE}, X is "standardized" using the
+sample means and sample standard deviations. Standardizing X
+allows a faster implementation, but the prior has a different
+interpretation. Coefficients and covariances are returned on the
+original scale.}
+
+\item{verbose}{If \code{TRUE}, some information about the
+algorithm's process is printed at each iteration.}
+
+\item{update_V}{if \code{TRUE}, residual covariance is updated.}
+
+\item{update_V_method}{Method to update residual covariance. So far,
+"full" and "diagonal" are supported}
+
+\item{version}{Whether to use R or C++ code to perform the
+coordinate ascent updates.}
+
+\item{e}{A small number to add to the diagonal elements of the
+prior matrices to improve numerical stability of the updates.}
+
+\item{ca_update_order}{The order with which coordinates are updated.
+So far, "consecutive", "decreasing_logBF", "increasing_logBF" are supported.}
 }
 \value{
-a mr.mash fit, which is a list with some or all of the following elements\cr
-\item{mu1}{a p x r matrix of posterior means for the regression coeffcients.}
-\item{S1}{a r x r x p array of posterior covariances for the regression coeffcients.}
-\item{w1}{a p x K matrix of posterior assignment probabilities to the mixture components.}
-\item{intercept}{an r-vector with the estimated intercepts.}
-\item{fitted}{an n x r matrix of fitted values.}
-\item{ELBO}{the Evidence Lower Bound at convergence.}
-\item{progress}{A data.frame including information regarding convergence criteria at each iteration.}
+A mr.mash fit, stored as a list with some or all of the
+following elements:
+
+\item{mu1}{p x r matrix of posterior means for the regression
+  coeffcients.}
+
+\item{S1}{r x r x p array of posterior covariances for the
+  regression coeffcients.}
+
+\item{w1}{p x K matrix of posterior assignment probabilities to the
+  mixture components.}
+  
+\item{V}{r x r residual covariance matrix}
+
+\item{w0}{K-vector with (updated, if \code{update_w0=TRUE}) prior mixture weights, each associated with
+  the respective covariance matrix in \code{S0}}.
+  
+\item{S0}{r x r x K array of prior covariance matrices
+  on the regression coefficients}.
+
+\item{intercept}{r-vector containing posterior mean estimate of the
+  intercept.}
+
+\item{fitted}{n x r matrix of fitted values.}
+
+\item{ELBO}{Evidence Lower Bound (ELBO) at last iteration.}
+
+\item{progress}{A data frame including information regarding
+  convergence criteria at each iteration.}
+  
+\item{converged}{\code{TRUE} or \code{FALSE}, indicating whether
+  the optimization algorithm converged to a solution within the chosen tolerance
+  level.}
 }
 \description{
-Multiple Regression with Multivariate Adaptive Shrinkage.
-}
-\details{
-Performs multivariate multiple regression with mixture-of-normals prior.
+Performs multivariate multiple regression with
+  mixture-of-normals prior.
 }
 \examples{
 ###Set seed
@@ -86,12 +147,15 @@ B  <- matrix(c(-2, -2,
 X <- matrix(rnorm(n*p), nrow=n, ncol=p)
 X <- scale(X, center=TRUE, scale=FALSE)
 
-##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix and V is the residual covariance  
+##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix
+##and V is the residual covariance  
 Y <- mr.mash.alpha:::sim_mvr(X, B, V)
 
-###Specify the mixture weights and covariance matrices for the mixture-of-normals prior.
+###Specify the mixture weights and covariance matrices for the
+### mixture-of-normals prior.
 grid <- seq(1, 5)
-S0mix <- mr.mash.alpha:::compute_cov_canonical(ncol(Y), singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=TRUE)
+S0mix <- mr.mash.alpha:::compute_cov_canonical(ncol(Y), singletons=TRUE,
+           hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=TRUE)
 w0    <- rep(1/(length(S0mix)), length(S0mix))
 
 ###Split the data in training and test sets
@@ -104,15 +168,19 @@ Xtest <- X[c(1:10), ]
 V_est <- cov(Ytrain)
 
 ###Fit mr.mash
-fit <- mr.mash(Ytrain, Xtrain, V_est, S0mix, w0, tol=1e-8, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE)
+fit <- mr.mash(Xtrain, Ytrain, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE,
+               update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE,
+               verbose=TRUE, update_V=TRUE, version="R", e=1e-8)
 
 # Compare the "fitted" values of Y against the true Y in the training set.
-plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",ylab = "fitted")
+plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",
+     ylab = "fitted")
 abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 
 # Predict the multivariate outcomes in the test set using the fitted model.
 Ytest_est <- predict(fit,Xtest)
-plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",ylab = "predicted")
+plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",
+     ylab = "predicted")
 abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 
 }

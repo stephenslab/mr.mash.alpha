@@ -12,7 +12,7 @@
 \item{newx}{a new value for X at which to do predictions.}
 }
 \value{
-a matrix of predicted values.
+Matrix of predicted values.
 }
 \description{
 Predict future observations from mr.mash fit.

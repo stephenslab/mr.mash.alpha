@@ -28,13 +28,9 @@ norm2 <- function (x)
 tr <- function(x)
   sum(diag(x))
 
-# Should be the same as mvtnorm::dmvnorm(x,mu,S,log = TRUE)
-#
-#' @importFrom Rcpp evalCpp
-#' @useDynLib mr.mash.alpha
-#' 
-dmvnorm <- function (x, mu, S)
-  dmvnorm_rcpp(x,mu,S)
+# Add b[i] to each column A[,i].
+addtocols <- function (A, b)
+  t(t(A) + b)
 
 ###Function to simulate from MN distribution
 #
@@ -44,7 +40,7 @@ sim_mvr <- function (X, B, V) {
   
   # Get the number of samples (n) and conditions (m).
   n <- nrow(X)
-  R <- ncol(B)
+  r <- ncol(B)
   
   # Simulate the responses, Y.
   M <- X%*%B
@@ -55,9 +51,41 @@ sim_mvr <- function (X, B, V) {
   return(Y)
 }
 
+###Function to compute canonical covariance matrices
+create_cov_canonical <- function(r, singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 1)){
+  mats <- list()
+  
+  ###Singleton matrices
+  if((singletons)){
+    for(i in 1:r){
+      mats[[i]] <- matrix(0, nrow=r, ncol=r)
+      mats[[i]][i, i] <- 1
+    }
+    
+    ###Heterogeneity matrices
+    if(!is.null(hetgrid)){
+      for(j in 1:length(hetgrid)){
+        mats[[r+j]] <- matrix(1, nrow=r, ncol=r)
+        mats[[r+j]][lower.tri(mats[[r+j]], diag = FALSE)] <- hetgrid[j]
+        mats[[r+j]][upper.tri(mats[[r+j]], diag = FALSE)] <- hetgrid[j]
+      }
+    }
+  } else {
+    ###Heterogeneity matrices
+    if(!is.null(hetgrid)){
+      for(j in 1:length(hetgrid)){
+        mats[[j]] <- matrix(1, nrow=r, ncol=r)
+        mats[[j]][lower.tri(mats[[j]], diag = FALSE)] <- hetgrid[j]
+        mats[[j]][upper.tri(mats[[j]], diag = FALSE)] <- hetgrid[j]
+      }
+    }
+  }
+  return(mats)
+}
+
 ###Function to compute canonical covariance matrices scaled by a grid 
 compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid, zeromat=TRUE){
-  S <- mmbr:::create_cov_canonical(ntraits, singletons, hetgrid)
+  S <- create_cov_canonical(ntraits, singletons, hetgrid)
   U <- list()
   t <- 0
   for(i in 1:length(S)){
@@ -71,95 +99,229 @@ compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid, zeromat=TR
   
   if(zeromat){
     zero_mat <- matrix(0, ntraits, ntraits)
-    zero_mat[upper.tri(zero_mat)] <- 1e-10
-    zero_mat[lower.tri(zero_mat)] <- 1e-10
+    #zero_mat[upper.tri(zero_mat)] <- 1e-10
+    #zero_mat[lower.tri(zero_mat)] <- 1e-10
     U[[paste0("S0_", length(U)+1)]] <- zero_mat
   }
   
   return(U)
 }
 
-###Update mixture weights
-update_weights <- function(x){
-  w <- colSums(x)
-  w <- w/sum(w)
-  return(w)
-}
-
-###Compute intermediate components of the ELBO
-compute_ELBO_terms <- function(var_part_ERSS, neg_KL, x_j, rbar_j, bfit, xtx, Vinv){
-  mu1_mat <- matrix(bfit$mu1, ncol=1)
-  # var_part_ERSS <- var_part_ERSS + (tr(Vinv%*%bfit$S1)*xtx)
-  # neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*tr(tcrossprod(Vinv, rbar_j)%*%tcrossprod(matrix(x_j, ncol=1), mu1_mat))+
-  #                                        tr(Vinv%*%(bfit$S1+tcrossprod(mu1_mat)))*xtx))
-  ##Equivalent to the above but more efficient
-  var_part_ERSS <- var_part_ERSS + (sum(Vinv*bfit$S1)*xtx)
-  neg_KL <- neg_KL + (bfit$logbf +0.5*(-2*sum(tcrossprod(Vinv, rbar_j)*t(tcrossprod(matrix(x_j, ncol=1), mu1_mat)))+
-                                         sum(Vinv*(bfit$S1+tcrossprod(mu1_mat)))*xtx))
-  
-  
-  return(list(var_part_ERSS=var_part_ERSS, neg_KL=neg_KL))
-}
-
-###Compute ELBO from intermediate components
-compute_ELBO_fun <- function(rbar, V, Vinv, ldetV, var_part_ERSS, neg_KL){
-  n <- nrow(rbar)
-  R <- ncol(rbar)
-  # ERSS <- tr(Vinv%*%(crossprod(rbar))) + var_part_ERSS
-  ERSS <- sum(Vinv*(crossprod(rbar))) + var_part_ERSS
-  ELBO <- -log(n)/2 - (n*R)/2*log(2*pi) - n/2 * ldetV - 0.5*ERSS + neg_KL
-  
-  return(ELBO)
-}
-
 ###Compute log-determinant from Cholesky decomposition
 chol2ldet <- function(R){
-  logdet <- log(prod(diag(R)))*2
-  
+  logdet <- 2*sum(log(diag(R)))
   return(logdet)
 }
 
-###Compute quantities needed when using scaled X
-precompute_quants_scaled_X <- function(n, V, S0){
-  ###Quantities that don't depend on S0
-  R <- chol(V)
-  S <- V/(n-1)
-  S_chol <- R/sqrt(n-1)
-  ldetS_chol <- chol2ldet(S_chol)
-  
-  ###Quantities that depend on S0
-  SplusS0_chol <- list()
-  S1 <- list()
-  ldetSplusS0_chol <- c()
-  for(i in 1:length(S0)){
-    SplusS0_chol[[i]] <- chol(S+S0[[i]])
-    ldetSplusS0_chol[i] <- chol2ldet(SplusS0_chol[[i]])
-    S1[[i]] <- S0[[i]]%*%backsolve(SplusS0_chol[[i]], forwardsolve(t(SplusS0_chol[[i]]), S))
+###Similar to base::simplify2array but returns appropriate output when r=1
+simplify2array_custom <- function (x, higher = TRUE) {
+  common.len <- unique(lengths(x))
+  if (common.len >= 1L){
+    n <- length(x)
+    r <- unlist(x, recursive = FALSE, use.names = FALSE)
+    if (higher && length(c.dim <- unique(lapply(x, dim))) == 
+        1 && is.numeric(c.dim <- c.dim[[1L]]) && prod(d <- c(c.dim, n)) == length(r)) {
+      iN1 <- is.null(n1 <- dimnames(x[[1L]]))
+      n2 <- names(x)
+      dnam <- if (!(iN1 && is.null(n2))) 
+        c(if (iN1) rep.int(list(n1), length(c.dim)) else n1, 
+          list(n2))
+      array(r, dim = d, dimnames = dnam)
+    }
+    else if (prod(d <- c(common.len, n)) == length(r)) 
+      array(r, dim = d, dimnames = if (!(is.null(n1 <- names(x[[1L]])) & 
+                                         is.null(n2 <- names(x)))) 
+        list(n1, n2))
+    else x
+  } else {
+    x
   }
-  
-  return(list(V_chol=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol, 
-              ldetS_chol=ldetS_chol, ldetSplusS0_chol=ldetSplusS0_chol))
 }
 
-###Compute quantities needed when using centered X
-precompute_quants_centered_X <- function(X, V, S0){
-  ###Quantities that don't depend on S0
-  #xtx <- diag(crossprod(X))
-  xtx <- colSums(X^2)
-  R <- chol(V)
-  Rtinv <- solve(t(R))
-  Rinv <- solve(R)
+###Add small number e to diagonal elements to a matrix 
+makePD <- function(S0, e){
+  S0_PD <- S0+(diag(nrow(S0))*e)
   
-  ###Quantities that depend on S0
-  U0 <- list()
-  d <- list()
-  Q <- list()
-  for(i in 1:length(S0)){
-    U0[[i]]  <- Rtinv %*% S0[[i]] %*% Rinv
-    out <- eigen(U0[[i]])
-    d[[i]]   <- out$values
-    Q[[i]]   <- out$vectors   
+  return(S0_PD)
+}
+
+###Precompute quantities in any case
+precompute_quants <- function(X, V, S0, standardize, version){
+  if(standardize){
+    n <- nrow(X)
+    xtx <- n-1
+    
+    ###Quantities that don't depend on S0
+    R <- chol(V)
+    S <- V/xtx
+    S_chol <- R/sqrt(xtx)
+    
+    ###Quantities that depend on S0
+    SplusS0_chol <- list()
+    S1 <- list()
+    for(i in 1:length(S0)){
+      SplusS0_chol[[i]] <- chol(S+S0[[i]])
+      S1[[i]] <- S0[[i]]%*%backsolve(SplusS0_chol[[i]], forwardsolve(t(SplusS0_chol[[i]]), S))
+    }
+    
+    if(version=="R"){
+      return(list(V_chol=R, S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))      
+    } else if(version=="Rcpp"){
+      xtx <- c(0, 0) ##Vector
+      d <- matrix(0, nrow=1, ncol=1)
+      QtimesR <- array(0, c(1, 1, 1))
+      
+      return(list(V_chol=R, S=S, S1=simplify2array_custom(S1), S_chol=S_chol, SplusS0_chol=simplify2array_custom(SplusS0_chol), 
+                  xtx=xtx, d=d, QtimesV_chol=QtimesR))
+    }
+    
+  } else {
+    ###Quantities that don't depend on S0
+    R <- chol(V)
+    #Rtinv <- solve(t(R))
+    #Rinv <- solve(R)
+    Rtinv <- forwardsolve(t(R), diag(nrow(R)))
+    Rinv <- backsolve(R, diag(nrow(R)))
+    
+    ###Quantities that depend on S0
+    d <- list()
+    QtimesR <- list()
+    for(i in 1:length(S0)){
+      U0  <- Rtinv %*% S0[[i]] %*% Rinv
+      out <- eigen(U0)
+      d[[i]]   <- out$values
+      QtimesR[[i]]   <- crossprod(out$vectors, R)   
+    }
+    
+    if(version=="R"){
+      return(list(V_chol=R, d=d, QtimesV_chol=QtimesR))
+    } else if(version=="Rcpp"){
+      S <- matrix(0, nrow=1, ncol=1)
+      S1 <- array(0, c(1, 1, 1))
+      S_chol <- matrix(0, nrow=1, ncol=1)
+      SplusS0_chol <- array(0, c(1, 1, 1))
+      
+      return(list(V_chol=R, d=simplify2array_custom(d), QtimesV_chol=simplify2array_custom(QtimesR), 
+                  S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))
+    }
+  }
+}
+
+###Filter out quantities corresponding to components that are dropped by w0_threshold
+filter_precomputed_quants <- function(precomp_quants, to_keep, standardize, version){
+  if(standardize){
+    if(version=="R"){
+      precomp_quants$SplusS0_chol <- precomp_quants$SplusS0_chol[to_keep]
+      precomp_quants$S1 <- precomp_quants$S1[to_keep]
+    } else if(version=="Rcpp"){
+      precomp_quants$SplusS0_chol <- precomp_quants$SplusS0_chol[, , to_keep]
+      precomp_quants$S1 <- precomp_quants$S1[, , to_keep]
+    }
+  } else {
+    if(version=="R"){
+      precomp_quants$d <- precomp_quants$d[to_keep]
+      precomp_quants$QtimesV_chol <- precomp_quants$QtimesV_chol[to_keep]
+    } else if(version=="Rcpp"){
+      precomp_quants$d <- precomp_quants$d[, to_keep]
+      precomp_quants$QtimesV_chol <- precomp_quants$QtimesV_chol[, , to_keep]
+    }
   }
   
-  return(list(xtx=xtx, V_chol=R, U0=U0, d=d, Q=Q))
+  return(precomp_quants)
+}
+
+###Compute variance part of the ERSS
+compute_var_part_ERSS <- function(var_part_ERSS, bfit, xtx){
+  var_part_ERSS <- var_part_ERSS + (bfit$S1*xtx)
+  
+  return(var_part_ERSS)
+}
+
+###Rescale posterior mean and covariance of the regression coefficients when standardizing X
+rescale_post_mean_covar <- function(mu1, S1, sx){
+  p <- nrow(mu1)
+  r <- ncol(mu1)
+  
+  mu1_orig <- mu1/sx
+  
+  S1_orig <- array(0, c(r, r, p))
+  for(j in 1:p){
+    S1_orig[, , j] <- S1[, , j]/sx[j]^2
+  }
+  
+  return(list(mu1_orig=mu1_orig, S1_orig=S1_orig))
+}
+
+###Faster version of rescale_post_mean_covar()
+rescale_post_mean_covar_fast <- function(mu1, S1, sx){
+  rescale_post_mean_covar_rcpp(mu1, S1, sx)
+}
+  
+
+###Scale a matrix (similar to but faster than base::scale())
+#' @importFrom matrixStats colSds colMeans2
+#' 
+scale_fast <- function(M, scale=TRUE, na.rm=TRUE){
+  ##Check whether M is a matrix. If not, coerce into it. 
+  if(!is.matrix(M))
+    M <- as.matrix(M)
+  
+  ##Store dimnames
+  col_names <- colnames(M)
+  row_names <- rownames(M)
+  
+  ###Compute column means and sds
+  a <- colMeans2(M, na.rm=na.rm)
+  names(a) <- col_names
+  if(scale){  
+    b <- colSds(M, na.rm=na.rm)
+    if(any(b==0))
+      stop("Some column(s) have 0 standard deviation")
+  } else{
+    b <- rep(1, ncol(M))
+  }
+  names(b) <- col_names
+  
+  ###Scale
+  M <- scale_rcpp(M, a, b)
+  
+  ###Attach dimension names
+  colnames(M) <- col_names
+  rownames(M) <- row_names
+  
+  return(list(M=M, means=a, sds=b))
+}
+
+###Scale a matrix (similar to the above but does not use R to compute means and sds)
+scale_fast2 <- function(M, scale=TRUE, na.rm=TRUE){
+  ##Check whether M is a matrix. If not, coerce into it. 
+  if(!is.matrix(M))
+    M <- as.matrix(M)
+  
+  ##Store dimnames
+  col_names <- colnames(M)
+  row_names <- rownames(M)
+  
+  ###Scale
+  out <- scale2_rcpp(M, scale=scale, na_rm=na.rm)
+  means <- drop(out$means)
+  sds <- drop(out$sds)
+  M <- out$M
+  rm(out)
+  
+  ###Attach dimension names
+  colnames(M) <- col_names
+  rownames(M) <- row_names
+  names(means) <- col_names
+  names(sds) <- col_names
+  
+  return(list(M=M, means=means, sds=sds))
+}
+
+###Compute initial estimate of V
+compute_V_init <- function(X, Y, B){
+  R <- Y - X%*%B
+  V <- cov(R)
+  
+  return(V)
 }

@@ -1,6 +1,7 @@
-context("ELBO is non-decreasing over iterations")
+context("mixsqp mixture weight updates monotonically increase ELBO")
 
-test_that("ELBO does not decrease over iterations", {
+test_that(paste("ELBO does not decrease over iterations with mixsqp weights",
+                "updates"), {
   ###Set seed
   set.seed(123)
   
@@ -39,44 +40,45 @@ test_that("ELBO does not decrease over iterations", {
   
   ###Fit with current implementation (R version)
   capture.output(
-    fit <- mr.mash(X, Y, S0mix, w0, V_est,  update_w0=TRUE,
-                   update_w0_method="EM", compute_ELBO=TRUE, standardize=FALSE,
-                   verbose=FALSE, update_V=FALSE, version="R"))
+    fit <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
+                   update_w0_method="mixsqp", compute_ELBO=TRUE, 
+                   standardize=FALSE, verbose=FALSE, update_V=FALSE,
+                   version="R"))
   capture.output(
     fit_scaled <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
-                          update_w0_method="EM", compute_ELBO=TRUE, 
+                          update_w0_method="mixsqp", compute_ELBO=TRUE, 
                           standardize=TRUE, verbose=FALSE, update_V=FALSE,
                           version="R"))
   capture.output(
-    fit_V <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE, 
-                     update_w0_method="EM", compute_ELBO=TRUE, 
+    fit_V <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
+                     update_w0_method="mixsqp", compute_ELBO=TRUE, 
                      standardize=FALSE, verbose=FALSE, update_V=TRUE,
                      version="R"))
   capture.output(
     fit_scaled_V <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
-                            update_w0_method="EM", compute_ELBO=TRUE, 
+                            update_w0_method="mixsqp", compute_ELBO=TRUE, 
                             standardize=TRUE, verbose=FALSE, update_V=TRUE,
                             version="R"))
-  
+ 
   ###Fit with current implementation (Rcpp version)
   capture.output(
     fit_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
-                        update_w0_method="EM", compute_ELBO=TRUE, 
+                        update_w0_method="mixsqp", compute_ELBO=TRUE, 
                         standardize=FALSE, verbose=FALSE, update_V=FALSE,
                         version="Rcpp"))
   capture.output(
-    fit_scaled_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, tol=1e-8,
-                               update_w0=TRUE, update_w0_method="EM",
+    fit_scaled_rcpp <- mr.mash(X, Y, S0mix, w0, V_est,
+                               update_w0=TRUE, update_w0_method="mixsqp",
                                compute_ELBO=TRUE, standardize=TRUE,
                                verbose=FALSE, update_V=FALSE, version="Rcpp"))
   capture.output(
     fit_V_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
-                          update_w0_method="EM", compute_ELBO=TRUE, 
+                          update_w0_method="mixsqp", compute_ELBO=TRUE, 
                           standardize=FALSE, verbose=FALSE, update_V=TRUE,
                           version="Rcpp"))
   capture.output(
-    fit_scaled_V_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, 
-                                 update_w0=TRUE, update_w0_method="EM",
+    fit_scaled_V_rcpp <- mr.mash(X, Y, S0mix, w0, V_est,
+                                 update_w0=TRUE, update_w0_method="mixsqp",
                                  compute_ELBO=TRUE, standardize=TRUE,
                                  verbose=FALSE, update_V=TRUE, version="Rcpp"))
   
@@ -89,5 +91,6 @@ test_that("ELBO does not decrease over iterations", {
   expect_nondecreasing(fit_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
   expect_nondecreasing(fit_scaled_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
   expect_nondecreasing(fit_V_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
-  expect_nondecreasing(fit_scaled_V_rcpp$progress[, "ELBO"],tolerance=1e-10,scale=1)
+  expect_nondecreasing(fit_scaled_V_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  
 })

@@ -1,4 +1,4 @@
-context("Test Bayesian multivariate regression with centered x")
+context("Test Bayesian multivariate regression with centered X")
 
 test_that("bayes_mvr_mix and bayes_mvr_mix_centered_X return the same results", {
   ###Set seed
@@ -27,6 +27,7 @@ test_that("bayes_mvr_mix and bayes_mvr_mix_centered_X return the same results", 
   ###Specify the mixture weights and covariance matrices for the mixture-of-normals prior
   grid <- seq(1, 5)
   S0mix <- compute_cov_canonical(ncol(Y), singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=TRUE)
+  S0mix <- lapply(S0mix, makePD, e=1e-8)
   
   w0    <- rep(1/(length(S0mix)), length(S0mix))
   
@@ -34,8 +35,9 @@ test_that("bayes_mvr_mix and bayes_mvr_mix_centered_X return the same results", 
   fit_mix <- bayes_mvr_mix(X[, 1], Y, V, w0, S0mix)
   
   ###Fit BMR with transformed X
-  comps1 <- precompute_quants_centered_X(X, V, S0mix)
-  fit_mix_centered <- bayes_mvr_mix_centered_X(X[, 1], Y, V, w0, S0mix, comps1$xtx[1], comps1$V_chol, comps1$U0, comps1$d, comps1$Q)
+  comps1 <- precompute_quants(X, V, S0mix, standardize=FALSE, version="R")
+  comps1$xtx <- colSums(X^2)
+  fit_mix_centered <- bayes_mvr_mix_centered_X(X[, 1], Y, V, w0, S0mix, comps1$xtx[1], solve(V), comps1$V_chol, comps1$d, comps1$QtimesV_chol)
   
   ###Tests
   expect_equal(fit_mix$mu1, fit_mix_centered$mu1, tolerance = 1e-10, scale = 1)
