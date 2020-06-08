@@ -325,3 +325,43 @@ compute_V_init <- function(X, Y, B){
   
   return(V)
 }
+
+###Compute summary statistics from from univariate simple linear regression
+get_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.response=FALSE){
+  r <- ncol(Y)
+  p <- ncol(X)
+  B <- matrix(as.numeric(NA), nrow=p, ncol=r)
+  S <- matrix(as.numeric(NA), nrow=p, ncol=r)
+  
+  X <- scale(X, center=TRUE, scale=standardize) 
+  Y <- scale(Y, center=TRUE, scale=standardize.response)
+  
+  for(i in 1:r){
+    for(j in 1:p){
+      fit <- lm(Y[, i] ~ X[, j]-1)
+      B[j, i] <- coef(fit)
+      S[j, i] <- summary(fit)$coefficients[1, 2]
+    }
+  }
+  
+  return(list(Bhat=B, Shat=S))
+}
+
+###Compute grid of standard deviations from univariate simple linear regression
+###summary statistics
+autoselect.mixsd <- function(betahat, sebetahat, mult=2){
+  sigmaamin = min(sebetahat)/10
+  if (all(betahat^2 <= sebetahat^2)) {
+    sigmaamax = 8 * sigmaamin
+  }
+  else {
+    sigmaamax = 2 * sqrt(max(betahat^2 - sebetahat^2))
+  }
+  if (mult == 0) {
+    return(c(0, sigmaamax/2))
+  }
+  else {
+    npoint = ceiling(log2(sigmaamax/sigmaamin)/log2(mult))
+    return(mult^((-npoint):0) * sigmaamax)
+  }
+}
