@@ -159,7 +159,7 @@
 mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
                     mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
-                    w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
+                    w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, scaled_prior=FALSE,
                     update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
                     ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF")) {
 
@@ -249,6 +249,19 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     V <- compute_V_init(X, Y, mu1_init)
     if(update_V_method=="diagonal")
       V <- diag(diag(V))
+  }
+  
+  ###Compute V^{-0.5}, then scale Y, S0, V, and mu1_t by it, if scaled_prior
+  if(scaled_prior){
+    S0_orig <- S0
+    Y_orig <- Y
+    V_orig <- V
+    V_neghalf <- compute_V_neghalf(V_orig)
+    Y <- Y_orig %*% V_neghalf
+    for(k in 1:K)
+      S0[[k]] <- t(V_neghalf) %*% S0_orig[[k]] %*% V_neghalf
+    V <- diag(r)
+    mu1_init <- mu1_init %*% V_neghalf
   }
   
   ###Initilize mu1, S1, w1, delta_mu1, delta_ELBO, delta_conv, ELBO, iterator, and progress
@@ -481,6 +494,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
 
   # POST-PROCESSING STEPS
   # --------------------
+  ###Backtransform posterior means, if prior was scaled
+  if(scaled_prior)
+    mu1_t <- mu1_t %*% solve(V_neghalf)
+
   ###Compute the "fitted" values.
   fitted_vals <- addtocols(X %*% mu1_t, muy)
 

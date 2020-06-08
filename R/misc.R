@@ -325,3 +325,17 @@ compute_V_init <- function(X, Y, B){
   
   return(V)
 }
+
+###Compute V^{-0.5}
+compute_V_neghalf <- function(V){
+  eig <- eigen(V)
+  vectors <- eig$vectors
+  values <- eig$values
+  if(length(values)!=1)
+    D <- diag(1/sqrt(values))
+  else
+    D <- 1/sqrt(values)
+  A <- vectors %*% D %*% t(vectors)
+  
+  return(A)
+}
