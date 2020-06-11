@@ -8,27 +8,60 @@
 # tried to make the code as simple as possible, with an emphasis on
 # clarity. Very little effort has been devoted to making the
 # implementation efficient, or the code concise.
-mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100) {
+mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
+                            tol=1e-4, update_w0=TRUE, update_V=TRUE) {
+  
+  #Center X and Y
+  X <- scale(X, scale=FALSE)
+  Y <- scale(Y, scale=FALSE)
+  mux <- attr(X,"scaled:center")
+  muy <- attr(Y,"scaled:center")
   
   # This variable is used to keep track of the algorithm's progress.
   maxd <- rep(0,numiter)
 
   # Iterate the updates.
   for (i in 1:numiter) {
+    
+    cat("Iter", i, "\n")
 
     # Save the current estimates of the posterior means.
     B0 <- B
+    
+    # M-step, if not the first iteration
+    if(i!=1){
+      # Update mixture weights, if requested
+      if(update_w0){
+        w0 <- colSums(out$W1)
+        w0 <- w0/sum(w0)
+      }
       
-    # Update the posterior means of the regression coefficients.
-    B <- mr_mash_update_simple(X,Y,B,V,w0,S0)
+      # Update V, if requested
+      if(update_V){
+        R <- Y - X%*%B
+        ERSS <- crossprod(R) + out$var_part_ERSS
+        V <- ERSS/nrow(Y)
+      }
+    }
+      
+    # E-step: Update the posterior means of the regression coefficients.
+    out <- mr_mash_update_simple(X,Y,B,V,w0,S0)
+    B <- out$B 
     
     # Store the largest change in the posterior means.
-    maxd[i] <- abs(max(B - B0))
+    delta_B <- abs(max(B - B0))
+    maxd[i] <- delta_B
+    if(delta_B<tol)
+      break
   }
+  
+  # Compute the intercept
+  intercept <- drop(muy - mux %*% B)
 
   # Return the updated posterior means of the regression coefficicents
-  # (B) and the maximum change at each iteration (maxd).
-  return(list(B = B,maxd = maxd))
+  # (B), the maximum change at each iteration (maxd), the prior weights,
+  # and V.
+  return(list(intercept=intercept,B = B,maxd = maxd,w0=w0,V=V))
 }
 
 # Perform a single pass of the co-ordinate ascent updates for the
@@ -45,10 +78,18 @@ mr_mash_update_simple <- function (X, Y, B, V, w0, S0) {
 
   # Make sure B is a matrix.
   B <- as.matrix(B)
-    
-  # Get the number of predictors.
+  
+  # Get the number of predictors, responses, and mixture components.
   p <- ncol(X)
+  k <- length(w0)
+  r <- ncol(Y)
 
+  # Create matrix to store posterior assignment probabilities
+  W1 <- matrix(as.numeric(NA), p, k)
+  
+  # Initialize var_part_ERSS
+  var_part_ERSS <- matrix(0, r, r)
+  
   # Compute the expected residuals.
   R <- Y - X %*% B
 
@@ -66,12 +107,18 @@ mr_mash_update_simple <- function (X, Y, B, V, w0, S0) {
     b     <- out$mu1
     B[i,] <- b
     
+    # Update the posterior assignment probabilities for the ith predictor
+    W1[i,] <- out$w1
+    
+    # Update quantity needed to update V
+    var_part_ERSS <- var_part_ERSS + out$S1*sum(x^2)
+    
     # Update the expected residuals.
     R <- R - outer(x,b)
   }
 
   # Output the updated predictors.
-  return(drop(B))
+  return(list(B=drop(B), W1=W1, var_part_ERSS=var_part_ERSS))
 }
 
 # Compute quantities for a basic Bayesian multivariate regression with
