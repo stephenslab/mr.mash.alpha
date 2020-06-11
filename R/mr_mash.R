@@ -268,7 +268,6 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     progress$ELBO <- as.numeric(NA)
   }
 
-  
   ###Precompute quantities
   comps <- precompute_quants(X, V, S0, standardize, version)
   if(!standardize){
@@ -303,9 +302,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   
   cat("Done!\n")
 
-  # PERFORM ONE UPDATE
-  # ------------------
-  ###First iteration
+  # MAIN LOOP
+  # ---------
   cat("Fitting the optimization algorithm... ")
   if(verbose){
     cat("\n")
@@ -316,53 +314,6 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
       cat("\n")
   }
   
-  ##Start timing
-  time1 <- proc.time()
-  
-  ##Save current estimates.
-  mu1_old <- mu1_t   
-  
-  ##Set last value of ELBO as ELBO_old
-  ELBO_old <- ELBO
-  
-  ##Update iterator
-  t <- t+1
-  
-  ###Update variational parameters
-  ups <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
-                                ldetV=ldetV, w0=w0, S0=S0,
-                                precomp_quants=comps,
-                                compute_ELBO=compute_ELBO,
-                                standardize=standardize, 
-                                update_V=update_V, version=version,
-                                update_order=update_order)
-  mu1_t <- ups$mu1_t
-  S1_t  <- ups$S1_t
-  w1_t  <- ups$w1_t
-  if(compute_ELBO)
-    ELBO <- ups$ELBO
-  if(update_V)
-    var_part_ERSS <- ups$var_part_ERSS
-  
-  ##End timing
-  time2 <- proc.time()
-  
-  ##Update progress data.frame 
-  progress[t, c(1:3)] <- c(t, time2["elapsed"] - time1["elapsed"], max(delta_mu1))
-  if(compute_ELBO)
-    progress[t, c(4, 5)] <- c(delta_ELBO, ELBO)
-  
-  if(verbose){
-    ##Print out useful info
-    cat(sprintf("%4d      %9.2e", t, max(delta_mu1)))
-    if(compute_ELBO)
-      cat(sprintf("      %9.2e      %0.20e\n", delta_ELBO, ELBO))
-    else
-      cat("\n")
-  }
-  
-  # MAIN LOOP
-  # ---------
   ###Repeat the following until convergence, or until maximum number
   ###of iterations is reached.
   while(delta_conv>tol){
@@ -387,44 +338,46 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
 
     # M-STEP
     # ------
-    ##Update V if requested
-    if(update_V){
-      V     <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
-      if(update_V_method=="diagonal")
-        V <- diag(diag(V))
+    if(t != 1){
+      ##Update V if requested
+      if(update_V){
+        V     <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
+        if(update_V_method=="diagonal")
+          V <- diag(diag(V))
+        
+        #Recompute precomputed quantities after updating V
+        comps <- precompute_quants(X, V, S0, standardize, version)
+        if(!standardize)
+          comps$xtx <- xtx
+        if(compute_ELBO || !standardize)
+          Vinv <- chol2inv(comps$V_chol)
+        if(compute_ELBO)
+          ldetV <- chol2ldet(comps$V_chol)
+      }
       
-      #Recompute precomputed quantities after updating V
-      comps <- precompute_quants(X, V, S0, standardize, version)
-      if(!standardize)
-        comps$xtx <- xtx
-      if(compute_ELBO || !standardize)
-        Vinv <- chol2inv(comps$V_chol)
-      if(compute_ELBO)
-        ldetV <- chol2ldet(comps$V_chol)
+      ##Update w0 if requested
+      if(update_w0){
+        if(update_w0_method=="EM")
+          w0 <- update_weights_em(w1_t)
+        else if(update_w0_method=="mixsqp"){
+          w0   <- update_weights_mixsqp(X=X, Y=Y, mu1=mu1_t, V=V, Vinv=Vinv,
+                                        ldetV=ldetV, w0old=w0, S0=S0,
+                                        precomp_quants=comps,
+                                        standardize=standardize,
+                                        version=version, update_order=update_order)$w0
+        }
+        
+        #Drop components with mixture weight <= w0_threshold
+        if(t>15 && any(w0 < w0_threshold)){
+          to_keep <- which(w0 >= w0_threshold)
+          w0 <- w0[to_keep]
+          w0 <- w0/sum(w0)
+          S0 <- S0[to_keep]
+          comps <- filter_precomputed_quants(comps, to_keep, standardize, version)
+        }
+      }
     }
     
-    ##Update w0 if requested
-    if(update_w0){
-      if(update_w0_method=="EM")
-        w0 <- update_weights_em(w1_t)
-      else if(update_w0_method=="mixsqp"){
-        w0   <- update_weights_mixsqp(X=X, Y=Y, mu1=mu1_t, V=V, Vinv=Vinv,
-                                      ldetV=ldetV, w0old=w0, S0=S0,
-                                      precomp_quants=comps,
-                                      standardize=standardize,
-                                      version=version, update_order=update_order)$w0
-      }
-      
-      #Drop components with mixture weight <= w0_threshold
-      if(t>15 && any(w0 < w0_threshold)){
-        to_keep <- which(w0 >= w0_threshold)
-        w0 <- w0[to_keep]
-        w0 <- w0/sum(w0)
-        S0 <- S0[to_keep]
-        comps <- filter_precomputed_quants(comps, to_keep, standardize, version)
-      }
-    }
-
     # E-STEP
     # ------
     ###Update variational parameters
