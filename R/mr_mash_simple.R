@@ -9,7 +9,8 @@
 # clarity. Very little effort has been devoted to making the
 # implementation efficient, or the code concise.
 mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
-                            tol=1e-4, update_w0=TRUE, update_V=TRUE) {
+                            tol=1e-4, update_w0=TRUE, update_V=TRUE,
+                            verbose=FALSE) {
   
   #Center X and Y
   X <- scale(X, scale=FALSE)
@@ -22,8 +23,6 @@ mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
 
   # Iterate the updates.
   for (i in 1:numiter) {
-    
-    cat("Iter", i, "\n")
 
     # Save the current estimates of the posterior means.
     B0 <- B
@@ -51,6 +50,12 @@ mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
     # Store the largest change in the posterior means.
     delta_B <- abs(max(B - B0))
     maxd[i] <- delta_B
+    
+    # Print out some info, if requested
+    if(verbose)
+      cat("Iter:", i, "    max_deltaB:", delta_B, "\n")
+    
+    # Break if convergence is reached
     if(delta_B<tol)
       break
   }
