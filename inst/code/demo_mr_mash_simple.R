@@ -30,11 +30,13 @@ S0 <- list(k1 = rbind(c(3,0),
            k3 = rbind(c(6,3.5),
                       c(3.5,4)),
            k4 = rbind(c(5,0),
+                      c(0,0)),
+           k5 = rbind(c(0,0),
                       c(0,0)))
 
 # The mixture weights in the mixture-of-normals prior on the
 # regression coefficients.
-w0 <- c(0.1,0.6,0.2,0.1)
+w0 <- c(0.1,0.2,0.2,0.1,0.4)
 k  <- length(w0)
 
 # SIMULATE DATA
@@ -47,13 +49,12 @@ X <- scale(X,scale = FALSE)
 # package appears to be much faster than rmatrixnorm from the
 # MixMatrix package.
 Y <- matrix.normal(X %*% B,diag(n),V)
-Y <- scale(Y,scale = FALSE)
 
 # FIT MR-MASH MODEL
 # -----------------
 # Run 20 co-ordinate ascent updates.
 B0  <- matrix(0,p,r)
-fit <- mr_mash_simple(X,Y,V,S0,w0,B0,20)
+fit <- mr_mash_simple(X,Y,V,S0,w0,B0,20,update_w0=TRUE,update_V=FALSE)
 
 # Compare the posterior mean estimates of the regression coefficients
 # against the coefficients used to simulate the data.
