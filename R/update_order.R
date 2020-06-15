@@ -1,5 +1,5 @@
 ###Compute logbf from Bayesian multivariate simple regression with mixture prior
-compute_logbf_R <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize){
+compute_logbf_R <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, eps){
   p <- ncol(X)
   logbf <- rep(0, p)
   
@@ -7,11 +7,11 @@ compute_logbf_R <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize){
     #Run Bayesian SLR
     if(standardize){
       bfit <- bayes_mvr_mix_standardized_X(X[, j], Y, w0, S0, precomp_quants$S, precomp_quants$S1, 
-                                           precomp_quants$SplusS0_chol, precomp_quants$S_chol)      
+                                           precomp_quants$SplusS0_chol, precomp_quants$S_chol, eps)      
     } else {
       bfit <- bayes_mvr_mix_centered_X(X[, j], Y, V, w0, S0, precomp_quants$xtx[j], Vinv, 
                                        precomp_quants$V_chol, precomp_quants$d, 
-                                       precomp_quants$QtimesV_chol)
+                                       precomp_quants$QtimesV_chol, eps)
     }
     
     logbf[j] <- bfit$logbf
@@ -21,11 +21,11 @@ compute_logbf_R <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize){
 }
 
 ###Compute rank of logbf from Bayesian multivariate simple regression with mixture prior
-compute_rank_variables_BFmix <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, version, decreasing){
+compute_rank_variables_BFmix <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, version, decreasing, eps){
   if(version=="R"){
-    logbfs <- compute_logbf_R(X, Y, V, Vinv, w0, S0, precomp_quants, standardize)
+    logbfs <- compute_logbf_R(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, eps)
   } else if(version=="Rcpp"){
-    logbfs <- compute_logbf_rcpp(X, Y, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, standardize)
+    logbfs <- compute_logbf_rcpp(X, Y, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, standardize, eps)
     logbfs <- drop(logbfs)
   }
   

@@ -97,7 +97,7 @@ bayes_mvr_ridge_centered_X <- function (V, b, S, S0, xtx, Vinv, V_chol, S_chol, 
 # (w1), the posterior mean of the coefficients given that all the
 # coefficients are not nonzero (mu1), and the posterior covariance of
 # the coefficients given that all the coefficients are not zero (S1).
-bayes_mvr_mix <- function (x, Y, V, w0, S0) {
+bayes_mvr_mix <- function (x, Y, V, w0, S0, eps) {
   
   # Get the number of variables (n) and the number of mixture
   # components (k).
@@ -118,7 +118,7 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
   # Compute the posterior assignment probabilities for the latent
   # indicator variable.
   logbf <- sapply(out,function (x) x$logbf)
-  w1    <- softmax(logbf + log(w0))
+  w1    <- softmax(logbf + log(w0 + eps))
   
   # Compute the posterior mean (mu1_mix) and covariance (S1_mix) of the
   # regression coefficients.
@@ -157,7 +157,7 @@ bayes_mvr_mix <- function (x, Y, V, w0, S0) {
 # (w1), the posterior mean of the coefficients given that all the
 # coefficients are not nonzero (mu1), and the posterior covariance of
 # the coefficients given that all the coefficients are not zero (S1).
-bayes_mvr_mix_standardized_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol) {
+bayes_mvr_mix_standardized_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_chol, eps) {
   
   
   # Get the number of conditions (r), the number of mixture
@@ -183,7 +183,7 @@ bayes_mvr_mix_standardized_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_c
   # Compute the posterior assignment probabilities for the latent
   # indicator variable.
   logbf <- sapply(out,function (x) x$logbf)
-  w1    <- softmax(logbf + log(w0))
+  w1    <- softmax(logbf + log(w0 + eps))
   
   # Compute the posterior mean (mu1_mix) and covariance (S1_mix) of the
   # regression coefficients.
@@ -222,7 +222,7 @@ bayes_mvr_mix_standardized_X <- function (x, Y, w0, S0, S, S1, SplusS0_chol, S_c
 # (w1), the posterior mean of the coefficients given that all the
 # coefficients are not nonzero (mu1), and the posterior covariance of
 # the coefficients given that all the coefficients are not zero (S1).
-bayes_mvr_mix_centered_X <- function (x, Y, V, w0, S0, xtx, Vinv, V_chol, d, QtimesV_chol) {
+bayes_mvr_mix_centered_X <- function (x, Y, V, w0, S0, xtx, Vinv, V_chol, d, QtimesV_chol, eps) {
   
   # Get the number of variables (n) and the number of mixture
   # components (k).
@@ -250,7 +250,7 @@ bayes_mvr_mix_centered_X <- function (x, Y, V, w0, S0, xtx, Vinv, V_chol, d, Qti
   # Compute the posterior assignment probabilities for the latent
   # indicator variable.
   logbf <- sapply(out,function (x) x$logbf)
-  w1    <- softmax(logbf + log(w0))
+  w1    <- softmax(logbf + log(w0 + eps))
   
   # Compute the posterior mean (mu1_mix) and covariance (S1_mix) of the
   # regression coefficients.

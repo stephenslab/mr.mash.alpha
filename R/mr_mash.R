@@ -267,6 +267,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     progress$ELBO_diff <- as.numeric(NA)
     progress$ELBO <- as.numeric(NA)
   }
+  
+  ###Set eps
+  eps <- .Machine$double.eps
 
   ###Precompute quantities
   comps <- precompute_quants(X, V, S0, standardize, version)
@@ -295,9 +298,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   if(ca_update_order=="consecutive"){
     update_order <- 1:p
   } else if(ca_update_order=="decreasing_logBF"){
-    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, decreasing=TRUE)
+    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, decreasing=TRUE, eps)
   } else if(ca_update_order=="increasing_logBF"){
-    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, decreasing=FALSE)
+    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, decreasing=FALSE, eps)
   }
   
   cat("Done!\n")
@@ -338,7 +341,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
 
     # M-STEP
     # ------
-    if(t != 1){
+    if(t > 1){
       ##Update V if requested
       if(update_V){
         V     <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
@@ -364,7 +367,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                                         ldetV=ldetV, w0old=w0, S0=S0,
                                         precomp_quants=comps,
                                         standardize=standardize,
-                                        version=version, update_order=update_order)$w0
+                                        version=version, update_order=update_order, eps=eps)$w0
         }
         
         #Drop components with mixture weight <= w0_threshold
@@ -387,7 +390,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                                   compute_ELBO=compute_ELBO,
                                   standardize=standardize,
                                   update_V=update_V, version=version, 
-                                  update_order=update_order)
+                                  update_order=update_order, eps=eps)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t
