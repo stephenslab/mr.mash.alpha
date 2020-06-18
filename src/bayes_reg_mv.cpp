@@ -125,7 +125,7 @@ double bayes_mvr_ridge_centered_X (const mat& V, const vec& b, const mat& S,
 double bayes_mvr_mix_standardized_X (const vec& x, const mat& Y, const vec& w0,
                                const cube& S0, const mat& S, const cube& S1,
                                const cube& SplusS0_chol, const mat& S_chol,
-                               vec& mu1_mix, mat& S1_mix, vec& w1) {
+                               double eps, vec& mu1_mix, mat& S1_mix, vec& w1) {
   unsigned int k = w0.n_elem;
   unsigned int r = Y.n_cols;
   unsigned int n = Y.n_rows;
@@ -146,7 +146,7 @@ double bayes_mvr_mix_standardized_X (const vec& x, const mat& Y, const vec& w0,
   
   // Compute the posterior assignment probabilities for the latent
   // indicator variable.
-  logbfmix += log(w0);
+  logbfmix += log(w0 + eps);
   w1 = logbfmix;
   softmax(w1);
   
@@ -172,8 +172,8 @@ double bayes_mvr_mix_standardized_X (const vec& x, const mat& Y, const vec& w0,
 double bayes_mvr_mix_centered_X (const vec& x, const mat& Y, const mat& V,
                                  const vec& w0, const cube& S0, double xtx, 
                                  const mat& Vinv, const mat& V_chol,
-                                 const mat& d, const cube& QtimesV_chol, vec& mu1_mix,
-                                 mat& S1_mix, vec& w1) {
+                                 const mat& d, const cube& QtimesV_chol, double eps,
+                                 vec& mu1_mix, mat& S1_mix, vec& w1) {
   unsigned int k = w0.n_elem;
   unsigned int r = Y.n_cols;
   
@@ -200,7 +200,7 @@ double bayes_mvr_mix_centered_X (const vec& x, const mat& Y, const mat& V,
   
   // Compute the posterior assignment probabilities for the latent
   // indicator variable.
-  logbfmix += log(w0);
+  logbfmix += log(w0 + eps);
   w1 = logbfmix;
   softmax(w1);
   

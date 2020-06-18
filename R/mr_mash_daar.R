@@ -4,7 +4,7 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                          mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4,
                          max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                          compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
-                         update_V=FALSE, version=c("Rcpp", "R"), e=1e-8,
+                         update_V=FALSE, version=c("Rcpp", "R"), e=1e-8, convergence_criterion=c("params", "ELBO"),
                          ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
                          mon_tol = 0.01, kappa = 20, alpha = 1.1) {
   
@@ -13,6 +13,14 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   
   # CHECK AND PROCESS INPUTS
   # ------------------------
+  ###Select method to check for convergence (if not specified by user, params 
+  ###will be used)
+  convergence_criterion <- match.arg(convergence_criterion)
+  if(convergence_criterion=="params")
+    convtype <- "params"
+  else if(convergence_criterion=="ELBO")
+    convtype <- "objfn"
+  
   ###Select method to update the weights (if not specified by user, EM
   ###will be used)
   update_w0_method <- match.arg(update_w0_method)
@@ -142,7 +150,7 @@ mr.mash.daar <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                    X=X, Y=Y, V=V, Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, precomp_quants=comps, compute_ELBO=compute_ELBO, 
                    standardize=standardize, update_V=update_V, version=version, update_order=update_order,
                    update_w0=update_w0, update_w0_method=update_w0_method, xtx=xtx, env=mr_mash_daar_env,
-                   control = list(maxiter = max_iter, order = 10, tol = tol,
+                   control = list(maxiter = max_iter, order = 10, tol = tol, convtype=convtype, 
                                     mon.tol = mon_tol, kappa = kappa, alpha = alpha))
   params_t <- out_daar$par
   out_daar$par <- NULL

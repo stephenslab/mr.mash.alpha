@@ -1,7 +1,7 @@
 ###Update variational parameters, expected residuals, and ELBO components with or without scaling X
 inner_loop_general_R <- function(X, Rbar, mu1, V, Vinv, w0, S0, ###note: V is only needed when not scaling X
                                precomp_quants, standardize, compute_ELBO, update_V,
-                               update_order){
+                               update_order, eps){
   ###Create variables to store quantities
   n <- nrow(Rbar)
   r <- ncol(Rbar)
@@ -22,11 +22,11 @@ inner_loop_general_R <- function(X, Rbar, mu1, V, Vinv, w0, S0, ###note: V is on
     #Run Bayesian SLR
     if(standardize){
       bfit <- bayes_mvr_mix_standardized_X(X[, j], Rbar_j, w0, S0, precomp_quants$S, precomp_quants$S1, 
-                                     precomp_quants$SplusS0_chol, precomp_quants$S_chol)      
+                                     precomp_quants$SplusS0_chol, precomp_quants$S_chol, eps)      
     } else {
       bfit <- bayes_mvr_mix_centered_X(X[, j], Rbar_j, V, w0, S0, precomp_quants$xtx[j], Vinv, 
                                           precomp_quants$V_chol, precomp_quants$d, 
-                                          precomp_quants$QtimesV_chol)
+                                          precomp_quants$QtimesV_chol, eps)
     }
     
     #Update variational parameters
@@ -78,10 +78,10 @@ inner_loop_general_R <- function(X, Rbar, mu1, V, Vinv, w0, S0, ###note: V is on
 #' @useDynLib mr.mash.alpha
 #' 
 inner_loop_general_Rcpp <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
-                                    standardize, compute_ELBO, update_V, update_order){
+                                    standardize, compute_ELBO, update_V, update_order, eps){
   
   out <- inner_loop_general_rcpp(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
-                                 standardize, compute_ELBO, update_V, update_order)
+                                 standardize, compute_ELBO, update_V, update_order, eps)
   
   ###Return output
   if(compute_ELBO && update_V){
@@ -100,14 +100,14 @@ inner_loop_general_Rcpp <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quant
 ###Wrapper of the inner loop with R or Rcpp
 inner_loop_general <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
                                standardize, compute_ELBO, update_V, version,
-                               update_order){
+                               update_order, eps){
   if(version=="R"){
     out <- inner_loop_general_R(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
-                                standardize, compute_ELBO, update_V, update_order)
+                                standardize, compute_ELBO, update_V, update_order, eps)
   } else if(version=="Rcpp"){
     update_order <- as.integer(update_order-1)
     out <- inner_loop_general_Rcpp(X, Rbar, mu1, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, 
-                                   standardize, compute_ELBO, update_V, update_order)
+                                   standardize, compute_ELBO, update_V, update_order, eps)
   }
   
   return(out)
@@ -117,7 +117,7 @@ inner_loop_general <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants,
 ###Perform one iteration of the outer loop with or without scaling X
 mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
                                    precomp_quants, compute_ELBO, standardize, 
-                                   update_V, version, update_order){
+                                   update_V, version, update_order, eps){
   ##Compute expected residuals
   Rbar <- Y - X%*%mu1_t
   
@@ -125,7 +125,7 @@ mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
   updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
                                 precomp_quants=precomp_quants, standardize=standardize,
                                 compute_ELBO=compute_ELBO, update_V=update_V, version=version,
-                                update_order=update_order)   
+                                update_order=update_order, eps=eps)   
   mu1_t   <- updates$mu1
   S1_t    <- updates$S1
   w1_t    <- updates$w1
