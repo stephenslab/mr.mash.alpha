@@ -159,7 +159,7 @@
 mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
                     mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
-                    w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, scaled_prior=FALSE,
+                    w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE, scaled_prior=c("no", "diagonal", "full"),
                     update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
                     ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF")) {
 
@@ -179,6 +179,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ###Select method to update the residual covariance (if not specified by user, full
   ###will be used)
   update_V_method <- match.arg(update_V_method)
+  
+  ###Select method to scale the prior by the residual covariance (if not specified by user, diagonal
+  ###will be used)
+  scaled_prior <- match.arg(scaled_prior)
   
   ###Select version of the inner loop (if not specified by user, Rcpp
   ###will be used)
@@ -224,10 +228,6 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
 
   # PRE-PROCESSING STEPS
   # --------------------
-  ###Add number to diagonal elements of the prior matrices (improves
-  ###numerical stability)
-  S0 <- lapply(S0, makePD, e=e)
-  
   ###Center Y, and center (and, optionally, scale) X
   outY <- scale_fast2(Y, scale=FALSE)
   outX <- scale_fast2(X, scale=standardize)
@@ -252,7 +252,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   }
   
   ###Compute V^{-0.5}, then scale Y, S0, V, and mu1_t by it, if scaled_prior
-  if(scaled_prior){
+  if(scaled_prior=="full"){
     S0_orig <- S0
     Y_orig <- Y
     V_orig <- V
@@ -262,7 +262,15 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
       S0[[k]] <- t(V_neghalf) %*% S0_orig[[k]] %*% V_neghalf
     V <- diag(r)
     mu1_init <- mu1_init %*% V_neghalf
+  } else if(scaled_prior=="diagonal"){
+    S0_orig <- S0
+    for(k in 1:K)
+      S0[[k]] <- sqrt(V) %*% S0_orig[[k]] %*% sqrt(V)
   }
+  
+  ###Add number to diagonal elements of the prior matrices (improves
+  ###numerical stability)
+  S0 <- lapply(S0, makePD, e=e)
   
   ###Initilize mu1, S1, w1, delta_mu1, delta_ELBO, delta_conv, ELBO, iterator, and progress
   mu1_t <- mu1_init 
@@ -357,10 +365,17 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     if(t > 1){
       ##Update V if requested
       if(update_V){
-        V     <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
+        V <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
         if(update_V_method=="diagonal")
           V <- diag(diag(V))
         
+        #Rescale the prior, if scaled_prior
+        if(scaled_prior=="diagonal"){
+          for(k in 1:length(S0_orig))
+            S0[[k]] <- sqrt(V) %*% S0_orig[[k]] %*% sqrt(V)
+          S0 <- lapply(S0, makePD, e=e)
+        }
+
         #Recompute precomputed quantities after updating V
         comps <- precompute_quants(X, V, S0, standardize, version)
         if(!standardize)
@@ -389,6 +404,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
           w0 <- w0[to_keep]
           w0 <- w0/sum(w0)
           S0 <- S0[to_keep]
+          if(scaled_prior=="diagonal")
+            S0_orig <- S0_orig[to_keep]
           comps <- filter_precomputed_quants(comps, to_keep, standardize, version)
         }
       }
@@ -451,7 +468,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   # POST-PROCESSING STEPS
   # --------------------
   ###Backtransform posterior means, if prior was scaled
-  if(scaled_prior)
+  if(scaled_prior=="full")
     mu1_t <- mu1_t %*% solve(V_neghalf)
 
   ###Compute the "fitted" values.
