@@ -83,7 +83,7 @@ create_cov_canonical <- function(r, singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.7
   return(mats)
 }
 
- 
+#' @title Compute canonical covariance matrices for \code{mr.mash}.
 #' @description Function to compute canonical covariance matrices scaled by a grid.
 #' 
 #' @param r number of responses.
@@ -343,7 +343,9 @@ compute_V_init <- function(X, Y, B){
   return(V)
 }
 
-#' @description Function to compute summary statistics from univariate simple linear regression.
+#' @title Compute summary statistics from univariate simple linear regression.
+#' @description Function to compute regression coefficients and their standard errors
+#'   from univariate simple linear regression.
 #' 
 #' @param X n x p matrix of covariates.
 #' 
@@ -382,6 +384,7 @@ get_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.respons
   return(list(Bhat=B, Shat=S))
 }
 
+#' @title Compute a grid of standard deviations to scale the canonical covariance matrices.
 #' @description Function to compute a grid of standard deviations from univariate 
 #'   simple linear regression summary statistics
 #' 
