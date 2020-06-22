@@ -83,9 +83,26 @@ create_cov_canonical <- function(r, singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.7
   return(mats)
 }
 
-###Function to compute canonical covariance matrices scaled by a grid 
-compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid, zeromat=TRUE){
-  S <- create_cov_canonical(ntraits, singletons, hetgrid)
+ 
+#' @description Function to compute canonical covariance matrices scaled by a grid.
+#' 
+#' @param r number of responses.
+#' 
+#' @param singletons if \code{TRUE}, the response-specific effect matrices will be 
+#'        included.
+#'        
+#' @param hetgrid scalar or numeric vector of positive correlation [0, 1] of the effects
+#'        across responses.
+#'        
+#' @param grid scalar or numeric vector of variances of the effects.
+#' 
+#' @param zeromat if \code{TRUE}, the no-effect matrix will be included.
+#'
+#' @return A list containing the canonical covariance matrices.
+#'   
+#' @export
+compute_cov_canonical <- function(r, singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 1), grid, zeromat=TRUE){
+  S <- create_cov_canonical(r, singletons, hetgrid)
   U <- list()
   t <- 0
   for(i in 1:length(S)){
@@ -98,7 +115,7 @@ compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid, zeromat=TR
   names(U) <- paste0("S0_", seq(1, length(U)))
   
   if(zeromat){
-    zero_mat <- matrix(0, ntraits, ntraits)
+    zero_mat <- matrix(0, r, r)
     #zero_mat[upper.tri(zero_mat)] <- 1e-10
     #zero_mat[lower.tri(zero_mat)] <- 1e-10
     U[[paste0("S0_", length(U)+1)]] <- zero_mat
@@ -326,7 +343,25 @@ compute_V_init <- function(X, Y, B){
   return(V)
 }
 
-###Compute summary statistics from from univariate simple linear regression
+#' @description Function to compute summary statistics from univariate simple linear regression.
+#' 
+#' @param X n x p matrix of covariates.
+#' 
+#' @param Y n x r matrix of responses.
+#'        
+#' @param standardize If \code{TRUE}, X is "standardized" using the
+#'   sample means and sample standard deviations.
+#'        
+#' @param standardize If \code{TRUE}, Y is "standardized" using the
+#'   sample means and sample standard deviations.
+#'   
+#' @return A list with following elements:
+#' 
+#' \item{Bhat}{p x r matrix of the regression coeffcients.}
+#'
+#' \item{Shat}{p x r matrix of the standard errors for regression coeffcients.}
+#' 
+#' @export
 get_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.response=FALSE){
   r <- ncol(Y)
   p <- ncol(X)
@@ -347,15 +382,25 @@ get_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.respons
   return(list(Bhat=B, Shat=S))
 }
 
-###Compute grid of standard deviations from univariate simple linear regression
-###summary statistics
-autoselect.mixsd <- function(betahat, sebetahat, mult=2){
-  sigmaamin = min(sebetahat)/10
-  if (all(betahat^2 <= sebetahat^2)) {
+#' @description Function to compute a grid of standard deviations from univariate 
+#'   simple linear regression summary statistics
+#' 
+#' @param bhat a numeric vector of regression coefficients.
+#' 
+#' @param shat a numeric vector of of standard erros for the regression coefficients.
+#' 
+#' @param mult a scalar affecting how dense the resulting grid of standard deviations will be. 
+#'   
+#' @return A numeric vector of standard deviations.
+#' 
+#' @export
+autoselect.mixsd <- function(bhat, shat, mult=2){
+  sigmaamin = min(shat)/10
+  if (all(bhat^2 <= shat^2)) {
     sigmaamax = 8 * sigmaamin
   }
   else {
-    sigmaamax = 2 * sqrt(max(betahat^2 - sebetahat^2))
+    sigmaamax = 2 * sqrt(max(bhat^2 - shat^2))
   }
   if (mult == 0) {
     return(c(0, sigmaamax/2))
