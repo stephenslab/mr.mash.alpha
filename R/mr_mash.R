@@ -156,7 +156,7 @@
 #' 
 #' @export
 #' 
-mr.mash <- function(X, Y, S0, w0=NULL, V=NULL, 
+mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
                     mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                     w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
@@ -203,14 +203,12 @@ mr.mash <- function(X, Y, S0, w0=NULL, V=NULL,
   }
   if(!is.list(S0))
     stop("S0 must be a list.")
-  if(!is.null(w0)){
-    if(!is.vector(w0))
-      stop("w0 must be a vector.")
-    if(abs(sum(w0) - 1) > 1e-10)
-      stop("Elements of w0 must sum to 1.")
-    if(length(S0)!=length(w0))
-      stop("S0 and w0 must have the same length.")
-  }
+  if(!is.vector(w0))
+    stop("w0 must be a vector.")
+  if(abs(sum(w0) - 1) > 1e-10)
+    stop("Elements of w0 must sum to 1.")
+  if(length(S0)!=length(w0))
+    stop("S0 and w0 must have the same length.")
   if(!is.matrix(mu1_init))
     stop("mu1_init must be a matrix.")
   if(update_w0_method=="mixsqp" && !compute_ELBO)
@@ -303,16 +301,6 @@ mr.mash <- function(X, Y, S0, w0=NULL, V=NULL,
     update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, decreasing=TRUE, eps)
   } else if(ca_update_order=="increasing_logBF"){
     update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, decreasing=FALSE, eps)
-  }
-  
-  ###Initialize weights with mixsqp
-  if(is.null(w0)){
-    w0 <- compute_mixsqp_update(X, Y, V, S0, mu1_t, Vinv, comps, standardize, version, update_order)$w0
-    if(any(w0 < eps)){
-      to_replace <- which(w0 < eps)
-      w0[to_replace] <- 1e-4
-      w0 <- w0/sum(w0)
-    }
   }
   
   cat("Done!\n")
