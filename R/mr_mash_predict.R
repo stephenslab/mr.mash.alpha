@@ -16,3 +16,18 @@ predict.mr.mash <- function(object, newx){
     stop("X must not contain missing values.")
   return(with(object,addtocols(newx %*% mu1,intercept)))
 }
+
+#' @title Extract coefficients from mr.mash fit.
+#' 
+#' @param object a mr.mash fit.
+#' 
+#' @return (p+1) x r matrix of coefficients.
+#' 
+#' @export
+#' @export coef.mr.mash
+#' 
+coef.mr.mash <- function(object){
+  coeffs <- rbind(object$intercept, object$mu1)
+  rownames(coeffs)[1] <- "(Intercept)"
+  return(coeffs)
+}
