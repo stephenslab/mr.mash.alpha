@@ -354,7 +354,7 @@ compute_V_init <- function(X, Y, B){
 #' @param standardize If \code{TRUE}, X is "standardized" using the
 #'   sample means and sample standard deviations.
 #'        
-#' @param standardize If \code{TRUE}, Y is "standardized" using the
+#' @param standardize.response If \code{TRUE}, Y is "standardized" using the
 #'   sample means and sample standard deviations.
 #'   
 #' @return A list with following elements:

@@ -16,7 +16,10 @@ get_univariate_sumstats(
 
 \item{Y}{n x r matrix of responses.}
 
-\item{standardize}{If \code{TRUE}, Y is "standardized" using the
+\item{standardize}{If \code{TRUE}, X is "standardized" using the
+sample means and sample standard deviations.}
+
+\item{standardize.response}{If \code{TRUE}, Y is "standardized" using the
 sample means and sample standard deviations.}
 }
 \value{
