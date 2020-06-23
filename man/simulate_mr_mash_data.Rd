@@ -77,6 +77,6 @@ following elements:
   mixture components each causal effect comes.}
 }
 \description{
-Function to simulate data from MN_{nxr}(XB, I, V), where X \sim N_p(0, Gamma),
-  B \sim \sum_k w_k N_r(0, Sigma_k), with Gamma, w_k, Sigma_k, and V defined by the user.
+Function to simulate data from \eqn{MN_{nxr}(XB, I, V)}, where \eqn{X \sim N_p(0, Gamma)},
+  \eqn{B \sim \sum_k w_k N_r(0, Sigma_k)}, with \eqn{Gamma}, \eqn{w_k}, \eqn{Sigma_k}, and \eqn{V} defined by the user.
 }

@@ -1,7 +1,7 @@
 #' @title Simulate data to test \code{mr.mash}.
 #' 
-#' @description Function to simulate data from MN_{nxr}(XB, I, V), where X \sim N_p(0, Gamma),
-#'   B \sim \sum_k w_k N_r(0, Sigma_k), with Gamma, w_k, Sigma_k, and V defined by the user.
+#' @description Function to simulate data from \eqn{MN_{nxr}(XB, I, V)}, where \eqn{X \sim N_p(0, Gamma)},
+#'   \eqn{B \sim \sum_k w_k N_r(0, Sigma_k)}, with \eqn{Gamma}, \eqn{w_k}, \eqn{Sigma_k}, and \eqn{V} defined by the user.
 #'   
 #' @param n scalar indicating the number of samples.
 #' 
