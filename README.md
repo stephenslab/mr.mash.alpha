@@ -19,3 +19,5 @@ devtools::install_local()
 
 This command should automatically install all required packages if
 they are not installed already.
+
+[devtools]: https://github.com/r-lib/devtools
