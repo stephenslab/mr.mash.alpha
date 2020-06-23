@@ -1,24 +1,62 @@
-###Function to simulate data to test mr.mash
-## X ~ N_r(0, Gamma); B ~ N_r(0, Sigma) or B ~ \sum_K w_k N_r(0, Sigma_k);
-## Y ~ MN_nxr(XB, V)
-## where Gamma, Sigma (os Sigma_k), and V are chosen to achieve the desired correlations
-## and PVE. 
-##
-## Inputs are:
-## n=number of sample; p=number of variables; 
-## p_causal=number of causal variables; r=number of responses;
-## r_causal=number of responses in which causal variables have an effect;
-## intercepts=intercept value for each response; pve=per-response pve;
-## B_cor=scalar or numeric vector (one element for each mixture component) 
-## of positive correlation [0, 1] between causal effects;
-## B_scale=scalar or numeric vector (one element for each mixture component) of 
-## diagonal value for Sigma;
-## w=scalar or numeric vector (one element for each mixture component) of mixture 
-## proportion associated to each mixture component;
-## X_cor=positive correlation [0, 1] between predictors;
-## X_scale=diagonal value for Gamma;
-## V_cor=positive correlation [0, 1] between residuals;
-##
+#' @title Simulate data to test \code{mr.mash}.
+#' 
+#' @description Function to simulate data from MN_{nxr}(XB, I, V), where X \sim N_p(0, Gamma),
+#'   B \sim \sum_k w_k N_r(0, Sigma_k), with Gamma, w_k, Sigma_k, and V defined by the user.
+#'   
+#' @param n scalar indicating the number of samples.
+#' 
+#' @param p scalar indicating the number of variables.
+#' 
+#' @param p_causal scalar indicating the number of causal variables.
+#' 
+#' @param r scalar indicating the number of responses.
+#' 
+#' @param r_causal scalar indicating the number of responses in which causal variables have an effect.
+#' 
+#' @param intercepts numeric vector of intercept for each response.
+#' 
+#' @param pve per-response proportion of variance explained by the causal variables.
+#' 
+#' @param B_cor scalar or numeric vector (one element for each mixture component)
+#'   with positive correlation [0, 1] between causal effects.   
+#'   
+#' @param B_scale scalar or numeric vector (one element for each mixture component) with the 
+#'   diagonal value for Sigma_k;
+#'   
+#' @param w scalar or numeric vector (one element for each mixture component) with mixture 
+#'   proportions associated to each mixture component.
+#'   
+#' @param X_cor scalar indicating the positive correlation [0, 1] between variables.
+#' 
+#' @param X_scale scalar indicating the diagonal value for Gamma.
+#' 
+#' @param V_cor scalar indicating the positive correlation [0, 1] between residuals
+#' 
+#' @return A list with some or all of the
+#' following elements:
+#' 
+#' \item{X}{n x p matrix of variables.}
+#' 
+#' \item{Y}{n x r matrix of responses.}
+#' 
+#' \item{B}{p x r matrix of effects.}
+#' 
+#' \item{V}{r x r residual covariance matrix among responses.}
+#'   
+#' \item{Sigma}{list of r x r covariance matrices among the effects.} 
+#' 
+#' \item{Gamma}{p x p covariance matrix among the variables.}
+#' 
+#' \item{intercepts}{r-vector of intercept for each response.}
+#' 
+#' \item{causal_responses}{r_causal-vector of indexes indicating which responses have
+#'   causal effects.}
+#'   
+#' \item{causal_variables}{p_causal-vector of indexes indicating which variables are causal.}  
+#' 
+#' \item{causal_vars_to_mixture_comps}{p_causal-vector of indexes indicating from which
+#'   mixture components each causal effect comes.}
+#'   
 #' @importFrom mvtnorm rmvnorm
 #' @importFrom MBSP matrix.normal
 #' @importFrom matrixStats colVars
