@@ -69,7 +69,7 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(c(1:r)), inte
   ##Check that the inputs are correct
   if(length(intercepts)!=r)
     stop("intercepts must be of length equal to r.")
-  if(r_causal>r)
+  if(any(lapply(r_causal, length)>r))
     stop("r_causal cannot be greater than r.")
   if(!(length(B_cor)==length(B_scale) & length(w)==length(B_cor) & length(B_scale)==length(w)))
     stop("B_cor, B_scale, and w must have the same length.")
