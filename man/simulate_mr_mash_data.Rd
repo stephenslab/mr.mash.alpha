@@ -9,7 +9,7 @@ simulate_mr_mash_data(
   p,
   p_causal,
   r,
-  r_causal = r,
+  r_causal = list(c(1:r)),
   intercepts = rep(1, r),
   pve = 0.2,
   B_cor = 0,
@@ -29,7 +29,8 @@ simulate_mr_mash_data(
 
 \item{r}{scalar indicating the number of responses.}
 
-\item{r_causal}{scalar indicating the number of responses in which causal variables have an effect.}
+\item{r_causal}{a list of numeric vectors (one element for each mixture component) 
+indicating in which responses the causal variables have an effect.}
 
 \item{intercepts}{numeric vector of intercept for each response.}
 
@@ -68,8 +69,8 @@ following elements:
 
 \item{intercepts}{r-vector of intercept for each response.}
 
-\item{causal_responses}{r_causal-vector of indexes indicating which responses have
-  causal effects.}
+\item{causal_responses}{a list of numeric vectors of indexes indicating which responses have
+  causal effects for each mixture component.}
   
 \item{causal_variables}{p_causal-vector of indexes indicating which variables are causal.}  
 

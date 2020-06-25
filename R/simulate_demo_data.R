@@ -11,7 +11,8 @@
 #' 
 #' @param r scalar indicating the number of responses.
 #' 
-#' @param r_causal scalar indicating the number of responses in which causal variables have an effect.
+#' @param r_causal a list of numeric vectors (one element for each mixture component) 
+#'   indicating in which responses the causal variables have an effect.
 #' 
 #' @param intercepts numeric vector of intercept for each response.
 #' 
@@ -49,8 +50,8 @@
 #' 
 #' \item{intercepts}{r-vector of intercept for each response.}
 #' 
-#' \item{causal_responses}{r_causal-vector of indexes indicating which responses have
-#'   causal effects.}
+#' \item{causal_responses}{a list of numeric vectors of indexes indicating which responses have
+#'   causal effects for each mixture component.}
 #'   
 #' \item{causal_variables}{p_causal-vector of indexes indicating which variables are causal.}  
 #' 
@@ -62,7 +63,7 @@
 #' @importFrom matrixStats colVars
 #' 
 #' @export
-simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=r, intercepts=rep(1, r),
+simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(c(1:r)), intercepts=rep(1, r),
                                   pve=0.2, B_cor=0, B_scale=0.8, w=1,
                                   X_cor=0.5, X_scale=0.8, V_cor=0.25){
   ##Check that the inputs are correct
@@ -82,27 +83,27 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=r, intercepts=rep(
   ##covariance matrices across traits and w_k is the mixture proportion associated to Sigma_k
   Sigma <- vector("list", K)
   for(i in 1:K){
+    r_mix_length <- length(r_causal[[i]])
     Sigma_offdiag <- B_scale[i]*B_cor[i]
-    Sigma[[i]] <- matrix(Sigma_offdiag, nrow=r_causal, ncol=r_causal)
+    Sigma[[i]] <- matrix(Sigma_offdiag, nrow=r_mix_length, ncol=r_mix_length)
     diag(Sigma[[i]]) <- B_scale[i]
   }
   #Sample effects from a mixture of MVN distributions or a single MVN distribution
   if(K>1){
     mixcomps <- sample(x=1:K, size=p_causal, prob=w, replace=TRUE)
-    B_causal <- matrix(0, nrow=p_causal, ncol=r_causal)
+    B_causal <- matrix(0, nrow=p_causal, ncol=r)
     for(j in 1:p_causal){
       comp_to_use <- mixcomps[j]
-      B_causal[j, ] <- rmvnorm(n=1, mean=rep(0, r_causal), sigma=Sigma[[comp_to_use]])
+      r_causal_mix <- r_causal[[comp_to_use]]
+      B_causal[j, r_causal_mix] <- rmvnorm(n=1, mean=rep(0, length(r_causal_mix)), sigma=Sigma[[comp_to_use]])
     }
   } else {
-    B_causal <- rmvnorm(n=p_causal, mean=rep(0, r_causal), sigma=Sigma[[1]])
+    B_causal <- rmvnorm(n=p_causal, mean=rep(0, length(r_causal[[1]])), sigma=Sigma[[1]])
   }
   B <- matrix(0, ncol=r, nrow=p)
   causal_variables <- sample(x=(1:p), size=p_causal)
-  #causal_responses <- sample(x=(1:r), size=r_causal)
-  causal_responses <- 1:r_causal
-  B[causal_variables, causal_responses] <- B_causal
-
+  B[causal_variables, ] <- B_causal
+  
   ##Simulate X from N_r(0, Gamma) where Gamma is a given covariance matrix across variables
   Gamma_offdiag <- X_scale*X_cor
   Gamma <- matrix(Gamma_offdiag, nrow=p, ncol=p)
@@ -126,8 +127,11 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=r, intercepts=rep(
   Y <- matrix.normal(G + matrix(intercepts, n, r, byrow=TRUE), diag(n), V)
   
   ##Compile output
+  causal_responses <- r_causal
+  names(causal_responses) <- paste0("Component", 1:K)
+  names(Sigma) <- paste0("Component", 1:K)
   out <- list(X=X, Y=Y, B=B, V=V, Sigma=Sigma, Gamma=Gamma,
-              intercepts=intercepts, causal_responses=sort(causal_responses))
+              intercepts=intercepts, causal_responses=causal_responses)
   if(K>1){
     causal_variables_mixcomps <- cbind(causal_variables, mixcomps)
     causal_variables_mixcomps <- causal_variables_mixcomps[order(causal_variables_mixcomps[, 1]), ]
