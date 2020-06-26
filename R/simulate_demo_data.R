@@ -89,16 +89,18 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(c(1:r)), inte
     diag(Sigma[[i]]) <- B_scale[i]
   }
   #Sample effects from a mixture of MVN distributions or a single MVN distribution
+  B_causal <- matrix(0, nrow=p_causal, ncol=r)
   if(K>1){
     mixcomps <- sample(x=1:K, size=p_causal, prob=w, replace=TRUE)
-    B_causal <- matrix(0, nrow=p_causal, ncol=r)
     for(j in 1:p_causal){
       comp_to_use <- mixcomps[j]
       r_causal_mix <- r_causal[[comp_to_use]]
       B_causal[j, r_causal_mix] <- rmvnorm(n=1, mean=rep(0, length(r_causal_mix)), sigma=Sigma[[comp_to_use]])
     }
   } else {
-    B_causal <- rmvnorm(n=p_causal, mean=rep(0, length(r_causal[[1]])), sigma=Sigma[[1]])
+    r_causal_length <- length(r_causal[[1]])
+    r_causal_index <- r_causal[[1]]
+    B_causal[, r_causal_index] <- rmvnorm(n=p_causal, mean=rep(0, r_causal_length), sigma=Sigma[[1]])
   }
   B <- matrix(0, ncol=r, nrow=p)
   causal_variables <- sample(x=(1:p), size=p_causal)
