@@ -133,44 +133,27 @@ set.seed(123)
 ##Set parameters
 n  <- 100
 p <- 10
+p_causal <- 2
+r <- 5
 
-##Compute residual covariance
-V  <- rbind(c(1.0,0.2),
-            c(0.2,0.4))
+###Simulate data
+out <- simulate_mr_mash_data(n, p, p_causal, r, r_causal, intercepts = rep(1, r),
+                             pve=0.5, B_cor=1, B_scale=1, X_cor=0, X_scale=1, V_cor=0)
 
-##Set true effects
-B  <- matrix(c(-2, -2,
-               5, 5,
-               rep(0, (p-2)*2)), byrow=TRUE, ncol=2)
-
-##Simulate X
-X <- matrix(rnorm(n*p), nrow=n, ncol=p)
-X <- scale(X, center=TRUE, scale=FALSE)
-
-##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix
-##and V is the residual covariance  
-Y <- mr.mash.alpha:::sim_mvr(X, B, V)
-
-###Specify the mixture weights and covariance matrices for the
-### mixture-of-normals prior.
-grid <- seq(1, 5)
-S0mix <- mr.mash.alpha:::compute_cov_canonical(ncol(Y), singletons=TRUE,
-           hetgrid=c(0, 0.25, 0.5, 0.75, 0.99), grid, zeromat=TRUE)
-w0    <- rep(1/(length(S0mix)), length(S0mix))
+###Specify the covariance matrices for the mixture-of-normals prior.
+univ_sumstats <- get_univariate_sumstats(Xtrain, Ytrain, standardize=TRUE, standardize.response=FALSE)
+grid <- autoselect.mixsd(univ_sumstats, mult=sqrt(2))^2
+S0 <- compute_canonical_covs(ncol(Ytrain), singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 1))
+S0 <- expand_covs(S0, grid, zeromat=TRUE)
 
 ###Split the data in training and test sets
-Ytrain <- Y[-c(1:10), ]
-Xtrain <- X[-c(1:10), ]
-Ytest <- Y[c(1:10), ]
-Xtest <- X[c(1:10), ]
-
-###Estimate residual covariance
-V_est <- cov(Ytrain)
+Ytrain <- out$Y[-c(1:10), ]
+Xtrain <- out$X[-c(1:10), ]
+Ytest <- out$Y[c(1:10), ]
+Xtest <- out$X[c(1:10), ]
 
 ###Fit mr.mash
-fit <- mr.mash(Xtrain, Ytrain, S0mix, w0, V_est, tol=1e-8, update_w0=TRUE,
-               update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE,
-               verbose=TRUE, update_V=TRUE, version="R", e=1e-8)
+fit <- mr.mash(Xtrain, Ytrain, S0, update_V=TRUE, version="R")
 
 # Compare the "fitted" values of Y against the true Y in the training set.
 plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",
