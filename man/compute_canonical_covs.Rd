@@ -23,5 +23,5 @@ across responses.}
 A list containing the canonical covariance matrices.
 }
 \description{
-Function to compute canonical covariance matrices scaled by a grid.
+Function to compute canonical covariance matrices scaled.
 }
