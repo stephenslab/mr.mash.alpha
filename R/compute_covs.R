@@ -74,10 +74,10 @@ compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, non_
   U_pca <- cov_pca(data=data, npc=n_pcs, subset=subs)
   U_flash <- cov_flash(data=data, subset=subs, non_canonical=non_canonical, save_model=NULL)
   if(is.null(subs)){
-    subs = 1:mashr:::n_effects(data)
+    subss <- 1:mashr:::n_effects(data)
   }
-  B_center <- apply(data$Bhat[subs, ], 2, function(x) x - mean(x))
-  U_BB <- t(B_center) %*% B_center / nrow(B_center)
+  B_center <- apply(data$Bhat[subss, ], 2, function(x) x - mean(x))
+  U_BB <- crossprod(B_center) / nrow(B_center)
   
   ##De-noise data-driven matrices via extreme deconvolution
   U_datadriven <- c(U_pca, U_flash, list(BB=U_BB))
