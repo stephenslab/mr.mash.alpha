@@ -76,7 +76,7 @@ compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, non_
   if(is.null(subs)){
     subs = 1:mashr:::n_effects(data)
   }
-  B_center <- apply(dat$Bhat[subs, ], 2, function(x) x - mean(x))
+  B_center <- apply(data$Bhat[subs, ], 2, function(x) x - mean(x))
   U_BB <- t(B_center) %*% B_center / nrow(B_center)
   
   ##De-noise data-driven matrices via extreme deconvolution
@@ -209,12 +209,13 @@ flash_pipeline <- function(data, ...) {
                               optmethod = "mixSQP"),
                      f = list(mixcompdist = "+uniform",
                               optmethod = "mixSQP"))
+  
   ##
   fl_g <- flashr:::flash_greedy_workhorse(data,
                                           var_type = "constant",
                                           ebnm_fn = ebnm_fn,
                                           ebnm_param = ebnm_param,
-                                          init_fn = "my_init_fn",
+                                          init_fn = my_init_fn,
                                           stopping_rule = "factors",
                                           tol = 1e-3,
                                           verbose_output = "odF")
@@ -304,3 +305,26 @@ compute_cov_canonical <- function(r, singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.
   
   return(U)
 }
+
+###Compute univariate summary statistics
+##N.B. deprecated and left only for backwards compatibility
+get_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.response=FALSE){
+  r <- ncol(Y)
+  p <- ncol(X)
+  B <- matrix(as.numeric(NA), nrow=p, ncol=r)
+  S <- matrix(as.numeric(NA), nrow=p, ncol=r)
+  
+  X <- scale(X, center=TRUE, scale=standardize) 
+  Y <- scale(Y, center=TRUE, scale=standardize.response)
+  
+  for(i in 1:r){
+    for(j in 1:p){
+      fit <- lm(Y[, i] ~ X[, j]-1)
+      B[j, i] <- coef(fit)
+      S[j, i] <- summary(fit)$coefficients[1, 2]
+    }
+  }
+  
+  return(list(Bhat=B, Shat=S))
+}
+
