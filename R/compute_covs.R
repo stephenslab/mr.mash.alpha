@@ -53,16 +53,18 @@ compute_canonical_covs <- function(r, singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0
 #' 
 #' @param n_pcs indicating the number of principal components to be selected.
 #' 
-#' @param non_canonical ???
+#' @param Gamma an r x r correlation matrix for the residuals; must be positive
+#'   definite.
 #'
 #' @return A list containing the (de-noised) data-driven covariance matrices.
 #' 
 #' @importFrom mashr mash_set_data mash_1by1 get_significant_results cov_pca cov_ed
 #'   
 #' @export
-compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, non_canonical=TRUE){
-  ###Obtain string effects
-  data <- mash_set_data(sumstats$Bhat, sumstats$Shat)
+compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3,
+                                     Gamma=diag(ncol(sumstats$Bhat))){
+  ###Obtain strong effects
+  data <- mash_set_data(sumstats$Bhat, sumstats$Shat, V=Gamma)
   if(!is.null(subset_thresh)){
     m_1by1 <- mash_1by1(data)
     subs <- get_significant_results(m_1by1, subset_thresh)
@@ -72,15 +74,11 @@ compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, non_
   
   ##Compute data-driven matrices
   U_pca <- cov_pca(data=data, npc=n_pcs, subset=subs)
-  U_flash <- cov_flash(data=data, subset=subs, non_canonical=non_canonical, save_model=NULL)
-  if(is.null(subs)){
-    subss <- 1:mashr:::n_effects(data)
-  }
-  B_center <- apply(data$Bhat[subss, ], 2, function(x) x - mean(x))
-  U_BB <- crossprod(B_center) / nrow(B_center)
-  
+  U_flash <- cov_flash(data=data, subset=subs, non_canonical=FALSE, save_model=NULL)
+  U_emp <- cov_empirical(data=data, subset=subs)
+
   ##De-noise data-driven matrices via extreme deconvolution
-  U_datadriven <- c(U_pca, U_flash, list(BB=U_BB))
+  U_datadriven <- c(U_pca, U_flash, list(BB=U_emp))
   U_ed <- cov_ed(data, U_datadriven, subset=subs)
   
   return(U_ed)
@@ -188,6 +186,11 @@ expand_covs <- function(mats, grid, zeromat=TRUE){
   return(U)
 }
 
+#' @importFrom mashr estimate_null_correlation_simple
+#' @export
+mashr::estimate_null_correlation_simple
+
+
 ###Functions to compute data-driven matrices using flashr
 my_init_fn <- function(Y, K = 1) {
   ret <- flashr:::udv_si(Y, K)
@@ -278,6 +281,19 @@ grid_max = function(Bhat,Shat){
     2 * sqrt(max(Bhat^2 - Shat^2))
   }
 }
+
+###Compute empirical covariance
+cov_empirical <- function(data, subset=NULL){
+  if(is.null(subset)) 
+    subset <- 1:mashr:::n_effects(data)
+  B_center <- apply(data$Bhat[subset, ], 2, function(x) x - mean(x))
+  U_emp <- crossprod(B_center) / nrow(B_center)
+  
+  return(U_emp)
+}
+
+
+
 
 
 ###Compute canonical covariance matrices for mr.mash.

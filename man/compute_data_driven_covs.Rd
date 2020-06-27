@@ -8,7 +8,7 @@ compute_data_driven_covs(
   sumstats,
   subset_thresh = NULL,
   n_pcs = 3,
-  non_canonical = TRUE
+  Gamma = diag(ncol(sumstats$Bhat))
 )
 }
 \arguments{
@@ -20,7 +20,8 @@ the covariance matrices based on false local sign rate (lfsr).}
 
 \item{n_pcs}{indicating the number of principal components to be selected.}
 
-\item{non_canonical}{???}
+\item{Gamma}{an r x r correlation matrix for the residuals; must be positive
+definite.}
 }
 \value{
 A list containing the (de-noised) data-driven covariance matrices.
