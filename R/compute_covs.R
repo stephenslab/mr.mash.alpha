@@ -186,11 +186,6 @@ expand_covs <- function(mats, grid, zeromat=TRUE){
   return(U)
 }
 
-#' @importFrom mashr estimate_null_correlation_simple
-#' @export
-mashr::estimate_null_correlation_simple
-
-
 ###Functions to compute data-driven matrices using flashr
 my_init_fn <- function(Y, K = 1) {
   ret <- flashr:::udv_si(Y, K)
