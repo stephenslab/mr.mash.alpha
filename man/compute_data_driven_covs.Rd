@@ -8,6 +8,7 @@ compute_data_driven_covs(
   sumstats,
   subset_thresh = NULL,
   n_pcs = 3,
+  non_singleton_flash = FALSE,
   Gamma = diag(ncol(sumstats$Bhat))
 )
 }
@@ -16,12 +17,15 @@ compute_data_driven_covs(
 2 - Shat, a numeric vector of of standard erros for the regression coefficients.}
 
 \item{subset_thresh}{scalar indicating the threshold for selecting the effects to be used for computing 
-the covariance matrices based on false local sign rate (lfsr).}
+the covariance matrices based on false local sign rate (lfsr) for a response-by-response ash analysis.}
 
 \item{n_pcs}{indicating the number of principal components to be selected.}
 
 \item{Gamma}{an r x r correlation matrix for the residuals; must be positive
 definite.}
+
+\item{non_singleton}{if \code{TRUE}, \code{flash} matrices where only one response has non-zero variance 
+are excluded.}
 }
 \value{
 A list containing the (de-noised) data-driven covariance matrices.

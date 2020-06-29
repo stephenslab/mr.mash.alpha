@@ -49,9 +49,12 @@ compute_canonical_covs <- function(r, singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0
 #'   2 - Shat, a numeric vector of of standard erros for the regression coefficients.
 #' 
 #' @param subset_thresh scalar indicating the threshold for selecting the effects to be used for computing 
-#'   the covariance matrices based on false local sign rate (lfsr).  
+#'   the covariance matrices based on false local sign rate (lfsr) for a response-by-response ash analysis.  
 #' 
 #' @param n_pcs indicating the number of principal components to be selected.
+#' 
+#' @param non_singleton if \code{TRUE}, \code{flash} matrices where only one response has non-zero variance 
+#'   are excluded.
 #' 
 #' @param Gamma an r x r correlation matrix for the residuals; must be positive
 #'   definite.
@@ -61,7 +64,7 @@ compute_canonical_covs <- function(r, singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0
 #' @importFrom mashr mash_set_data mash_1by1 get_significant_results cov_pca cov_ed
 #'   
 #' @export
-compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3,
+compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, non_singleton_flash=FALSE,
                                      Gamma=diag(ncol(sumstats$Bhat))){
   ###Obtain strong effects
   data <- mash_set_data(sumstats$Bhat, sumstats$Shat, V=Gamma)
@@ -74,7 +77,7 @@ compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3,
   
   ##Compute data-driven matrices
   U_pca <- cov_pca(data=data, npc=n_pcs, subset=subs)
-  U_flash <- cov_flash(data=data, subset=subs, non_canonical=FALSE, save_model=NULL)
+  U_flash <- cov_flash(data=data, subset=subs, non_singleton=non_singleton_flash, save_model=NULL)
   U_emp <- cov_empirical(data=data, subset=subs)
 
   ##De-noise data-driven matrices via extreme deconvolution
@@ -228,7 +231,7 @@ flash_pipeline <- function(data, ...) {
   return(fl_b)
 }
 
-cov_flash <- function(data, subset = NULL, non_canonical = FALSE, save_model = NULL) {
+cov_flash <- function(data, subset = NULL, non_singleton = FALSE, save_model = NULL) {
   if(is.null(subset)) subset <- 1:mashr:::n_effects(data)
   b.center <- apply(data$Bhat[subset,], 2, function(x) x - mean(x))
   ## Only keep factors with at least two values greater than 1 / sqrt(n)
@@ -240,7 +243,7 @@ cov_flash <- function(data, subset = NULL, non_canonical = FALSE, save_model = N
   }
   
   fmodel <- flash_pipeline(b.center)
-  if (non_canonical)
+  if (non_singleton)
     flash_f <- find_nonunique_effects(fmodel)
   else 
     flash_f <- fmodel$ldf$f
