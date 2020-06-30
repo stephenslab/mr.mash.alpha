@@ -58,7 +58,7 @@ algorithm.}
 
 \item{w0_threshold}{Drop mixture components with weight less than this value.
 Components are dropped at each iteration after 15 initial iterations.
-This is done to prevent from dropping some poetentially importnat 
+This is done to prevent from dropping some poetentially important 
 components prematurely.}
 
 \item{compute_ELBO}{If \code{TRUE}, ELBO is computed.}
@@ -75,7 +75,9 @@ algorithm's process is printed at each iteration.}
 \item{update_V}{if \code{TRUE}, residual covariance is updated.}
 
 \item{update_V_method}{Method to update residual covariance. So far,
-"full" and "diagonal" are supported}
+"full" and "diagonal" are supported. If \code{update_V=TRUE} and V 
+is not provided by the user, this option will determine how V is 
+computed (and fixed) internally from \code{mu1_init}.}
 
 \item{version}{Whether to use R or C++ code to perform the
 coordinate ascent updates.}
