@@ -294,34 +294,67 @@ cov_empirical <- function(data, subset=NULL){
 
 
 
-###Compute canonical covariance matrices for mr.mash.
-##N.B. deprecated and left only for backwards compatibility
-compute_cov_canonical <- function(r, singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 1), grid, zeromat=TRUE){
-  S <- create_cov_canonical(r, singletons, hetgrid)
+#################################################
+##N.B. functions below deprecated and left only## 
+##for backwards compatibility                  ##
+#################################################
+
+###Function to compute canonical covariance matrices
+create_cov_canonical <- function(r, singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 1)){
+  mats <- list()
+  
+  ###Singleton matrices
+  if((singletons)){
+    for(i in 1:r){
+      mats[[i]] <- matrix(0, nrow=r, ncol=r)
+      mats[[i]][i, i] <- 1
+    }
+    
+    ###Heterogeneity matrices
+    if(!is.null(hetgrid)){
+      for(j in 1:length(hetgrid)){
+        mats[[r+j]] <- matrix(1, nrow=r, ncol=r)
+        mats[[r+j]][lower.tri(mats[[r+j]], diag = FALSE)] <- hetgrid[j]
+        mats[[r+j]][upper.tri(mats[[r+j]], diag = FALSE)] <- hetgrid[j]
+      }
+    }
+  } else {
+    ###Heterogeneity matrices
+    if(!is.null(hetgrid)){
+      for(j in 1:length(hetgrid)){
+        mats[[j]] <- matrix(1, nrow=r, ncol=r)
+        mats[[j]][lower.tri(mats[[j]], diag = FALSE)] <- hetgrid[j]
+        mats[[j]][upper.tri(mats[[j]], diag = FALSE)] <- hetgrid[j]
+      }
+    }
+  }
+  return(mats)
+}
+
+###Compute canonical covariance matrices scaled by a grid 
+compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid, zeromat=TRUE){
+  S <- create_cov_canonical(ntraits, singletons, hetgrid)
   U <- list()
-  nms <- vector("character")
   t <- 0
   for(i in 1:length(S)){
     for(j in 1:length(grid)){
       t <- t+1
       U[[t]] <- S[[i]]*grid[j]
-      nms[t] <- paste0(names(S)[i], "_grid", j) 
     }
   }
   
-  if(zeromat){
-    zero_mat <- list(matrix(0, r, r))
-    U <- c(zero_mat, U)
-    nms <- c("null", nms)
-  }
+  names(U) <- paste0("S0_", seq(1, length(U)))
   
-  names(U) <- nms
+  if(zeromat){
+    zero_mat <- matrix(0, ntraits, ntraits)
+    #zero_mat[upper.tri(zero_mat)] <- 1e-10
+    #zero_mat[lower.tri(zero_mat)] <- 1e-10
+    U[[paste0("S0_", length(U)+1)]] <- zero_mat
+  }
   
   return(U)
 }
-
 ###Compute univariate summary statistics
-##N.B. deprecated and left only for backwards compatibility
 get_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.response=FALSE){
   r <- ncol(Y)
   p <- ncol(X)

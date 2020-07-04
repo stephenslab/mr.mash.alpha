@@ -24,7 +24,8 @@ mr.mash(
   update_V_method = c("full", "diagonal"),
   version = c("Rcpp", "R"),
   e = 1e-08,
-  ca_update_order = c("consecutive", "decreasing_logBF", "increasing_logBF")
+  ca_update_order = c("consecutive", "decreasing_logBF", "increasing_logBF"),
+  nthreads = 1
 )
 }
 \arguments{
@@ -87,6 +88,8 @@ prior matrices to improve numerical stability of the updates.}
 
 \item{ca_update_order}{The order with which coordinates are updated.
 So far, "consecutive", "decreasing_logBF", "increasing_logBF" are supported.}
+
+\item{nthreads}{Number of threads to be used. It applies only to Rcpp version.}
 }
 \value{
 A mr.mash fit, stored as a list with some or all of the

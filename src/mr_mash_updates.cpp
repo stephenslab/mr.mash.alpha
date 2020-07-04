@@ -41,7 +41,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
                          const mat& Vinv, const vec& w0, const cube& S0,
                          const mr_mash_precomputed_quantities& precomp_quants,
                          bool standardize, bool compute_ELBO, bool update_V,
-                         const vec& update_order, double eps,
+                         const vec& update_order, double eps, unsigned int nthreads,
                          cube& S1, mat& w1, double& var_part_tr_wERSS, 
                          double& neg_KL, mat& var_part_ERSS);
 
@@ -61,7 +61,7 @@ List inner_loop_general_rcpp (const arma::mat& X, arma::mat& Rbar, arma::mat& mu
                               const arma::mat& V, const arma::mat& Vinv, const arma::vec& w0,
                               const arma::cube& S0, const List& precomp_quants_list,
                               bool standardize, bool compute_ELBO, bool update_V,
-                              const arma::vec& update_order, double eps) {
+                              const arma::vec& update_order, double eps, unsigned int nthreads) {
   unsigned int r = Rbar.n_cols;
   unsigned int p = X.n_cols;
   unsigned int k = w0.n_elem;
@@ -82,7 +82,7 @@ List inner_loop_general_rcpp (const arma::mat& X, arma::mat& Rbar, arma::mat& mu
      as<cube>(precomp_quants_list["QtimesV_chol"]),
      as<vec>(precomp_quants_list["xtx"]));
   inner_loop_general(X, Rbar_new, mu1_new, V, Vinv, w0, S0, precomp_quants,
-                     standardize, compute_ELBO, update_V, update_order, eps, S1, w1, 
+                     standardize, compute_ELBO, update_V, update_order, eps, nthreads, S1, w1, 
                      var_part_tr_wERSS, neg_KL, var_part_ERSS);
   return List::create(Named("Rbar")               = Rbar_new,
                       Named("mu1")                = mu1_new,
@@ -98,7 +98,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
                          const mat& Vinv, const vec& w0, const cube& S0,
                          const mr_mash_precomputed_quantities& precomp_quants,
                          bool standardize, bool compute_ELBO, bool update_V, 
-                         const vec& update_order, double eps,
+                         const vec& update_order, double eps, unsigned int nthreads,
                          cube& S1, mat& w1, double& var_part_tr_wERSS, 
                          double& neg_KL, mat& var_part_ERSS) {
   unsigned int n = X.n_rows;
@@ -134,12 +134,12 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
     if (standardize)
       logbf_mix = bayes_mvr_mix_standardized_X(x, Rbar_j, w0, S0, precomp_quants.S,
                              precomp_quants.S1, precomp_quants.SplusS0_chol,
-                             precomp_quants.S_chol, eps, mu1_mix, S1_mix, w1_mix);
+                             precomp_quants.S_chol, eps, nthreads, mu1_mix, S1_mix, w1_mix);
     else {
       double xtx_j = precomp_quants.xtx(j);
       logbf_mix = bayes_mvr_mix_centered_X(x, Rbar_j, V, w0, S0, xtx_j, Vinv,
                                precomp_quants.V_chol, precomp_quants.d, 
-                               precomp_quants.QtimesV_chol, eps,
+                               precomp_quants.QtimesV_chol, eps, nthreads,
                                mu1_mix, S1_mix, w1_mix);
     }
     

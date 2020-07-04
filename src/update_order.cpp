@@ -39,7 +39,7 @@ struct mr_mash_precomputed_quantities {
 vec compute_logbf (const mat& X, const mat& Y, const mat& V,
                    const mat& Vinv, const vec& w0, const cube& S0,
                    const mr_mash_precomputed_quantities& precomp_quants,
-                   bool standardize, double eps);
+                   bool standardize, double eps, unsigned int nthreads);
 
 // FUNCTION DEFINITIONS
 // --------------------
@@ -49,7 +49,7 @@ vec compute_logbf (const mat& X, const mat& Y, const mat& V,
 arma::vec compute_logbf_rcpp (const arma::mat& X, const arma::mat& Y, const arma::mat& V,
                               const arma::mat& Vinv, const arma::vec& w0, const arma::cube& S0,
                               const List& precomp_quants_list,
-                              bool standardize, double eps) {
+                              bool standardize, double eps, unsigned int nthreads) {
   
   mr_mash_precomputed_quantities precomp_quants
   (as<mat>(precomp_quants_list["S"]),
@@ -62,13 +62,13 @@ arma::vec compute_logbf_rcpp (const arma::mat& X, const arma::mat& Y, const arma
    as<vec>(precomp_quants_list["xtx"]));
   
   
-  return compute_logbf(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, eps);
+  return compute_logbf(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, eps, nthreads);
 }
 
 vec compute_logbf (const mat& X, const mat& Y, const mat& V,
                    const mat& Vinv, const vec& w0, const cube& S0,
                    const mr_mash_precomputed_quantities& precomp_quants,
-                   bool standardize, double eps){
+                   bool standardize, double eps, unsigned int nthreads){
   
   unsigned int n = X.n_rows;
   unsigned int p = X.n_cols;
@@ -89,12 +89,13 @@ vec compute_logbf (const mat& X, const mat& Y, const mat& V,
     if (standardize)
       logbf_mix = bayes_mvr_mix_standardized_X(x, Y, w0, S0, precomp_quants.S,
                                                precomp_quants.S1, precomp_quants.SplusS0_chol,
-                                               precomp_quants.S_chol, eps, mu1_mix, S1_mix, w1_mix);
+                                               precomp_quants.S_chol, eps, nthreads,
+                                               mu1_mix, S1_mix, w1_mix);
     else {
       double xtx_j = precomp_quants.xtx(j);
       logbf_mix = bayes_mvr_mix_centered_X(x, Y, V, w0, S0, xtx_j, Vinv,
                                            precomp_quants.V_chol, precomp_quants.d, 
-                                           precomp_quants.QtimesV_chol, eps,
+                                           precomp_quants.QtimesV_chol, eps, nthreads,
                                            mu1_mix, S1_mix, w1_mix);
     }
     

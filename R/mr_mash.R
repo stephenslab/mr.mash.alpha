@@ -62,6 +62,8 @@
 #'   
 #' @param ca_update_order The order with which coordinates are updated.
 #'   So far, "consecutive", "decreasing_logBF", "increasing_logBF" are supported.
+#'   
+#' @param nthreads Number of threads to be used. It applies only to Rcpp version.
 #' 
 #' @return A mr.mash fit, stored as a list with some or all of the
 #' following elements:
@@ -145,7 +147,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                     w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
-                    ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF")) {
+                    ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"), nthreads=1) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -282,9 +284,11 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   if(ca_update_order=="consecutive"){
     update_order <- 1:p
   } else if(ca_update_order=="decreasing_logBF"){
-    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, decreasing=TRUE, eps)
+    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, 
+                                                 decreasing=TRUE, eps, nthreads)
   } else if(ca_update_order=="increasing_logBF"){
-    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, decreasing=FALSE, eps)
+    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, 
+                                                 decreasing=FALSE, eps, nthreads)
   }
   
   cat("Done!\n")
@@ -351,7 +355,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                                         ldetV=ldetV, w0old=w0, S0=S0,
                                         precomp_quants=comps,
                                         standardize=standardize,
-                                        version=version, update_order=update_order, eps=eps)$w0
+                                        version=version, update_order=update_order, eps=eps,
+                                        nthreads=nthreads)$w0
         }
         
         #Drop components with mixture weight <= w0_threshold
@@ -374,7 +379,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                                   compute_ELBO=compute_ELBO,
                                   standardize=standardize,
                                   update_V=update_V, version=version, 
-                                  update_order=update_order, eps=eps)
+                                  update_order=update_order, eps=eps,
+                                  nthreads=nthreads)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t
