@@ -8,7 +8,8 @@ compute_univariate_sumstats(
   X,
   Y,
   standardize = FALSE,
-  standardize.response = FALSE
+  standardize.response = FALSE,
+  mc.cores = 1
 )
 }
 \arguments{
@@ -21,6 +22,8 @@ sample means and sample standard deviations.}
 
 \item{standardize.response}{If \code{TRUE}, Y is "standardized" using the
 sample means and sample standard deviations.}
+
+\item{mc.cores}{Number of cores to use. Parallelization is done over responses.}
 }
 \value{
 A list with following elements:
