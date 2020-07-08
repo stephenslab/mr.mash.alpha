@@ -109,7 +109,7 @@ compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, non_
 #'
 #' \item{Shat}{p x r matrix of the standard errors for regression coeffcients.}
 #' 
-#' @importFrom parallel mclapply
+#' @importFrom parallel makeCluster parLapply stopCluster
 #' 
 #' @export
 compute_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.response=FALSE, mc.cores=1){
@@ -132,7 +132,13 @@ compute_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.res
     return(list(bhat=bhat, shat=shat))
   }
   
-  out <- mclapply(1:r, linreg, X, Y, mc.cores=mc.cores)
+  ###mclapply is a little faster but uses more memory
+  # out <- mclapply(1:r, linreg, X, Y, mc.cores=mc.cores)
+  
+  cl <- makeCluster(mc.cores)
+  out <- parLapply(cl, 1:r, linreg, X, Y)
+  stopCluster(cl)
+  
   
   return(list(Bhat=sapply(out,"[[","bhat"), Shat=sapply(out,"[[","shat")))
 }
