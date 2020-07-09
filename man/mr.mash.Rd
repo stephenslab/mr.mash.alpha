@@ -151,7 +151,7 @@ Ytest <- out$Y[c(1:200), ]
 Xtest <- out$X[c(1:200), ]
 
 ###Specify the covariance matrices for the mixture-of-normals prior.
-univ_sumstats <- get_univariate_sumstats(Xtrain, Ytrain, standardize=TRUE, standardize.response=FALSE)
+univ_sumstats <- compute_univariate_sumstats(Xtrain, Ytrain, standardize=TRUE, standardize.response=FALSE)
 grid <- autoselect.mixsd(univ_sumstats, mult=sqrt(2))^2
 S0 <- compute_canonical_covs(ncol(Ytrain), singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 1))
 S0 <- expand_covs(S0, grid, zeromat=TRUE)
