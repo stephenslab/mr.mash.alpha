@@ -181,6 +181,7 @@ autoselect.mixsd <- function(data, mult=2){
 #'   
 #' @export
 expand_covs <- function(mats, grid, zeromat=TRUE){
+  r <- ncol(mats[[1]])
   mats <- lapply(mats, normalize_cov)
   U <- list()
   nms <- vector("character")
