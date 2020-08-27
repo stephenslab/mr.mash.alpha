@@ -25,7 +25,7 @@ mr.mash(
   version = c("Rcpp", "R"),
   e = 1e-08,
   ca_update_order = c("consecutive", "decreasing_logBF", "increasing_logBF"),
-  nthreads = 1
+  nthreads = as.integer(NA)
 )
 }
 \arguments{
@@ -86,10 +86,15 @@ coordinate ascent updates.}
 \item{e}{A small number to add to the diagonal elements of the
 prior matrices to improve numerical stability of the updates.}
 
-\item{ca_update_order}{The order with which coordinates are updated.
-So far, "consecutive", "decreasing_logBF", "increasing_logBF" are supported.}
+\item{ca_update_order}{The order with which coordinates are
+updated.  So far, "consecutive", "decreasing_logBF",
+"increasing_logBF" are supported.}
 
-\item{nthreads}{Number of threads to be used. It applies only to Rcpp version.}
+\item{nthreads}{Number of RcppParallel threads to use for the
+updates. When \code{nthreads} is \code{NA}, the default number of
+threads is used; see
+\code{\link[RcppParallel]{defaultNumThreads}}. This setting is
+ignored when \code{version = "R"}.}
 }
 \value{
 A mr.mash fit, stored as a list with some or all of the

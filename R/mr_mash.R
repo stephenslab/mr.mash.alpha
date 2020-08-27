@@ -60,10 +60,15 @@
 #' @param e A small number to add to the diagonal elements of the
 #'   prior matrices to improve numerical stability of the updates.
 #'   
-#' @param ca_update_order The order with which coordinates are updated.
-#'   So far, "consecutive", "decreasing_logBF", "increasing_logBF" are supported.
+#' @param ca_update_order The order with which coordinates are
+#'   updated.  So far, "consecutive", "decreasing_logBF",
+#'   "increasing_logBF" are supported.
 #'   
-#' @param nthreads Number of threads to be used. It applies only to Rcpp version.
+#' @param nthreads Number of RcppParallel threads to use for the
+#'   updates. When \code{nthreads} is \code{NA}, the default number of
+#'   threads is used; see
+#'   \code{\link[RcppParallel]{defaultNumThreads}}. This setting is
+#'   ignored when \code{version = "R"}.
 #' 
 #' @return A mr.mash fit, stored as a list with some or all of the
 #' following elements:
@@ -149,7 +154,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                     max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
                     w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
-                    ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"), nthreads=1) {
+                    ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
+                    nthreads=as.integer(NA)) {
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -175,6 +181,16 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ###Select ordering of the coordinate ascent updates (if not specified by user,
   ###consecutive will be used
   ca_update_order <- match.arg(ca_update_order)
+
+  # Initialize the RcppParallel multithreading using a pre-specified number
+  # of threads, or using the default number of threads when nthreads is NA.
+  if (is.na(nthreads)) {
+    setThreadOptions()
+    nthreads <- defaultNumThreads()
+  } else
+    setThreadOptions(numThreads = nthreads)
+  if (nthreads > 1)
+    message(sprintf("Using %d RcppParallel threads.",nthreads))
   
   ###Check that the inputs are in the correct format
   if(!is.matrix(Y))
