@@ -11,7 +11,7 @@ mr.mash(
   w0 = rep(1/(length(S0)), length(S0)),
   V = NULL,
   mu1_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)),
-  tol = 1e-04,
+  tol = 0.0001,
   convergence_criterion = c("mu1", "ELBO"),
   max_iter = 5000,
   update_w0 = TRUE,
@@ -142,7 +142,7 @@ p_causal <- 20
 r <- 5
 
 ###Simulate data
-out <- simulate_mr_mash_data(n, p, p_causal, r, pve=0.5, B_cor=1, B_scale=1, X_cor=0, X_scale=1, V_cor=0)
+out <- simulate_mr_mash_data(n, p, p_causal, r, pve=0.5, B_cor=list(1), B_scale=list(1), X_cor=0, X_scale=1, V_cor=0)
 
 ###Split the data in training and test sets
 Ytrain <- out$Y[-c(1:200), ]

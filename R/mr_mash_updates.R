@@ -72,9 +72,11 @@ inner_loop_general_R <- function(X, Rbar, mu1, V, Vinv, w0, S0, ###note: V is on
   }
 }
 
-###Wrapper for the Rcpp function to update variational parameters, expected residuals, 
-###and ELBO components with or without scaling X
+### Wrapper for the Rcpp function to update variational parameters,
+### expected residuals, and ELBO components with or without scaling X.
+#
 #' @importFrom Rcpp evalCpp
+#' @importFrom RcppParallel RcppParallelLibs
 #' @useDynLib mr.mash.alpha
 #' 
 inner_loop_general_Rcpp <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 

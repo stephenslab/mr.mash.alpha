@@ -82,8 +82,7 @@ Function to simulate data \eqn{Y \sim MN_{nxr}(XB, I, V)}, where \eqn{X \sim N_p
   \eqn{B \sim \sum_k w_k N_r(0, Sigma_k)}, with \eqn{Gamma}, \eqn{w_k}, \eqn{Sigma_k}, and \eqn{V} defined by the user.
 }
 \examples{
-
-dat <- simulate_mr_mash_data(n=50, p=40, p_causal=20, r=5, r_causal=list(1:2, 3:5), wb=c(0.5, 0.5), intercepts=rep(1, r),
+dat <- simulate_mr_mash_data(n=50, p=40, p_causal=20, r=5, r_causal=list(1:2, 3:5), wb=c(0.5, 0.5), intercepts=rep(1, 5),
                              pve=0.2, B_cor=list(c(0,1), c(0,0.5,1)), B_scale=list(c(0.5,0.8), c(0.7,1.5,2)), 
                              w=list(c(0.5,0.5), c(0.33,0.33,0.34)),
                              X_cor=0.5, X_scale=1, V_cor=0)

@@ -1,8 +1,8 @@
 Encoding: UTF-8
 Type: Package
 Package: mr.mash.alpha
-Version: 0.1-103
-Date: 2020-07-29
+Version: 0.1-104
+Date: 2020-08-27
 Title: Multiple Regression with Multivariate Adaptive Shrinkage
 Description: Provides an implementation of methods for multivariate 
     multiple regression with adaptive shrinkage priors.
@@ -16,6 +16,7 @@ Depends: R (>= 3.1.0)
 Imports:
     stats,
     Rcpp (>= 1.0.3),
+    RcppParallel (>= 4.4.1),
     MBSP,
     daarem,
     mvtnorm,
@@ -27,6 +28,9 @@ Imports:
 Suggests:
     testthat,
     varbvs
-LinkingTo: Rcpp, RcppArmadillo
+LinkingTo:
+    Rcpp,
+    RcppArmadillo,
+    RcppParallel
 Remotes: stephenslab/flashr
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1

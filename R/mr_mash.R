@@ -99,7 +99,6 @@
 #'   the optimization algorithm converged to a solution within the chosen tolerance
 #'   level.}
 #'  
-#' 
 #' @examples 
 #' ###Set seed
 #' set.seed(123)
@@ -139,7 +138,10 @@
 #' plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",
 #'      ylab = "predicted")
 #' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
-#' 
+#'
+#' @importFrom RcppParallel defaultNumThreads
+#' @importFrom RcppParallel setThreadOptions
+#'
 #' @export
 #' 
 mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
