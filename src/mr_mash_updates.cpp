@@ -1,7 +1,3 @@
-// This is included to suppress the warnings from solve() when the
-// system is singular or close to singular.
-#define ARMA_DONT_PRINT_ERRORS
-
 #include "bayes_reg_mv.h"
 #include "misc.h"
 
@@ -134,12 +130,12 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
     if (standardize)
       logbf_mix = bayes_mvr_mix_standardized_X(x, Rbar_j, w0, S0, precomp_quants.S,
                              precomp_quants.S1, precomp_quants.SplusS0_chol,
-                             precomp_quants.S_chol, eps, nthreads, mu1_mix, S1_mix, w1_mix);
+                             precomp_quants.S_chol, eps, mu1_mix, S1_mix, w1_mix);
     else {
       double xtx_j = precomp_quants.xtx(j);
       logbf_mix = bayes_mvr_mix_centered_X(x, Rbar_j, V, w0, S0, xtx_j, Vinv,
                                precomp_quants.V_chol, precomp_quants.d, 
-                               precomp_quants.QtimesV_chol, eps, nthreads,
+                               precomp_quants.QtimesV_chol, eps, 
                                mu1_mix, S1_mix, w1_mix);
     }
     

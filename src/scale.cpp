@@ -1,18 +1,11 @@
-// This is included to suppress the warnings from solve() when the
-// system is singular or close to singular.
-#define ARMA_DONT_PRINT_ERRORS
-
 #include <RcppArmadillo.h>
 #include <stdexcept>
-
 
 using namespace Rcpp;
 using namespace arma;
 
-
 // FUNCTION DECLARATIONS
 // ---------------------
-
 // 
 void scale (arma::mat& M, const arma::vec& a, const arma::vec& b);
 

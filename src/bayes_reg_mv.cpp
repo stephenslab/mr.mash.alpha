@@ -121,12 +121,13 @@ double bayes_mvr_ridge_centered_X (const mat& V, const vec& b, const mat& S,
 }
 
 
-// Perform Bayesian multivariate simple regression with mixture-of-normals prior with standardized x.
+// Perform Bayesian multivariate simple regression with
+// mixture-of-normals prior with standardized x.
 double bayes_mvr_mix_standardized_X (const vec& x, const mat& Y, const vec& w0,
-                               const cube& S0, const mat& S, const cube& S1,
-                               const cube& SplusS0_chol, const mat& S_chol,
-                               double eps, unsigned int nthreads,
-                               vec& mu1_mix, mat& S1_mix, vec& w1) {
+				     const cube& S0, const mat& S,
+				     const cube& S1, const cube& SplusS0_chol,
+				     const mat& S_chol, double eps,
+				     vec& mu1_mix, mat& S1_mix, vec& w1) {
   unsigned int k = w0.n_elem;
   unsigned int r = Y.n_cols;
   unsigned int n = Y.n_rows;
@@ -138,15 +139,11 @@ double bayes_mvr_mix_standardized_X (const vec& x, const mat& Y, const vec& w0,
   // Compute the least-squares estimate.
   vec b = trans(Y)*x/(n-1);
   
-  //Set number of threads for OpenMP
-  omp_set_num_threads(nthreads);
-  
   // Compute the quantities separately for each mixture component.
-#pragma omp parallel for default(none) schedule(static) shared(k, b, S0, S, S1, SplusS0_chol, S_chol, \
-  logbfmix, mu1mix) private(mu1)
   for (unsigned int i = 0; i < k; i++) {
-    logbfmix(i) = bayes_mvr_ridge_standardized_X(b, S0.slice(i), S, S1.slice(i),
-             SplusS0_chol.slice(i), S_chol, mu1);
+    logbfmix(i) = bayes_mvr_ridge_standardized_X(b,S0.slice(i),S,S1.slice(i),
+						 SplusS0_chol.slice(i),S_chol,
+						 mu1);
     mu1mix.col(i) = mu1;
   }
   
@@ -173,14 +170,14 @@ double bayes_mvr_mix_standardized_X (const vec& x, const mat& Y, const vec& w0,
   return u + log(sum(exp(logbfmix - u)));
 }
 
-
-// Perform Bayesian multivariate simple regression with mixture-of-normals prior with centered x.
+// Perform Bayesian multivariate simple regression with
+// mixture-of-normals prior with centered x.
 double bayes_mvr_mix_centered_X (const vec& x, const mat& Y, const mat& V,
                                  const vec& w0, const cube& S0, double xtx, 
                                  const mat& Vinv, const mat& V_chol,
-                                 const mat& d, const cube& QtimesV_chol, double eps,
-                                 unsigned int nthreads,
-                                 vec& mu1_mix, mat& S1_mix, vec& w1) {
+				 const mat& d, const cube& QtimesV_chol,
+				 double eps, vec& mu1_mix, mat& S1_mix,
+				 vec& w1) {
   unsigned int k = w0.n_elem;
   unsigned int r = Y.n_cols;
   
@@ -197,15 +194,11 @@ double bayes_mvr_mix_centered_X (const vec& x, const mat& Y, const mat& V,
   // Compute quantities needed for bayes_mvr_ridge_centered_X()
   mat S_chol = V_chol/sqrt(xtx);
   
-  //Set number of threads for OpenMP
-  omp_set_num_threads(nthreads);
-  
   // Compute the quantities separately for each mixture component.
-#pragma omp parallel for default(none) schedule(static) shared(k, V, b, S, S0, xtx, Vinv, V_chol, \
-  S_chol, d, QtimesV_chol, logbfmix, mu1mix, S1mix) private(mu1, S1)
   for (unsigned int i = 0; i < k; i++) {
-    logbfmix(i) = bayes_mvr_ridge_centered_X(V, b, S, S0.slice(i), xtx, Vinv, V_chol,
-             S_chol, d.col(i), QtimesV_chol.slice(i), mu1, S1);
+    logbfmix(i) = bayes_mvr_ridge_centered_X(V,b,S,S0.slice(i),xtx,Vinv,
+					     V_chol,S_chol,d.col(i),
+					     QtimesV_chol.slice(i),mu1,S1);
     mu1mix.col(i)  = mu1;
     S1mix.slice(i) = S1;
   }
