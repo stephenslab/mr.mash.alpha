@@ -42,6 +42,49 @@ struct bayes_mvr_mix_standardized_X_worker : public RcppParallel::Worker {
   }
 };
 
+// TO DO: Explain here what this class is for.
+struct bayes_mvr_mix_centered_X_worker : public RcppParallel::Worker {
+  const vec&  b;
+  double      xtx;
+  const mat&  V;
+  const mat&  Vinv;
+  const mat&  V_chol;
+  const mat&  S;
+  const mat&  S_chol;
+  const mat&  d;
+  const cube& S0;
+  const cube& QtimesV_chol;
+  vec&        logbfmix;
+  mat&        mu1mix;
+  cube&       S1mix;
+  
+  // This is used to create a bayes_mvr_mix_worker object.
+  bayes_mvr_mix_centered_X_worker (const vec& b, double xtx, const mat& V,
+				   const mat& Vinv, const mat& V_chol,
+				   const mat& S, const mat& S_chol,
+				   const mat& d, const cube& S0,
+				   const cube& QtimesV_chol, vec& logbfmix,
+				   mat& mu1mix, cube& S1mix) :
+    b(b), xtx(xtx), V(V), Vinv(Vinv), V_chol(V_chol), S(S), S_chol(S_chol),
+    d(d), S0(S0), QtimesV_chol(QtimesV_chol), logbfmix(logbfmix),
+    mu1mix(mu1mix), S1mix(S1mix) { };
+  
+  // This function performs the Bayesian multivariate regression
+  // calculations for a given range of prior mixture components.
+  void operator() (std::size_t begin, std::size_t end) {
+    unsigned int r = b.n_elem;
+    vec mu1(r);
+    mat S1(r,r);
+    for (unsigned int i = begin; i < end; i++) {
+      logbfmix(i) = bayes_mvr_ridge_centered_X(V,b,S,S0.slice(i),xtx,Vinv,  
+					       V_chol,S_chol,d.col(i),
+					       QtimesV_chol.slice(i),mu1,S1);
+      mu1mix.col(i)  = mu1;
+      S1mix.slice(i) = S1;
+    }
+  }
+};
+
 // FUNCTION DEFINITIONS
 // --------------------
 // // Bayesian multivariate simple regression with normal prior with standardized x.
@@ -239,12 +282,11 @@ double bayes_mvr_mix_centered_X (const vec& x, const mat& Y, const mat& V,
   mat S_chol = V_chol/sqrt(xtx);
   
   // Compute the quantities separately for each mixture component.
-  if (0) {
-    //
-    // TO DO: Update this code.
-    //
-    // bayes_mvr_mix_worker worker(x,Y,V,S0,logbfmix,mu1mix,S1mix);
-    // parallelFor(0,k,worker);
+  if (nthreads > 0) {
+    bayes_mvr_mix_centered_X_worker worker(b,xtx,V,Vinv,V_chol,S,S_chol,d,
+					   S0,QtimesV_chol,logbfmix,mu1mix,
+					   S1mix);
+    parallelFor(0,k,worker);
   } else {
     for (unsigned int i = 0; i < k; i++) {
       logbfmix(i) = bayes_mvr_ridge_centered_X(V,b,S,S0.slice(i),xtx,Vinv,  
