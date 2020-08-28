@@ -1,3 +1,4 @@
+#include <RcppParallel.h>
 #include "bayes_reg_mv.h"
 #include "misc.h"
 
@@ -50,8 +51,10 @@ arma::mat compute_mixsqp_update_loop (const arma::mat& X, const arma::mat& Rbar,
 // FUNCTION DEFINITIONS
 // --------------------
 
-//Inner loop
+// Inner loop
+//
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::depends(RcppParallel)]]
 // [[Rcpp::export]]
 List inner_loop_general_rcpp (const arma::mat& X, arma::mat& Rbar, arma::mat& mu1,
                               const arma::mat& V, const arma::mat& Vinv, const arma::vec& w0,
@@ -78,8 +81,8 @@ List inner_loop_general_rcpp (const arma::mat& X, arma::mat& Rbar, arma::mat& mu
      as<cube>(precomp_quants_list["QtimesV_chol"]),
      as<vec>(precomp_quants_list["xtx"]));
   inner_loop_general(X, Rbar_new, mu1_new, V, Vinv, w0, S0, precomp_quants,
-                     standardize, compute_ELBO, update_V, update_order, eps, nthreads, S1, w1, 
-                     var_part_tr_wERSS, neg_KL, var_part_ERSS);
+                     standardize, compute_ELBO, update_V, update_order, eps,
+		     nthreads, S1, w1, var_part_tr_wERSS, neg_KL, var_part_ERSS);
   return List::create(Named("Rbar")               = Rbar_new,
                       Named("mu1")                = mu1_new,
                       Named("S1")                 = S1,
@@ -129,14 +132,16 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
     // predictor.
     if (standardize)
       logbf_mix = bayes_mvr_mix_standardized_X(x, Rbar_j, w0, S0, precomp_quants.S,
-                             precomp_quants.S1, precomp_quants.SplusS0_chol,
-                             precomp_quants.S_chol, eps, mu1_mix, S1_mix, w1_mix);
+					       precomp_quants.S1,
+					       precomp_quants.SplusS0_chol,
+					       precomp_quants.S_chol, eps, nthreads,
+					       mu1_mix, S1_mix, w1_mix);
     else {
       double xtx_j = precomp_quants.xtx(j);
       logbf_mix = bayes_mvr_mix_centered_X(x, Rbar_j, V, w0, S0, xtx_j, Vinv,
-                               precomp_quants.V_chol, precomp_quants.d, 
-                               precomp_quants.QtimesV_chol, eps, 
-                               mu1_mix, S1_mix, w1_mix);
+					   precomp_quants.V_chol, precomp_quants.d, 
+					   precomp_quants.QtimesV_chol, eps, nthreads,
+					   mu1_mix, S1_mix, w1_mix);
     }
     
     mu1.row(j)  = trans(mu1_mix);
