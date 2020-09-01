@@ -2,6 +2,7 @@
 #define INCLUDE_BAYES_REG_MV
 
 #include <RcppArmadillo.h>
+#include <RcppParallel.h>
 
 // FUNCTION DECLARATIONS
 // ---------------------

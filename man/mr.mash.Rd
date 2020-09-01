@@ -11,7 +11,7 @@ mr.mash(
   w0 = rep(1/(length(S0)), length(S0)),
   V = NULL,
   mu1_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)),
-  tol = 0.0001,
+  tol = 1e-04,
   convergence_criterion = c("mu1", "ELBO"),
   max_iter = 5000,
   update_w0 = TRUE,

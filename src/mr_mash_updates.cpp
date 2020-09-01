@@ -1,4 +1,3 @@
-#include <RcppParallel.h>
 #include "bayes_reg_mv.h"
 #include "misc.h"
 
