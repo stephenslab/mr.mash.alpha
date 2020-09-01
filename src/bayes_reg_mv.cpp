@@ -282,7 +282,7 @@ double bayes_mvr_mix_centered_X (const vec& x, const mat& Y, const mat& V,
   mat S_chol = V_chol/sqrt(xtx);
   
   // Compute the quantities separately for each mixture component.
-  if (nthreads > 0) {
+  if (nthreads > 1) {
     bayes_mvr_mix_centered_X_worker worker(b,xtx,V,Vinv,V_chol,S,S_chol,d,
 					   S0,QtimesV_chol,logbfmix,mu1mix,
 					   S1mix);
