@@ -41,7 +41,8 @@ struct bayes_mvr_mix_standardized_X_worker : public RcppParallel::Worker {
   }
 };
 
-// TO DO: Explain here what this class is for.
+// This class is used to implement the multithreaded computation in 
+// bayes_mvr_mix_centered_X.
 struct bayes_mvr_mix_centered_X_worker : public RcppParallel::Worker {
   const vec&  b;
   double      xtx;
