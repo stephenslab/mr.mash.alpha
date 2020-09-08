@@ -10,13 +10,12 @@ simulate_mr_mash_data(
   p_causal,
   r,
   r_causal = list(1:r),
-  wb = 1,
   intercepts = rep(1, r),
   pve = 0.2,
-  B_cor = list(0),
-  B_scale = list(1),
-  w = list(1),
-  X_cor = 0.5,
+  B_cor = 1,
+  B_scale = 1,
+  w = 1,
+  X_cor = 0,
   X_scale = 1,
   V_cor = 0
 )
@@ -30,24 +29,21 @@ simulate_mr_mash_data(
 
 \item{r}{scalar indicating the number of responses.}
 
-\item{r_causal}{a list whose elelments ar numeric vector(s) indicating in which responses
-the causal variables have an effect (defined as a block).}
-
-\item{wb}{scalar or numeric vector (one element for each block of causal responses)
-of probabilities of causal variables coming from each of the blocks.}
+\item{r_causal}{a list of numeric vectors (one element for each mixture component) 
+indicating in which responses the causal variables have an effect.}
 
 \item{intercepts}{numeric vector of intercept for each response.}
 
 \item{pve}{per-response proportion of variance explained by the causal variables.}
 
-\item{B_cor}{list whose elements (one element for each block of causal responses) are scalars or numeric vectors
-(one element for each mixture components) of positive correlation [0, 1] between causal effects.}
+\item{B_cor}{scalar or numeric vector (one element for each mixture component)
+with positive correlation [0, 1] between causal effects.}
 
-\item{B_scale}{list whose elements (one element for each block of causal responses) are scalars or numeric vectors
-(one element for each mixture components) with the diagonal value for Sigma_k.}
+\item{B_scale}{scalar or numeric vector (one element for each mixture component) with the 
+diagonal value for Sigma_k;}
 
-\item{w}{list whose elements (one element for each block of causal responses) are scalars or numeric vectors
-(one element for each mixture components) with mixture proportions.}
+\item{w}{scalar or numeric vector (one element for each mixture component) with mixture 
+proportions associated to each mixture component.}
 
 \item{X_cor}{scalar indicating the positive correlation [0, 1] between variables.}
 
@@ -56,7 +52,8 @@ of probabilities of causal variables coming from each of the blocks.}
 \item{V_cor}{scalar indicating the positive correlation [0, 1] between residuals}
 }
 \value{
-A list with the following elements:
+A list with some or all of the
+following elements:
 
 \item{X}{n x p matrix of variables.}
 
@@ -66,26 +63,28 @@ A list with the following elements:
 
 \item{V}{r x r residual covariance matrix among responses.}
   
-\item{Sigma}{list of r x r covariance matrices among the effects for each causal variable.} 
+\item{Sigma}{list of r x r covariance matrices among the effects.} 
 
 \item{Gamma}{p x p covariance matrix among the variables.}
 
 \item{intercepts}{r-vector of intercept for each response.}
 
 \item{causal_responses}{a list of numeric vectors of indexes indicating which responses have
-  causal effects for each causal variable.}
+  causal effects for each mixture component.}
   
-\item{causal_variables}{p_causal-vector of indexes indicating which variables are causal.}
+\item{causal_variables}{p_causal-vector of indexes indicating which variables are causal.}  
+
+\item{causal_vars_to_mixture_comps}{p_causal-vector of indexes indicating from which
+  mixture components each causal effect comes.}
 }
 \description{
-Function to simulate data \eqn{Y \sim MN_{nxr}(XB, I, V)}, where \eqn{X \sim N_p(0, Gamma)},
+Function to simulate data from \eqn{MN_{nxr}(XB, I, V)}, where \eqn{X \sim N_p(0, Gamma)},
   \eqn{B \sim \sum_k w_k N_r(0, Sigma_k)}, with \eqn{Gamma}, \eqn{w_k}, \eqn{Sigma_k}, and \eqn{V} defined by the user.
 }
 \examples{
-dat <- simulate_mr_mash_data(n=50, p=40, p_causal=20, r=5, r_causal=list(1:2, 3:5), wb=c(0.5, 0.5), intercepts=rep(1, 5),
-                             pve=0.2, B_cor=list(c(0,1), c(0,0.5,1)), B_scale=list(c(0.5,0.8), c(0.7,1.5,2)), 
-                             w=list(c(0.5,0.5), c(0.33,0.33,0.34)),
-                             X_cor=0.5, X_scale=1, V_cor=0)
+dat <- simulate_mr_mash_data(n=50, p=40, p_causal=20, r=5, r_causal=list(1:2, 3:4), intercepts=rep(1, 5),
+                             pve=0.2, B_cor=c(0, 1), B_scale=c(0.5, 1), w=c(0.5, 0.5), X_cor=0.5, X_scale=1, 
+                             V_cor=0)
                              
                              
 }
