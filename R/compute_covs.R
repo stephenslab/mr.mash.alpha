@@ -132,13 +132,16 @@ compute_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.res
     return(list(bhat=bhat, shat=shat))
   }
   
-  ###mclapply is a little faster but uses more memory
-  # out <- mclapply(1:r, linreg, X, Y, mc.cores=mc.cores)
-  
-  cl <- makeCluster(mc.cores)
-  out <- parLapply(cl, 1:r, linreg, X, Y)
-  stopCluster(cl)
-  
+  if(mc.cores>1){
+    ###mclapply is a little faster but uses more memory
+    # out <- mclapply(1:r, linreg, X, Y, mc.cores=mc.cores)
+    
+    cl <- makeCluster(mc.cores)
+    out <- parLapply(cl, 1:r, linreg, X, Y)
+    stopCluster(cl)
+  } else {
+    out <- lapply(1:r, linreg, X, Y)
+  }
   
   return(list(Bhat=sapply(out,"[[","bhat"), Shat=sapply(out,"[[","shat")))
 }
