@@ -143,10 +143,15 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
   out <- list(X=X, Y=Y, B=B, V=V, Sigma=Sigma, Gamma=Gamma,
               intercepts=intercepts, causal_responses=causal_responses)
   if(K>1){
-    causal_variables_mixcomps <- cbind(causal_variables, mixcomps)
-    causal_variables_mixcomps <- causal_variables_mixcomps[order(causal_variables_mixcomps[, 1]), ]
-    out$causal_variables <- causal_variables_mixcomps[, 1]
-    out$causal_vars_to_mixture_comps <- causal_variables_mixcomps[, 2]
+    if(p_causal>1){
+      causal_variables_mixcomps <- cbind(causal_variables, mixcomps)
+      causal_variables_mixcomps <- causal_variables_mixcomps[order(causal_variables_mixcomps[, 1]), ]
+      out$causal_variables <- causal_variables_mixcomps[, 1]
+      out$causal_vars_to_mixture_comps <- causal_variables_mixcomps[, 2]
+    } else {
+      out$causal_variables <- causal_variables
+      out$causal_vars_to_mixture_comps <- mixcomps
+    }
   } else {
     out$causal_variables <- sort(causal_variables)
     out$causal_vars_to_mixture_comps <- rep(1, p_causal)
