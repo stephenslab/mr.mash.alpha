@@ -115,8 +115,8 @@ compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, non_
 compute_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.response=FALSE, mc.cores=1){
   r <- ncol(Y)
   
-  X <- scale(X, center=TRUE, scale=standardize) 
-  Y <- scale(Y, center=TRUE, scale=standardize.response)
+  X <- scale_fast2(X, scale=standardize)$M 
+  Y <- scale_fast2(Y, scale=standardize.response)$M
   
   linreg <- function(i, X, Y){
     p <- ncol(X)
