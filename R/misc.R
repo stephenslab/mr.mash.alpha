@@ -90,7 +90,11 @@ makePD <- function(S0, e){
 }
 
 ###Precompute quantities in any case
-precompute_quants <- function(X, V, S0, standardize, version){
+#' @importFrom foreach foreach
+#' @importFrom parallel makeForkCluster stopCluster
+#' @importFrom doParallel registerDoParallel
+#' 
+precompute_quants <- function(X, V, S0, standardize, version, nthreads){
   if(standardize){
     n <- nrow(X)
     xtx <- n-1
@@ -101,11 +105,26 @@ precompute_quants <- function(X, V, S0, standardize, version){
     S_chol <- R/sqrt(xtx)
     
     ###Quantities that depend on S0
-    SplusS0_chol <- list()
-    S1 <- list()
-    for(i in 1:length(S0)){
-      SplusS0_chol[[i]] <- chol(S+S0[[i]])
-      S1[[i]] <- S0[[i]]%*%backsolve(SplusS0_chol[[i]], forwardsolve(t(SplusS0_chol[[i]]), S))
+    if(nthreads>1){
+      cl <- makeForkCluster(nthreads)
+      registerDoParallel(cl)
+      loopout <- foreach(i=1:length(S0), .combine='comb', .multicombine=TRUE,
+                                         .init=list(list(), list())) %dopar% {
+          SplusS0_chol <- chol(S+S0[[i]])
+          list(SplusS0_chol,
+               S0[[i]]%*%backsolve(SplusS0_chol, forwardsolve(t(SplusS0_chol), S)))
+        }
+      stopCluster(cl)
+      
+      SplusS0_chol <- loopout[[1]]
+      S1 <- loopout[[2]]
+    } else {
+      SplusS0_chol <- list()
+      S1 <- list()
+      for(i in 1:length(S0)){
+        SplusS0_chol[[i]] <- chol(S+S0[[i]])
+        S1[[i]] <- S0[[i]]%*%backsolve(SplusS0_chol[[i]], forwardsolve(t(SplusS0_chol[[i]]), S))
+      }
     }
     
     if(version=="R"){
@@ -118,7 +137,6 @@ precompute_quants <- function(X, V, S0, standardize, version){
       return(list(V_chol=R, S=S, S1=simplify2array_custom(S1), S_chol=S_chol, SplusS0_chol=simplify2array_custom(SplusS0_chol), 
                   xtx=xtx, d=d, QtimesV_chol=QtimesR))
     }
-    
   } else {
     ###Quantities that don't depend on S0
     R <- chol(V)
@@ -128,15 +146,31 @@ precompute_quants <- function(X, V, S0, standardize, version){
     Rinv <- backsolve(R, diag(nrow(R)))
     
     ###Quantities that depend on S0
-    d <- list()
-    QtimesR <- list()
-    for(i in 1:length(S0)){
-      U0  <- Rtinv %*% S0[[i]] %*% Rinv
-      out <- eigen(U0)
-      d[[i]]   <- out$values
-      QtimesR[[i]]   <- crossprod(out$vectors, R)   
+    if(nthreads>1){
+      cl <- makeForkCluster(nthreads)
+      registerDoParallel(cl)
+      loopout <- foreach(i=1:length(S0), .combine='comb', .multicombine=TRUE,
+                                          .init=list(list(), list())) %dopar% {
+          U0  <- Rtinv %*% S0[[i]] %*% Rinv
+          out <- eigen(U0)
+          list(out$values,
+          crossprod(out$vectors, R))   
+        }
+      stopCluster(cl)
+      
+      d <- loopout[[1]]
+      QtimesR <- loopout[[2]]
+    } else {
+      d <- list()
+      QtimesR <- list()
+      for(i in 1:length(S0)){
+        U0  <- Rtinv %*% S0[[i]] %*% Rinv
+        out <- eigen(U0)
+        d[[i]]   <- out$values
+        QtimesR[[i]]   <- crossprod(out$vectors, R)   
+      }
     }
-    
+
     if(version=="R"){
       return(list(V_chol=R, d=d, QtimesV_chol=QtimesR))
     } else if(version=="Rcpp"){
@@ -149,6 +183,12 @@ precompute_quants <- function(X, V, S0, standardize, version){
                   S=S, S1=S1, S_chol=S_chol, SplusS0_chol=SplusS0_chol))
     }
   }
+}
+
+###Function to combine output in foreach loop above (https://stackoverflow.com/questions/19791609/saving-multiple-outputs-of-foreach-dopar-loop)
+comb <- function(x, ...) {
+  lapply(seq_along(x),
+         function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
 }
 
 ###Filter out quantities corresponding to components that are dropped by w0_threshold

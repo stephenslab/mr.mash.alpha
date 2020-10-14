@@ -276,7 +276,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   eps <- .Machine$double.eps
 
   ###Precompute quantities
-  comps <- precompute_quants(X, V, S0, standardize, version)
+  comps <- precompute_quants(X, V, S0, standardize, version, nthreads)
   if(!standardize){
     xtx <- colSums(X^2)
     comps$xtx <- xtx
@@ -355,7 +355,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
           V <- diag(diag(V))
         
         #Recompute precomputed quantities after updating V
-        comps <- precompute_quants(X, V, S0, standardize, version)
+        comps <- precompute_quants(X, V, S0, standardize, version, nthreads)
         if(!standardize)
           comps$xtx <- xtx
         if(compute_ELBO || !standardize)
