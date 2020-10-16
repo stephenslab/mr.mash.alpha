@@ -1,14 +1,14 @@
 Encoding: UTF-8
 Type: Package
 Package: mr.mash.alpha
-Version: 0.1-117
-Date: 2020-10-09
+Version: 0.1-118
+Date: 2020-10-16
 Title: Multiple Regression with Multivariate Adaptive Shrinkage
 Description: Provides an implementation of methods for multivariate 
     multiple regression with adaptive shrinkage priors.
 URL: https://github.com/stephenslab/mr.mash.alpha
 Authors@R: c(person("Fabio","Morgante",role=c("cre","aut"),
-                   email="fmorgante@uchicago.edu"),
+                   email="fabiom@clemson.edu"),
              person("Peter","Carbonetto",role="aut"),
              person("Matthew","Stephens",role="aut"))
 License: MIT + file LICENSE
