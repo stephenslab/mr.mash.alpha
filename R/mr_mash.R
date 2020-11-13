@@ -29,7 +29,8 @@
 #' 
 #' @param update_w0 If \code{TRUE}, prior weights are updated.
 #' 
-#' @param update_w0_method Method to update prior weights.
+#' @param update_w0_method Method to update prior weights. Only EM is
+#'   currently supported.
 #' 
 #' @param w0_threshold Drop mixture components with weight less than this value.
 #'   Components are dropped at each iteration after 15 initial iterations.
@@ -151,7 +152,7 @@
 #' 
 mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
                     mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
-                    max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
+                    max_iter=5000, update_w0=TRUE, update_w0_method="EM", 
                     w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
                     ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
@@ -215,8 +216,6 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     stop("S0 and w0 must have the same length.")
   if(!is.matrix(mu1_init))
     stop("mu1_init must be a matrix.")
-  if(update_w0_method=="mixsqp" && !compute_ELBO)
-    stop("ELBO needs to be computed with update_w0_method=\"mixsqp\".")
   if(convergence_criterion=="ELBO" && !compute_ELBO)
     stop("ELBO needs to be computed with convergence_criterion=\"ELBO\".")
 
@@ -366,16 +365,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
       
       ##Update w0 if requested
       if(update_w0){
-        if(update_w0_method=="EM")
-          w0 <- update_weights_em(w1_t)
-        else if(update_w0_method=="mixsqp"){
-          w0   <- update_weights_mixsqp(X=X, Y=Y, mu1=mu1_t, V=V, Vinv=Vinv,
-                                        ldetV=ldetV, w0old=w0, S0=S0,
-                                        precomp_quants=comps,
-                                        standardize=standardize,
-                                        version=version, update_order=update_order, eps=eps,
-                                        nthreads=nthreads)$w0
-        }
+        w0 <- update_weights_em(w1_t)
         
         #Drop components with mixture weight <= w0_threshold
         if(t>15 && any(w0 < w0_threshold)){
