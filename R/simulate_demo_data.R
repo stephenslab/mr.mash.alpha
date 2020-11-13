@@ -63,18 +63,28 @@
 #' @importFrom matrixStats colVars
 #' 
 #' @export
-simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(c(1:r)), intercepts=rep(1, r),
-                                  pve=0.2, B_cor=0, B_scale=0.8, w=1,
-                                  X_cor=0.5, X_scale=0.8, V_cor=0.25){
+#' 
+#' 
+#' @examples
+#' dat <- simulate_mr_mash_data(n=50, p=40, p_causal=20, r=5, r_causal=list(1:2, 3:4), intercepts=rep(1, 5),
+#'                              pve=0.2, B_cor=c(0, 1), B_scale=c(0.5, 1), w=c(0.5, 0.5), X_cor=0.5, X_scale=1, 
+#'                              V_cor=0)
+#'                              
+#'                              
+simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), intercepts=rep(1, r),
+                                  pve=0.2, B_cor=1, B_scale=1, w=1,
+                                  X_cor=0, X_scale=1, V_cor=0){
   ##Check that the inputs are correct
   if(length(intercepts)!=r)
     stop("intercepts must be of length equal to r.")
-  if(any(lapply(r_causal, length)>r))
+  if(any(sapply(r_causal, length)>r))
     stop("r_causal cannot be greater than r.")
   if(!(length(B_cor)==length(B_scale) & length(w)==length(B_cor) & length(B_scale)==length(w)))
     stop("B_cor, B_scale, and w must have the same length.")
   if(abs(sum(w) - 1) > 1e-10)
     stop("Elements of w must sum to 1.")
+  if(length(pve)!=1 & length(pve)!=r)
+    stop("pve must be of length equal to 1 or r.")
   
   ##Get number of mixture components
   K <- length(w)
@@ -135,12 +145,18 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(c(1:r)), inte
   out <- list(X=X, Y=Y, B=B, V=V, Sigma=Sigma, Gamma=Gamma,
               intercepts=intercepts, causal_responses=causal_responses)
   if(K>1){
-    causal_variables_mixcomps <- cbind(causal_variables, mixcomps)
-    causal_variables_mixcomps <- causal_variables_mixcomps[order(causal_variables_mixcomps[, 1]), ]
-    out$causal_variables <- causal_variables_mixcomps[, 1]
-    out$causal_vars_to_mixture_comps <- causal_variables_mixcomps[, 2]
+    if(p_causal>1){
+      causal_variables_mixcomps <- cbind(causal_variables, mixcomps)
+      causal_variables_mixcomps <- causal_variables_mixcomps[order(causal_variables_mixcomps[, 1]), ]
+      out$causal_variables <- causal_variables_mixcomps[, 1]
+      out$causal_vars_to_mixture_comps <- causal_variables_mixcomps[, 2]
+    } else {
+      out$causal_variables <- causal_variables
+      out$causal_vars_to_mixture_comps <- mixcomps
+    }
   } else {
     out$causal_variables <- sort(causal_variables)
+    out$causal_vars_to_mixture_comps <- rep(1, p_causal)
   }
   
   return(out)

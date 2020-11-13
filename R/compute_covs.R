@@ -101,31 +101,49 @@ compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, non_
 #' @param standardize.response If \code{TRUE}, Y is "standardized" using the
 #'   sample means and sample standard deviations.
 #'   
+#' @param mc.cores Number of cores to use. Parallelization is done over responses. 
+#'   
 #' @return A list with following elements:
 #' 
 #' \item{Bhat}{p x r matrix of the regression coeffcients.}
 #'
 #' \item{Shat}{p x r matrix of the standard errors for regression coeffcients.}
 #' 
+#' @importFrom parallel makeCluster parLapply stopCluster
+#' 
 #' @export
-compute_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.response=FALSE){
+compute_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.response=FALSE, mc.cores=1){
   r <- ncol(Y)
-  p <- ncol(X)
-  B <- matrix(as.numeric(NA), nrow=p, ncol=r)
-  S <- matrix(as.numeric(NA), nrow=p, ncol=r)
   
-  X <- scale(X, center=TRUE, scale=standardize) 
-  Y <- scale(Y, center=TRUE, scale=standardize.response)
+  X <- scale_fast2(X, scale=standardize)$M 
+  Y <- scale_fast2(Y, scale=standardize.response)$M
   
-  for(i in 1:r){
+  linreg <- function(i, X, Y){
+    p <- ncol(X)
+    bhat <- rep(as.numeric(NA), p)
+    shat <- rep(as.numeric(NA), p)
+    
     for(j in 1:p){
       fit <- lm(Y[, i] ~ X[, j]-1)
-      B[j, i] <- coef(fit)
-      S[j, i] <- summary(fit)$coefficients[1, 2]
+      bhat[j] <- coef(fit)
+      shat[j] <- summary(fit)$coefficients[1, 2]
     }
+    
+    return(list(bhat=bhat, shat=shat))
   }
   
-  return(list(Bhat=B, Shat=S))
+  if(mc.cores>1){
+    ###mclapply is a little faster but uses more memory
+    # out <- mclapply(1:r, linreg, X, Y, mc.cores=mc.cores)
+    
+    cl <- makeCluster(mc.cores)
+    out <- parLapply(cl, 1:r, linreg, X, Y)
+    stopCluster(cl)
+  } else {
+    out <- lapply(1:r, linreg, X, Y)
+  }
+  
+  return(list(Bhat=sapply(out,"[[","bhat"), Shat=sapply(out,"[[","shat")))
 }
 
 #' @title Compute a grid of standard deviations to scale the canonical covariance matrices.
@@ -166,6 +184,7 @@ autoselect.mixsd <- function(data, mult=2){
 #'   
 #' @export
 expand_covs <- function(mats, grid, zeromat=TRUE){
+  r <- ncol(mats[[1]])
   mats <- lapply(mats, normalize_cov)
   U <- list()
   nms <- vector("character")

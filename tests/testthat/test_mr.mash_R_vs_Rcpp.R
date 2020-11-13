@@ -72,34 +72,6 @@ test_that("mr.mash R version and Rcpp version return the same results", {
                             version="R", ca_update_order="decreasing_logBF"))
   fit_scaled_V_declogBF$progress <- fit_scaled_V_declogBF$progress[, -2]
   
-  capture.output(
-    fit_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
-                          update_w0_method="mixsqp", compute_ELBO=TRUE, 
-                          standardize=FALSE, verbose=FALSE, update_V=FALSE,
-                          version="R"))
-  fit_mixsqp$progress <- fit_mixsqp$progress[, -2]
-  
-  capture.output(
-    fit_scaled_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, 
-                                 update_w0=TRUE, update_w0_method="mixsqp",
-                                 compute_ELBO=TRUE, standardize=TRUE,
-                                 verbose=FALSE, update_V=FALSE, version="R"))
-  fit_scaled_mixsqp$progress <- fit_scaled_mixsqp$progress[, -2]
-  
-  capture.output(
-    fit_V_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
-                            update_w0_method="mixsqp", compute_ELBO=TRUE, 
-                            standardize=FALSE, verbose=FALSE, update_V=TRUE,
-                            version="R"))
-  fit_V_mixsqp$progress <- fit_V_mixsqp$progress[, -2]
-  
-  capture.output(
-    fit_scaled_V_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, 
-                                   update_w0=TRUE, update_w0_method="mixsqp",
-                                   compute_ELBO=TRUE, standardize=TRUE,
-                                   verbose=FALSE, update_V=TRUE, version="R"))
-  fit_scaled_V_mixsqp$progress <- fit_scaled_V_mixsqp$progress[, -2]
-  
 
     ###Fit with current implementation (Rcpp version)
   capture.output(
@@ -137,38 +109,6 @@ test_that("mr.mash R version and Rcpp version return the same results", {
                                      version="Rcpp", ca_update_order="decreasing_logBF"))
   fit_scaled_V_declogBF_rcpp$progress <- fit_scaled_V_declogBF_rcpp$progress[, -2]
   
-  capture.output(
-    fit_rcpp_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, 
-                               update_w0=TRUE, update_w0_method="mixsqp",
-                               compute_ELBO=TRUE, standardize=FALSE,
-                               verbose=FALSE, update_V=FALSE, version="Rcpp"))
-  fit_rcpp_mixsqp$progress <- fit_rcpp_mixsqp$progress[, -2]
-  
-  capture.output(
-    fit_scaled_rcpp_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, 
-                                      update_w0=TRUE,
-                                      update_w0_method="mixsqp",
-                                      compute_ELBO=TRUE, standardize=TRUE,
-                                      verbose=FALSE, update_V=FALSE,
-                                      version="Rcpp"))
-  fit_scaled_rcpp_mixsqp$progress <- fit_scaled_rcpp_mixsqp$progress[, -2]
-  
-  capture.output(
-    fit_V_rcpp_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, 
-                                 update_w0=TRUE, update_w0_method="mixsqp",
-                                 compute_ELBO=TRUE, standardize=FALSE,
-                                 verbose=FALSE, update_V=TRUE, version="Rcpp"))
-  fit_V_rcpp_mixsqp$progress <- fit_V_rcpp_mixsqp$progress[, -2]
-  
-  capture.output(
-    fit_scaled_V_rcpp_mixsqp <- mr.mash(X, Y, S0mix, w0, V_est, 
-                                        update_w0=TRUE,
-                                        update_w0_method="mixsqp",
-                                        compute_ELBO=TRUE, standardize=TRUE,
-                                        verbose=FALSE, update_V=TRUE,
-                                        version="Rcpp"))
-  fit_scaled_V_rcpp_mixsqp$progress <- fit_scaled_V_rcpp_mixsqp$progress[, -2]
-  
   
   ###Tests
   expect_equal(fit, fit_rcpp, tolerance=1e-10, scale=1)
@@ -176,10 +116,4 @@ test_that("mr.mash R version and Rcpp version return the same results", {
   expect_equal(fit_V, fit_V_rcpp, tolerance=1e-10, scale=1)
   expect_equal(fit_scaled_V, fit_scaled_V_rcpp, tolerance=1e-10, scale=1)
   expect_equal(fit_scaled_V_declogBF, fit_scaled_V_declogBF_rcpp, tolerance=1e-10, scale=1)
-  expect_equal(fit_mixsqp, fit_rcpp_mixsqp, tolerance=1e-10, scale=1)
-  expect_equal(fit_scaled_mixsqp, fit_scaled_rcpp_mixsqp, tolerance=1e-10,
-               scale=1)
-  expect_equal(fit_V_mixsqp, fit_V_rcpp_mixsqp, tolerance=1e-10, scale=1)
-  expect_equal(fit_scaled_V_mixsqp, fit_scaled_V_rcpp_mixsqp, tolerance=1e-10,
-               scale=1)
 })

@@ -15,7 +15,7 @@ mr.mash(
   convergence_criterion = c("mu1", "ELBO"),
   max_iter = 5000,
   update_w0 = TRUE,
-  update_w0_method = c("EM", "mixsqp"),
+  update_w0_method = "EM",
   w0_threshold = 0,
   compute_ELBO = TRUE,
   standardize = TRUE,
@@ -24,7 +24,8 @@ mr.mash(
   update_V_method = c("full", "diagonal"),
   version = c("Rcpp", "R"),
   e = 1e-08,
-  ca_update_order = c("consecutive", "decreasing_logBF", "increasing_logBF")
+  ca_update_order = c("consecutive", "decreasing_logBF", "increasing_logBF"),
+  nthreads = as.integer(NA)
 )
 }
 \arguments{
@@ -54,7 +55,8 @@ algorithm.}
 
 \item{update_w0}{If \code{TRUE}, prior weights are updated.}
 
-\item{update_w0_method}{Method to update prior weights.}
+\item{update_w0_method}{Method to update prior weights. Only EM is
+currently supported.}
 
 \item{w0_threshold}{Drop mixture components with weight less than this value.
 Components are dropped at each iteration after 15 initial iterations.
@@ -85,8 +87,15 @@ coordinate ascent updates.}
 \item{e}{A small number to add to the diagonal elements of the
 prior matrices to improve numerical stability of the updates.}
 
-\item{ca_update_order}{The order with which coordinates are updated.
-So far, "consecutive", "decreasing_logBF", "increasing_logBF" are supported.}
+\item{ca_update_order}{The order with which coordinates are
+updated.  So far, "consecutive", "decreasing_logBF",
+"increasing_logBF" are supported.}
+
+\item{nthreads}{Number of RcppParallel threads to use for the
+updates. When \code{nthreads} is \code{NA}, the default number of
+threads is used; see
+\code{\link[RcppParallel]{defaultNumThreads}}. This setting is
+ignored when \code{version = "R"}.}
 }
 \value{
 A mr.mash fit, stored as a list with some or all of the
@@ -139,7 +148,7 @@ p_causal <- 20
 r <- 5
 
 ###Simulate data
-out <- simulate_mr_mash_data(n, p, p_causal, r, pve=0.5, B_cor=1, B_scale=1, X_cor=0, X_scale=1, V_cor=0)
+out <- simulate_mr_mash_data(n, p, p_causal, r, pve=0.5, B_cor=list(1), B_scale=list(1), X_cor=0, X_scale=1, V_cor=0)
 
 ###Split the data in training and test sets
 Ytrain <- out$Y[-c(1:200), ]
@@ -148,7 +157,7 @@ Ytest <- out$Y[c(1:200), ]
 Xtest <- out$X[c(1:200), ]
 
 ###Specify the covariance matrices for the mixture-of-normals prior.
-univ_sumstats <- get_univariate_sumstats(Xtrain, Ytrain, standardize=TRUE, standardize.response=FALSE)
+univ_sumstats <- compute_univariate_sumstats(Xtrain, Ytrain, standardize=TRUE, standardize.response=FALSE)
 grid <- autoselect.mixsd(univ_sumstats, mult=sqrt(2))^2
 S0 <- compute_canonical_covs(ncol(Ytrain), singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 1))
 S0 <- expand_covs(S0, grid, zeromat=TRUE)

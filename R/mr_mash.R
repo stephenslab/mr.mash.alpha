@@ -29,7 +29,8 @@
 #' 
 #' @param update_w0 If \code{TRUE}, prior weights are updated.
 #' 
-#' @param update_w0_method Method to update prior weights.
+#' @param update_w0_method Method to update prior weights. Only EM is
+#'   currently supported.
 #' 
 #' @param w0_threshold Drop mixture components with weight less than this value.
 #'   Components are dropped at each iteration after 15 initial iterations.
@@ -60,8 +61,15 @@
 #' @param e A small number to add to the diagonal elements of the
 #'   prior matrices to improve numerical stability of the updates.
 #'   
-#' @param ca_update_order The order with which coordinates are updated.
-#'   So far, "consecutive", "decreasing_logBF", "increasing_logBF" are supported.
+#' @param ca_update_order The order with which coordinates are
+#'   updated.  So far, "consecutive", "decreasing_logBF",
+#'   "increasing_logBF" are supported.
+#'   
+#' @param nthreads Number of RcppParallel threads to use for the
+#'   updates. When \code{nthreads} is \code{NA}, the default number of
+#'   threads is used; see
+#'   \code{\link[RcppParallel]{defaultNumThreads}}. This setting is
+#'   ignored when \code{version = "R"}.
 #' 
 #' @return A mr.mash fit, stored as a list with some or all of the
 #' following elements:
@@ -97,7 +105,6 @@
 #'   the optimization algorithm converged to a solution within the chosen tolerance
 #'   level.}
 #'  
-#' 
 #' @examples 
 #' ###Set seed
 #' set.seed(123)
@@ -110,7 +117,7 @@
 #' r <- 5
 #'
 #' ###Simulate data
-#' out <- simulate_mr_mash_data(n, p, p_causal, r, pve=0.5, B_cor=1, B_scale=1, X_cor=0, X_scale=1, V_cor=0)
+#' out <- simulate_mr_mash_data(n, p, p_causal, r, pve=0.5, B_cor=list(1), B_scale=list(1), X_cor=0, X_scale=1, V_cor=0)
 #' 
 #' ###Split the data in training and test sets
 #' Ytrain <- out$Y[-c(1:200), ]
@@ -119,7 +126,7 @@
 #' Xtest <- out$X[c(1:200), ]
 #' 
 #' ###Specify the covariance matrices for the mixture-of-normals prior.
-#' univ_sumstats <- get_univariate_sumstats(Xtrain, Ytrain, standardize=TRUE, standardize.response=FALSE)
+#' univ_sumstats <- compute_univariate_sumstats(Xtrain, Ytrain, standardize=TRUE, standardize.response=FALSE)
 #' grid <- autoselect.mixsd(univ_sumstats, mult=sqrt(2))^2
 #' S0 <- compute_canonical_covs(ncol(Ytrain), singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0.75, 1))
 #' S0 <- expand_covs(S0, grid, zeromat=TRUE)
@@ -137,15 +144,29 @@
 #' plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",
 #'      ylab = "predicted")
 #' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
-#' 
+#'
+#' @importFrom RcppParallel defaultNumThreads
+#' @importFrom RcppParallel setThreadOptions
+#'
 #' @export
 #' 
 mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
                     mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
-                    max_iter=5000, update_w0=TRUE, update_w0_method=c("EM", "mixsqp"), 
+                    max_iter=5000, update_w0=TRUE, update_w0_method="EM", 
                     w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
-                    ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF")) {
+                    ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
+                    nthreads=as.integer(NA)) {
+  
+  # Initialize the RcppParallel multithreading using a pre-specified number
+  # of threads, or using the default number of threads when nthreads is NA.
+  if (is.na(nthreads)) {
+    setThreadOptions()
+    nthreads <- defaultNumThreads()
+  } else
+    setThreadOptions(numThreads = nthreads)
+  if (nthreads > 1)
+    message(sprintf("Using %d RcppParallel threads.",nthreads))
 
   tic <- Sys.time()
   cat("Processing the inputs... ")
@@ -171,7 +192,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ###Select ordering of the coordinate ascent updates (if not specified by user,
   ###consecutive will be used
   ca_update_order <- match.arg(ca_update_order)
-  
+
   ###Check that the inputs are in the correct format
   if(!is.matrix(Y))
     stop("Y must be a matrix.")
@@ -195,8 +216,6 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     stop("S0 and w0 must have the same length.")
   if(!is.matrix(mu1_init))
     stop("mu1_init must be a matrix.")
-  if(update_w0_method=="mixsqp" && !compute_ELBO)
-    stop("ELBO needs to be computed with update_w0_method=\"mixsqp\".")
   if(convergence_criterion=="ELBO" && !compute_ELBO)
     stop("ELBO needs to be computed with convergence_criterion=\"ELBO\".")
 
@@ -282,9 +301,11 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   if(ca_update_order=="consecutive"){
     update_order <- 1:p
   } else if(ca_update_order=="decreasing_logBF"){
-    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, decreasing=TRUE, eps)
+    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, 
+                                                 decreasing=TRUE, eps, nthreads)
   } else if(ca_update_order=="increasing_logBF"){
-    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, decreasing=FALSE, eps)
+    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, 
+                                                 decreasing=FALSE, eps, nthreads)
   }
   
   cat("Done!\n")
@@ -344,15 +365,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
       
       ##Update w0 if requested
       if(update_w0){
-        if(update_w0_method=="EM")
-          w0 <- update_weights_em(w1_t)
-        else if(update_w0_method=="mixsqp"){
-          w0   <- update_weights_mixsqp(X=X, Y=Y, mu1=mu1_t, V=V, Vinv=Vinv,
-                                        ldetV=ldetV, w0old=w0, S0=S0,
-                                        precomp_quants=comps,
-                                        standardize=standardize,
-                                        version=version, update_order=update_order, eps=eps)$w0
-        }
+        w0 <- update_weights_em(w1_t)
         
         #Drop components with mixture weight <= w0_threshold
         if(t>15 && any(w0 < w0_threshold)){
@@ -374,7 +387,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                                   compute_ELBO=compute_ELBO,
                                   standardize=standardize,
                                   update_V=update_V, version=version, 
-                                  update_order=update_order, eps=eps)
+                                  update_order=update_order, eps=eps,
+                                  nthreads=nthreads)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t

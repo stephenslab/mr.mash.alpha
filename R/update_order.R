@@ -1,5 +1,5 @@
 ###Compute logbf from Bayesian multivariate simple regression with mixture prior
-compute_logbf_R <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, eps){
+compute_logbf_R <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, eps, nthreads){
   p <- ncol(X)
   logbf <- rep(0, p)
   
@@ -21,11 +21,13 @@ compute_logbf_R <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, 
 }
 
 ###Compute rank of logbf from Bayesian multivariate simple regression with mixture prior
-compute_rank_variables_BFmix <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, version, decreasing, eps){
+compute_rank_variables_BFmix <- function(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, version, 
+                                         decreasing, eps, nthreads){
   if(version=="R"){
     logbfs <- compute_logbf_R(X, Y, V, Vinv, w0, S0, precomp_quants, standardize, eps)
   } else if(version=="Rcpp"){
-    logbfs <- compute_logbf_rcpp(X, Y, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, standardize, eps)
+    logbfs <- compute_logbf_rcpp(X, Y, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, 
+                                 standardize, eps , nthreads)
     logbfs <- drop(logbfs)
   }
   

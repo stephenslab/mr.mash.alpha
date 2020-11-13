@@ -80,7 +80,8 @@ compute_mixsqp_update_loop_general <- function(X, Rbar, V, S0, mu1, Vinv, precom
 # mixture weights update that increases the ELBO.
 backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0old, w0mixsqp,
                                       precomp_quants, standardize, compute_ELBO, update_V, 
-                                      version, update_order, eps, stepsize.reduce, stepsize.min) {
+                                      version, update_order, eps, nthreads, stepsize.reduce, 
+                                      stepsize.min) {
   
   # Compute the objective (ELBO) at the current iterate.
   ##Update variational parameters, expected residuals, and ELBO components
@@ -89,7 +90,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0old, w0mi
   updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1, V=V, Vinv=Vinv, w0=w0old, S0=S0, 
                                 precomp_quants=precomp_quants, standardize=standardize, 
                                 compute_ELBO=compute_ELBO, update_V=update_V, version=version,
-                                update_order=update_order, eps=eps)
+                                update_order=update_order, eps=eps, nthreads=nthreads)
 
   f <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=updates$var_part_tr_wERSS, neg_KL=updates$neg_KL)
     
@@ -102,7 +103,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0old, w0mi
     updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1, V=V, Vinv=Vinv, w0=w0new, S0=S0, 
                                   precomp_quants=precomp_quants, standardize=standardize,
                                   compute_ELBO=compute_ELBO, update_V=update_V, version=version,
-                                  update_order=update_order, eps=eps) 
+                                  update_order=update_order, eps=eps, nthreads=nthreads) 
 
     fnew <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=updates$var_part_tr_wERSS, neg_KL=updates$neg_KL)
     
@@ -137,7 +138,7 @@ backtracking_line_search <- function (X, Y, V, Vinv, ldetV, S0, mu1, w0old, w0mi
 update_weights_mixsqp <- function (X, Y, mu1, V, Vinv, ldetV, w0old, S0,
                                    precomp_quants, standardize,
                                    compute_ELBO=TRUE, update_V=FALSE, version, update_order,
-                                   eps, stepsize.reduce = 0.5, stepsize.min = 1e-8) {
+                                   eps, nthreads, stepsize.reduce = 0.5, stepsize.min = 1e-8) {
   
   # Compute the mix-SQP update for the mixture weights. Note that this
   # update is not guaranteed to increase the ELBO.
@@ -147,7 +148,8 @@ update_weights_mixsqp <- function (X, Y, mu1, V, Vinv, ldetV, w0old, S0,
   # increases the ELBO.
   out2 <- backtracking_line_search(X, Y, V, Vinv, ldetV, S0, mu1, w0old, out1$w0,
                                    precomp_quants, standardize, compute_ELBO, update_V, 
-                                   version, update_order, eps, stepsize.reduce, stepsize.min)
+                                   version, update_order, eps, nthreads, stepsize.reduce, 
+                                   stepsize.min)
   
   # Return the updated mixture weights ("w0"), the number of mix-SQP
   # iterations performed ("numiter"), and the step size determined by the
