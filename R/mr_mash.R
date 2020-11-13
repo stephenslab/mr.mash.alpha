@@ -168,8 +168,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   if (nthreads > 1)
     message(sprintf("Using %d RcppParallel threads.",nthreads))
 
-  tic <- Sys.time()
-  cat("Processing the inputs... ")
+  if(verbose){
+    tic <- Sys.time()
+    cat("Processing the inputs... ")
+  }
 
   # CHECK AND PROCESS INPUTS
   # ------------------------
@@ -308,13 +310,13 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                                                  decreasing=FALSE, eps, nthreads)
   }
   
-  cat("Done!\n")
+  if(verbose)
+    cat("Done!\n")
 
   # MAIN LOOP
   # ---------
-  cat("Fitting the optimization algorithm... ")
   if(verbose){
-    cat("\n")
+    cat("Fitting the optimization algorithm... \n")
     cat(" iter    mu1_max.diff")
     if(compute_ELBO)
       cat("     ELBO_diff               ELBO\n")
@@ -430,8 +432,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   else
     converged <- TRUE
   
-  cat("Done!\n")
-  cat("Processing the outputs... ")
+  if(verbose){
+    cat("Done!\n")
+    cat("Processing the outputs... ")
+  }
 
   # POST-PROCESSING STEPS
   # --------------------
@@ -485,10 +489,12 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
 
   class(out) <- c("mr.mash", "list")
   
-  cat("Done!\n")
-  toc <- Sys.time()
-  cat("mr.mash successfully executed in", difftime(toc, tic, units="mins"),
-      "minutes!\n")
+  if(verbose){
+    cat("Done!\n")
+    toc <- Sys.time()
+    cat("mr.mash successfully executed in", difftime(toc, tic, units="mins"),
+        "minutes!\n")
+  }
   
   return(out)
 }
