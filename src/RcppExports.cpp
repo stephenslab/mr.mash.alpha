@@ -30,25 +30,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// compute_mixsqp_update_loop_rcpp
-arma::mat compute_mixsqp_update_loop_rcpp(const arma::mat& X, const arma::mat& Rbar, const arma::mat& V, const arma::cube& S0, const arma::mat& mu1, const arma::mat& Vinv, const List& precomp_quants_list, bool standardize, const arma::vec& update_order);
-RcppExport SEXP _mr_mash_alpha_compute_mixsqp_update_loop_rcpp(SEXP XSEXP, SEXP RbarSEXP, SEXP VSEXP, SEXP S0SEXP, SEXP mu1SEXP, SEXP VinvSEXP, SEXP precomp_quants_listSEXP, SEXP standardizeSEXP, SEXP update_orderSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Rbar(RbarSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type V(VSEXP);
-    Rcpp::traits::input_parameter< const arma::cube& >::type S0(S0SEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type mu1(mu1SEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Vinv(VinvSEXP);
-    Rcpp::traits::input_parameter< const List& >::type precomp_quants_list(precomp_quants_listSEXP);
-    Rcpp::traits::input_parameter< bool >::type standardize(standardizeSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type update_order(update_orderSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_mixsqp_update_loop_rcpp(X, Rbar, V, S0, mu1, Vinv, precomp_quants_list, standardize, update_order));
-    return rcpp_result_gen;
-END_RCPP
-}
 // scale_rcpp
 arma::mat scale_rcpp(const arma::mat& M, const arma::vec& a, const arma::vec& b);
 RcppExport SEXP _mr_mash_alpha_scale_rcpp(SEXP MSEXP, SEXP aSEXP, SEXP bSEXP) {
@@ -111,7 +92,6 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_mr_mash_alpha_inner_loop_general_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rcpp, 14},
-    {"_mr_mash_alpha_compute_mixsqp_update_loop_rcpp", (DL_FUNC) &_mr_mash_alpha_compute_mixsqp_update_loop_rcpp, 9},
     {"_mr_mash_alpha_scale_rcpp", (DL_FUNC) &_mr_mash_alpha_scale_rcpp, 3},
     {"_mr_mash_alpha_scale2_rcpp", (DL_FUNC) &_mr_mash_alpha_scale2_rcpp, 3},
     {"_mr_mash_alpha_rescale_post_mean_covar_rcpp", (DL_FUNC) &_mr_mash_alpha_rescale_post_mean_covar_rcpp, 3},

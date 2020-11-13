@@ -15,7 +15,7 @@ mr.mash(
   convergence_criterion = c("mu1", "ELBO"),
   max_iter = 5000,
   update_w0 = TRUE,
-  update_w0_method = c("EM", "mixsqp"),
+  update_w0_method = "EM",
   w0_threshold = 0,
   compute_ELBO = TRUE,
   standardize = TRUE,
@@ -55,7 +55,8 @@ algorithm.}
 
 \item{update_w0}{If \code{TRUE}, prior weights are updated.}
 
-\item{update_w0_method}{Method to update prior weights.}
+\item{update_w0_method}{Method to update prior weights. Only EM is
+currently supported.}
 
 \item{w0_threshold}{Drop mixture components with weight less than this value.
 Components are dropped at each iteration after 15 initial iterations.

@@ -5,10 +5,6 @@ inner_loop_general_rcpp <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quant
     .Call('_mr_mash_alpha_inner_loop_general_rcpp', PACKAGE = 'mr.mash.alpha', X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads)
 }
 
-compute_mixsqp_update_loop_rcpp <- function(X, Rbar, V, S0, mu1, Vinv, precomp_quants_list, standardize, update_order) {
-    .Call('_mr_mash_alpha_compute_mixsqp_update_loop_rcpp', PACKAGE = 'mr.mash.alpha', X, Rbar, V, S0, mu1, Vinv, precomp_quants_list, standardize, update_order)
-}
-
 scale_rcpp <- function(M, a, b) {
     .Call('_mr_mash_alpha_scale_rcpp', PACKAGE = 'mr.mash.alpha', M, a, b)
 }
