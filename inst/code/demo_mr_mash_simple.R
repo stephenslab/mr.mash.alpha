@@ -63,12 +63,13 @@ abline(a = 0,b = 1,col = "skyblue",lty = "dotted")
 
 
 # Assign some missing values in Y
-Y[1:10, 1] <- NA
-Y[11:20, 2] <- NA
+Y_miss <- Y
+Y_miss[1:10, 1] <- NA
+Y_miss[11:25, 2] <- NA
 
 # FIT MR-MASH MODEL ALLOWING FOR MISSING Ys
 # -----------------
 # Run 20 co-ordinate ascent updates.
 B0  <- matrix(0,p,r)
-fit_miss <- mr_mash_simple_missing_Y(X,Y,V,S0,w0,B0,20,update_w0=TRUE,update_V=FALSE, verbose=TRUE)
+fit_miss <- mr_mash_simple_missing_Y(X,Y_miss,V,S0,w0,B0,20,update_w0=TRUE,update_V=FALSE, verbose=TRUE)
 
