@@ -1,4 +1,116 @@
 # Run several iterations of the co-ordinate ascent updates for the
+# mr-mash model allowing for missing values in Y.
+#
+# The special case of univariate regression, when Y is a vector or a
+# matrix with 1 column, is also handled.
+#
+# This implementation is meant to be "instructive"---that is, I've
+# tried to make the code as simple as possible, with an emphasis on
+# clarity. Very little effort has been devoted to making the
+# implementation efficient, or the code concise.
+mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
+                                      tol=1e-4, update_w0=TRUE, update_V=FALSE,
+                                      verbose=FALSE) {
+  
+  r <- ncol(Y)
+  n <- nrow(Y)
+  
+  # Get missing Y patterns (code from Yuxin)
+  Y_missing <- is.na(Y)
+  Y_non_missing <- !Y_missing
+  missing_pattern <- unique(Y_non_missing)
+  Y_missing_pattern_assign <- numeric(n)
+  for(z in 1:nrow(missing_pattern)){
+    idx = which(apply(Y_non_missing, 1, function(x) identical(x, missing_pattern[z,])))
+    Y_missing_pattern_assign[idx] <- z
+  }
+  Y[Y_missing] <- 0
+  
+  # Compute inverse of V for each missing pattern (code from Yuxin)
+  V_inv <- list()
+  for(z in 1:nrow(missing_pattern)){
+    if(r == 1){
+      V_inv[[z]] <- missing_pattern[z,] / V
+    }else{
+      Vz = V[which(missing_pattern[z,]), which(missing_pattern[z,])]
+      eigenVz <- eigen(Vz, symmetric = TRUE)
+      dinv <- 1/(eigenVz$values)
+      V_inv[[z]] <- eigenVz$vectors %*% (dinv * t(eigenVz$vectors))
+    }
+  }
+  
+  # Center X
+  X <- scale(X, scale=FALSE)
+  mux <- attr(X,"scaled:center")
+  
+  # This variable is used to keep track of the algorithm's progress.
+  maxd <- rep(0,numiter)
+  
+  # Iterate the updates.
+  for (t in 1:numiter) {
+    
+    # Save the current estimates of the posterior means.
+    B0 <- B
+    
+    # M-step, if not the first iteration
+    if(t!=1){
+      # Update mixture weights, if requested
+      if(update_w0){
+        w0 <- colSums(out$W1)
+        w0 <- w0/sum(w0)
+      }
+      
+      # # Update V, if requested
+      # if(update_V){
+      #   R <- Y - X%*%B
+      #   ERSS <- crossprod(R) + out$var_part_ERSS
+      #   V <- ERSS/nrow(Y)
+      # }
+    }
+    
+    # Impute missing Y (code from Yuxin)
+    for (i in 1:n){
+      missing_pattern_i = !missing_pattern[Y_missing_pattern_assign[i],]
+      V_mo = V[missing_pattern_i, !missing_pattern_i, drop=FALSE]
+      if(any(missing_pattern_i)){
+        imp_mean = B[i, missing_pattern_i] + V_mo %*% V_inv[[Y_missing_pattern_assign[i]]] %*%
+          (Y[i, !missing_pattern_i] - B[i, !missing_pattern_i])
+        Y[i,missing_pattern_i] = imp_mean
+      }
+    }
+      
+    # Center X
+    Y <- scale(Y, scale=FALSE)
+    muy <- attr(Y,"scaled:center")
+    
+    # E-step: Update the posterior means of the regression coefficients.
+    out <- mr_mash_update_simple(X,Y,B,V,w0,S0)
+    B <- out$B 
+    
+    # Store the largest change in the posterior means.
+    delta_B <- abs(max(B - B0))
+    maxd[t] <- delta_B
+      
+    # Print out some info, if requested
+    if(verbose)
+      cat("Iter:", t, "    max_deltaB:", delta_B, "\n")
+      
+    # Break if convergence is reached
+    if(delta_B<tol)
+      break
+  }
+    
+  # Compute the intercept
+  intercept <- drop(muy - mux %*% B)
+    
+  # Return the updated posterior means of the regression coefficicents
+  # (B), the maximum change at each iteration (maxd), the prior weights,
+  # and V.
+  return(list(intercept=intercept,B = B,maxd = maxd,w0=w0,V=V))
+}
+  
+
+# Run several iterations of the co-ordinate ascent updates for the
 # mr-mash model.
 #
 # The special case of univariate regression, when Y is a vector or a
@@ -22,13 +134,13 @@ mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
   maxd <- rep(0,numiter)
 
   # Iterate the updates.
-  for (i in 1:numiter) {
+  for (t in 1:numiter) {
 
     # Save the current estimates of the posterior means.
     B0 <- B
     
     # M-step, if not the first iteration
-    if(i!=1){
+    if(t!=1){
       # Update mixture weights, if requested
       if(update_w0){
         w0 <- colSums(out$W1)
@@ -49,11 +161,11 @@ mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
     
     # Store the largest change in the posterior means.
     delta_B <- abs(max(B - B0))
-    maxd[i] <- delta_B
+    maxd[t] <- delta_B
     
     # Print out some info, if requested
     if(verbose)
-      cat("Iter:", i, "    max_deltaB:", delta_B, "\n")
+      cat("Iter:", t, "    max_deltaB:", delta_B, "\n")
     
     # Break if convergence is reached
     if(delta_B<tol)
@@ -240,6 +352,6 @@ bayes_mvr_mix_simple <- function (x, Y, V, w0, S0) {
 # and covarirance S at x.
 #
 #' @importFrom mvtnorm dmvnorm
-ldmvnorm <- function (x, S)
-  mvtnorm::dmvnorm(x,sigma = S,log = TRUE)
-
+ldmvnorm <- function (x, S){
+  dmvnorm(x,sigma = S,log = TRUE)
+}
