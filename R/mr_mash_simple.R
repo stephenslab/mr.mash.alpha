@@ -354,5 +354,5 @@ bayes_mvr_mix_simple <- function (x, Y, V, w0, S0) {
 #
 #' @importFrom mvtnorm dmvnorm
 ldmvnorm <- function (x, S){
-  dmvnorm(x,sigma = S,log = TRUE)
+  mvtnorm::dmvnorm(x,sigma = S,log = TRUE)
 }

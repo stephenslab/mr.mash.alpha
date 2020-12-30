@@ -1,15 +1,14 @@
 # An illustration of the mr_mash_simple implementation applied to a
 # small, simulated data set.
 suppressMessages(library(MBSP))
-library(mvtnorm)
 source("../../R/misc.R")
 source("../../R/mr_mash_simple.R")
 
 # SCRIPT PARAMETERS
 # -----------------
 # Number of samples (n) and number of predictors (p).
-n <- 500
-p <- 20
+n <- 50
+p <- 100
 
 # Residual covariance matrix.
 V <- rbind(c(1.0,0.2),
@@ -37,7 +36,6 @@ S0 <- list(k1 = rbind(c(3,0),
 # The mixture weights in the mixture-of-normals prior on the
 # regression coefficients.
 w0 <- c(0.1,0.2,0.2,0.1,0.4)
-k  <- length(w0)
 
 # SIMULATE DATA
 # -------------
@@ -64,8 +62,8 @@ abline(a = 0,b = 1,col = "skyblue",lty = "dotted")
 
 # Assign some missing values in Y
 Y_miss <- Y
-Y_miss[1:10, 1] <- NA
-Y_miss[11:25, 2] <- NA
+Y_miss[1:5, 1] <- NA
+Y_miss[11:15, 2] <- NA
 
 # FIT MR-MASH MODEL ALLOWING FOR MISSING Ys
 # -----------------
@@ -73,3 +71,7 @@ Y_miss[11:25, 2] <- NA
 B0  <- matrix(0,p,r)
 fit_miss <- mr_mash_simple_missing_Y(X,Y_miss,V,S0,w0,B0,20,update_w0=TRUE,update_V=FALSE, verbose=TRUE)
 
+# Compare the posterior mean estimates of the regression coefficients
+# against the coefficients used to simulate the data.
+plot(B,fit_miss$B,pch = 20,xlab = "true",ylab = "estimated")
+abline(a = 0,b = 1,col = "skyblue",lty = "dotted")
