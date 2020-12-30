@@ -69,12 +69,13 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
     }
     
     # Impute missing Y (code from Yuxin)
+    mu <- X%*%B
     for (i in 1:n){
       missing_pattern_i = !missing_pattern[Y_missing_pattern_assign[i],]
       V_mo = V[missing_pattern_i, !missing_pattern_i, drop=FALSE]
       if(any(missing_pattern_i)){
-        imp_mean = B[i, missing_pattern_i] + V_mo %*% V_inv[[Y_missing_pattern_assign[i]]] %*%
-          (Y[i, !missing_pattern_i] - B[i, !missing_pattern_i])
+        imp_mean = mu[i, missing_pattern_i] + V_mo %*% V_inv[[Y_missing_pattern_assign[i]]] %*%
+          (Y[i, !missing_pattern_i] - mu[i, !missing_pattern_i])
         Y[i,missing_pattern_i] = imp_mean
       }
     }
