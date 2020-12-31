@@ -52,7 +52,7 @@ Y <- matrix.normal(X %*% B,diag(n),V)
 # -----------------
 # Run 20 co-ordinate ascent updates.
 B0  <- matrix(0,p,r)
-fit <- mr_mash_simple(X,Y,V,S0,w0,B0,20,update_w0=TRUE,update_V=FALSE, verbose=TRUE)
+fit <- mr_mash_simple(X,Y,V,S0,w0,B0,20,update_w0=TRUE,update_V=TRUE, verbose=TRUE)
 
 # Compare the posterior mean estimates of the regression coefficients
 # against the coefficients used to simulate the data.
@@ -69,7 +69,7 @@ Y_miss[11:15, 2] <- NA
 # -----------------
 # Run 20 co-ordinate ascent updates.
 B0  <- matrix(0,p,r)
-fit_miss <- mr_mash_simple_missing_Y(X,Y_miss,V,S0,w0,B0,20,update_w0=TRUE,update_V=FALSE, verbose=TRUE)
+fit_miss <- mr_mash_simple_missing_Y(X,Y_miss,V,S0,w0,B0,20,update_w0=TRUE,update_V=TRUE, verbose=TRUE)
 
 # Compare the posterior mean estimates of the regression coefficients
 # against the coefficients used to simulate the data.
