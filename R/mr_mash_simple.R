@@ -45,7 +45,6 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   
   # This variable is used to keep track of the algorithm's progress.
   maxd <- rep(0,numiter)
-  
   # Iterate the updates.
   for (t in 1:numiter) {
     
@@ -63,7 +62,7 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
       # Update V, if requested
       if(update_V){
         R <- Y - X%*%B
-        ERSS <- crossprod(R) + out$var_part_ERSS + Reduce('+', mapply("-", y_var, yy, SIMPLIFY = FALSE))
+        ERSS <- crossprod(R) + out$var_part_ERSS + Reduce('+', y_var)
         V <- ERSS/n
         
         # Compute inverse of V for each missing pattern (code from Yuxin)
@@ -99,16 +98,12 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
           y_var_i = matrix(0, r, r)
           y_var_mm <- V[missing_pattern_i, missing_pattern_i] - V_mo %*% tcrossprod(V_inv[[Y_missing_pattern_assign[i]]], V_mo)
           y_var_i[missing_pattern_i, missing_pattern_i] = y_var_mm
-          y_var_i[!missing_pattern_i, missing_pattern_i] = tcrossprod(Y[i, !missing_pattern_i], imp_mean)
-          y_var_i[missing_pattern_i, !missing_pattern_i] = tcrossprod(imp_mean, Y[i, !missing_pattern_i])
-          y_var_i[!missing_pattern_i, !missing_pattern_i] = tcrossprod(Y[i, !missing_pattern_i])
-          
+
           y_var[[i]] <- y_var_i
         }
       } else {
         if(update_V){
-          y_var_i = tcrossprod(Y[i, ])
-          y_var[[i]] <- y_var_i
+          y_var[[i]] = matrix(0, r, r)
         }
       }
       
@@ -116,7 +111,7 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
         yy[[i]] <- tcrossprod(Y[i, ])
       }
     }
-      
+    
     # Center Y
     Y <- scale(Y, scale=FALSE)
     muy <- attr(Y,"scaled:center")
@@ -128,25 +123,26 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
     # Store the largest change in the posterior means.
     delta_B <- abs(max(B - B0))
     maxd[t] <- delta_B
-      
+    
     # Print out some info, if requested
     if(verbose)
       cat("Iter:", t, "    max_deltaB:", delta_B, "\n")
-      
+    
     # Break if convergence is reached
     if(delta_B<tol)
       break
   }
-    
+  
   # Compute the intercept
   intercept <- drop(muy - mux %*% B)
-    
+  
   # Return the updated posterior means of the regression coefficicents
   # (B), the maximum change at each iteration (maxd), the prior weights,
   # and V.
   return(list(intercept=intercept,B = B,maxd = maxd,w0=w0,V=V))
 }
-  
+
+
 
 # Run several iterations of the co-ordinate ascent updates for the
 # mr-mash model.
