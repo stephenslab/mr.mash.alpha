@@ -60,27 +60,64 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
         w0 <- w0/sum(w0)
       }
       
-      # # Update V, if requested
-      # if(update_V){
-      #   R <- Y - X%*%B
-      #   ERSS <- crossprod(R) + out$var_part_ERSS
-      #   V <- ERSS/nrow(Y)
-      # }
+      # Update V, if requested
+      if(update_V){
+        R <- Y - X%*%B
+        ERSS <- crossprod(R) + out$var_part_ERSS + Reduce('+', mapply("-", y_var, yy, SIMPLIFY = FALSE))
+        V <- ERSS/n
+        
+        # Compute inverse of V for each missing pattern (code from Yuxin)
+        V_inv <- list()
+        for(z in 1:nrow(missing_pattern)){
+          if(r == 1){
+            V_inv[[z]] <- missing_pattern[z,] / V
+          }else{
+            Vz = V[which(missing_pattern[z,]), which(missing_pattern[z,])]
+            eigenVz <- eigen(Vz, symmetric = TRUE)
+            dinv <- 1/(eigenVz$values)
+            V_inv[[z]] <- eigenVz$vectors %*% (dinv * t(eigenVz$vectors))
+          }
+        }
+      }
     }
     
-    # Impute missing Y (code from Yuxin)
+    # Impute missing Y (code adapted from Yuxin)
     mu <- X%*%B
+    y_var <- list()
+    yy <- list()
     for (i in 1:n){
       missing_pattern_i = !missing_pattern[Y_missing_pattern_assign[i],]
       V_mo = V[missing_pattern_i, !missing_pattern_i, drop=FALSE]
       if(any(missing_pattern_i)){
+        # Compute first moment
         imp_mean = mu[i, missing_pattern_i] + V_mo %*% V_inv[[Y_missing_pattern_assign[i]]] %*%
           (Y[i, !missing_pattern_i] - mu[i, !missing_pattern_i])
         Y[i,missing_pattern_i] = imp_mean
+        
+        # Compute second moment (needed for computing the ELBO and V)
+        if(update_V){
+          y_var_i = matrix(0, r, r)
+          y_var_mm <- V[missing_pattern_i, missing_pattern_i] - V_mo %*% tcrossprod(V_inv[[Y_missing_pattern_assign[i]]], V_mo)
+          y_var_i[missing_pattern_i, missing_pattern_i] = y_var_mm
+          y_var_i[!missing_pattern_i, missing_pattern_i] = tcrossprod(Y[i, !missing_pattern_i], imp_mean)
+          y_var_i[missing_pattern_i, !missing_pattern_i] = tcrossprod(imp_mean, Y[i, !missing_pattern_i])
+          y_var_i[!missing_pattern_i, !missing_pattern_i] = tcrossprod(Y[i, !missing_pattern_i])
+          
+          y_var[[i]] <- y_var_i
+        }
+      } else {
+        if(update_V){
+          y_var_i = tcrossprod(Y[i, ])
+          y_var[[i]] <- y_var_i
+        }
+      }
+      
+      if(update_V){
+        yy[[i]] <- tcrossprod(Y[i, ])
       }
     }
       
-    # Center X
+    # Center Y
     Y <- scale(Y, scale=FALSE)
     muy <- attr(Y,"scaled:center")
     
