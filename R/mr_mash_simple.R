@@ -15,29 +15,23 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   r <- ncol(Y)
   n <- nrow(Y)
   
-  # Get missing Y patterns (code from Yuxin)
-  Y_missing <- is.na(Y)
-  Y_non_missing <- !Y_missing
-  missing_pattern <- unique(Y_non_missing)
-  Y_missing_pattern_assign <- numeric(n)
-  for(z in 1:nrow(missing_pattern)){
-    idx = which(apply(Y_non_missing, 1, function(x) identical(x, missing_pattern[z,])))
-    Y_missing_pattern_assign[idx] <- z
-  }
-  Y[Y_missing] <- 0
   
-  # Compute inverse of V for each missing pattern (code from Yuxin)
-  V_inv <- list()
-  for(z in 1:nrow(missing_pattern)){
-    if(r == 1){
-      V_inv[[z]] <- missing_pattern[z,] / V
-    }else{
-      Vz = V[which(missing_pattern[z,]), which(missing_pattern[z,])]
-      eigenVz <- eigen(Vz, symmetric = TRUE)
-      dinv <- 1/(eigenVz$values)
-      V_inv[[z]] <- eigenVz$vectors %*% (dinv * t(eigenVz$vectors))
-    }
+  # Compute inverse of V and store missingness patterns for each individual
+  V_inv <- vector("list", n)
+  miss <- vector("list", n)
+  non_miss <- vector("list", n)
+  for(i in 1:n){
+    miss_i <- is.na(Y[i, ])
+    non_miss_i <- !miss_i
+    miss[[i]] <- miss_i
+    non_miss[[i]] <- non_miss_i
+    
+    Vi <- V[non_miss_i, non_miss_i]
+    V_inv[[i]] <- chol2inv(chol(Vi))
   }
+  
+  Y[is.na(Y)] <- 0
+  
   
   # Center X
   X <- scale(X, scale=FALSE)
@@ -65,40 +59,36 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
         ERSS <- crossprod(R) + out$var_part_ERSS + Reduce('+', y_var)
         V <- ERSS/n
         
-        # Compute inverse of V for each missing pattern (code from Yuxin)
+        # Compute inverse of V for each individual
         V_inv <- list()
-        for(z in 1:nrow(missing_pattern)){
-          if(r == 1){
-            V_inv[[z]] <- missing_pattern[z,] / V
-          }else{
-            Vz = V[which(missing_pattern[z,]), which(missing_pattern[z,])]
-            eigenVz <- eigen(Vz, symmetric = TRUE)
-            dinv <- 1/(eigenVz$values)
-            V_inv[[z]] <- eigenVz$vectors %*% (dinv * t(eigenVz$vectors))
-          }
+        for(i in 1:n){
+          non_miss_i <- non_miss[[i]]
+          Vi <- V[non_miss_i, non_miss_i]
+          V_inv[[i]] <- chol2inv(chol(Vi))
         }
       }
     }
     
     # Impute missing Y (code adapted from Yuxin)
     mu <- X%*%B
-    y_var <- list()
-    yy <- list()
+    y_var <- vector("list", n)
+    yy <- vector("list", n)
     for (i in 1:n){
-      missing_pattern_i = !missing_pattern[Y_missing_pattern_assign[i],]
-      V_mo = V[missing_pattern_i, !missing_pattern_i, drop=FALSE]
-      if(any(missing_pattern_i)){
+      non_miss_i <- non_miss[[i]]
+      miss_i <- miss[[i]]
+      V_mo = V[miss_i, non_miss_i, drop=FALSE]
+      if(any(miss_i)){
         # Compute first moment
-        imp_mean = mu[i, missing_pattern_i] + V_mo %*% V_inv[[Y_missing_pattern_assign[i]]] %*%
-          (Y[i, !missing_pattern_i] - mu[i, !missing_pattern_i])
-        Y[i,missing_pattern_i] = imp_mean
+        imp_mean = mu[i, miss_i] + V_mo %*% V_inv[[i]] %*%
+          (Y[i, non_miss_i] - mu[i, non_miss_i])
+        Y[i, miss_i] = imp_mean
         
         # Compute second moment (needed for computing the ELBO and V)
         if(update_V){
           y_var_i = matrix(0, r, r)
-          y_var_mm <- V[missing_pattern_i, missing_pattern_i] - V_mo %*% tcrossprod(V_inv[[Y_missing_pattern_assign[i]]], V_mo)
-          y_var_i[missing_pattern_i, missing_pattern_i] = y_var_mm
-
+          y_var_mm <- V[miss_i, miss_i] - V_mo %*% tcrossprod(V_inv[[i]], V_mo)
+          y_var_i[miss_i, miss_i] = y_var_mm
+          
           y_var[[i]] <- y_var_i
         }
       } else {
