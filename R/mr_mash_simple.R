@@ -32,6 +32,7 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   
   Y[is.na(Y)] <- 0
   
+  # ty <- 0
   
   # Center X
   X <- scale(X, scale=FALSE)
@@ -69,6 +70,8 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
       }
     }
     
+    # t1 <- proc.time()
+    
     # Impute missing Y (code adapted from Yuxin)
     mu <- X%*%B
     y_var <- vector("list", n)
@@ -100,11 +103,15 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
       if(update_V){
         yy[[i]] <- tcrossprod(Y[i, ])
       }
+
     }
     
     # Center Y
     Y <- scale(Y, scale=FALSE)
     muy <- attr(Y,"scaled:center")
+
+    # t2 <- proc.time()
+    # ty <- ty + t2["elapsed"] - t1["elapsed"]
     
     # E-step: Update the posterior means of the regression coefficients.
     out <- mr_mash_update_simple(X,Y,B,V,w0,S0)
@@ -125,6 +132,8 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   
   # Compute the intercept
   intercept <- drop(muy - mux %*% B)
+
+  # print(ty)
   
   # Return the updated posterior means of the regression coefficicents
   # (B), the maximum change at each iteration (maxd), the prior weights,
