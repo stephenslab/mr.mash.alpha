@@ -57,7 +57,7 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
       # Update V, if requested
       if(update_V){
         R <- Y - X%*%B
-        ERSS <- crossprod(R) + out$var_part_ERSS + Reduce('+', y_var)
+        ERSS <- crossprod(R) + out$var_part_ERSS + y_var
         V <- ERSS/n
         
         # Compute inverse of V for each individual
@@ -74,8 +74,7 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
     
     # Impute missing Y (code adapted from Yuxin)
     mu <- X%*%B
-    y_var <- vector("list", n)
-    yy <- vector("list", n)
+    y_var <- matrix(0, r, r)
     for (i in 1:n){
       non_miss_i <- non_miss[[i]]
       miss_i <- miss[[i]]
@@ -92,18 +91,9 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
           y_var_mm <- V[miss_i, miss_i] - V_mo %*% tcrossprod(V_inv[[i]], V_mo)
           y_var_i[miss_i, miss_i] = y_var_mm
           
-          y_var[[i]] <- y_var_i
-        }
-      } else {
-        if(update_V){
-          y_var[[i]] = matrix(0, r, r)
+          y_var <- y_var + y_var_i
         }
       }
-      
-      if(update_V){
-        yy[[i]] <- tcrossprod(Y[i, ])
-      }
-
     }
     
     # Center Y
