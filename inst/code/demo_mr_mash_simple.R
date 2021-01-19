@@ -53,6 +53,8 @@ Y <- matrix.normal(X %*% B,diag(n),V)
 # Run 20 co-ordinate ascent updates.
 B0  <- matrix(0,p,r)
 fit <- mr_mash_simple(X,Y,V,S0,w0,B0,20,update_w0=TRUE,update_V=TRUE, verbose=TRUE)
+# fit1 <- mr.mash.alpha::mr.mash(X,Y,V=V,S0=S0,w0=w0,mu1_init=B0,update_w0=TRUE,update_V=TRUE, 
+#                                verbose=TRUE, nthreads = 1, tol=1e-4, standardize = FALSE)
 
 # Compare the posterior mean estimates of the regression coefficients
 # against the coefficients used to simulate the data.
