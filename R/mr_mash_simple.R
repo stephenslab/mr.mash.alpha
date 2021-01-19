@@ -273,7 +273,7 @@ mr_mash_update_simple <- function (X, Y, B, V, w0, S0) {
   ELBO <- -log(n)/2 - (n*r)/2*log(2*pi) - n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 0.5*tr_wERSS + neg_KL
 
   # Output the updated predictors.
-  return(list(B=drop(B), W1=W1, var_part_ERSS=var_part_ERSS, ELBO=ELBO))
+  return(list(B=drop(B), W1=W1, var_part_ERSS=var_part_ERSS, ELBO=drop(ELBO)))
 }
 
 # Compute quantities for a basic Bayesian multivariate regression with
