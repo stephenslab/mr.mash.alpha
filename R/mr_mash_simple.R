@@ -201,7 +201,7 @@ mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
   # Return the updated posterior means of the regression coefficicents
   # (B), the maximum change at each iteration (maxd), the prior weights,
   # and V.
-  return(list(intercept=intercept,B = B,maxd = maxd,w0=w0,V=V))
+  return(list(intercept=intercept,B = B,maxd = maxd,w0 = w0,V = V,ELBO = out$ELBO))
 }
 
 # Perform a single pass of the co-ordinate ascent updates for the
@@ -227,8 +227,13 @@ mr_mash_update_simple <- function (X, Y, B, V, w0, S0) {
   # Create matrix to store posterior assignment probabilities
   W1 <- matrix(as.numeric(NA), p, k)
   
-  # Initialize var_part_ERSS
-  var_part_ERSS <- matrix(0, r, r)
+  # Initialize quantities need to update V and ELBO
+  var_part_tr_wERSS <- 0
+  neg_KL <- 0
+  var_part_ERSS <- matrix(0, nrow=r, ncol=r)
+  
+  # Compute inverse of V
+  Vinv <- chol2inv(chol(V))
   
   # Compute the expected residuals.
   R <- Y - X %*% B
@@ -253,12 +258,22 @@ mr_mash_update_simple <- function (X, Y, B, V, w0, S0) {
     # Update quantity needed to update V
     var_part_ERSS <- var_part_ERSS + out$S1*sum(x^2)
     
+    # Update quantities needed for the ELBO
+    b_mat <- matrix(b, ncol=1)
+    xtx <- crossprod(x)
+    var_part_tr_wERSS <- var_part_tr_wERSS + (tr(Vinv%*%out$S1)*xtx)
+    neg_KL <- neg_KL + (out$logbf +0.5*(-2*tr(tcrossprod(Vinv, R)%*%tcrossprod(matrix(x, ncol=1), b_mat))+
+                                           tr(Vinv%*%(out$S1+tcrossprod(b_mat)))*xtx))
     # Update the expected residuals.
     R <- R - outer(x,b)
   }
+  
+  # Compute the ELBO
+  tr_wERSS <- tr(Vinv%*%(crossprod(R))) + var_part_tr_wERSS
+  ELBO <- -log(n)/2 - (n*r)/2*log(2*pi) - n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 0.5*tr_wERSS + neg_KL
 
   # Output the updated predictors.
-  return(list(B=drop(B), W1=W1, var_part_ERSS=var_part_ERSS))
+  return(list(B=drop(B), W1=W1, var_part_ERSS=var_part_ERSS, ELBO=ELBO))
 }
 
 # Compute quantities for a basic Bayesian multivariate regression with
