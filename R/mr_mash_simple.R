@@ -38,8 +38,10 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   X <- scale(X, scale=FALSE)
   mux <- attr(X,"scaled:center")
   
-  # This variable is used to keep track of the algorithm's progress.
+  # These variables is used to keep track of the algorithm's progress.
   maxd <- rep(0,numiter)
+  ELBO <- rep(0,numiter)
+  
   # Iterate the updates.
   for (t in 1:numiter) {
     
@@ -75,6 +77,9 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
     # Impute missing Y (code adapted from Yuxin)
     mu <- X%*%B
     y_var <- matrix(0, r, r)
+    yologlik <- 0
+    Vinv <- chol2inv(chol(V)) 
+      
     for (i in 1:n){
       non_miss_i <- non_miss[[i]]
       miss_i <- miss[[i]]
@@ -86,15 +91,22 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
         Y[i, miss_i] = imp_mean
         
         # Compute second moment (needed for computing the ELBO and V)
-        if(update_V){
-          y_var_i = matrix(0, r, r)
-          y_var_mm <- V[miss_i, miss_i] - V_mo %*% tcrossprod(V_inv[[i]], V_mo)
-          y_var_i[miss_i, miss_i] = y_var_mm
+        y_var_i = matrix(0, r, r)
+        y_var_mm <- V[miss_i, miss_i] - V_mo %*% tcrossprod(V_inv[[i]], V_mo)
+        y_var_i[miss_i, miss_i] = y_var_mm
           
-          y_var <- y_var + y_var_i
-        }
+        y_var <- y_var + y_var_i
       }
+      
+      yologlik = yologlik + mvtnorm::dmvnorm(x = Y[i,non_miss_i],
+                                             mean=mu[i,non_miss_i],
+                                             sigma = V[non_miss_i, non_miss_i, drop=FALSE], 
+                                             log = TRUE)
     }
+    
+    # Compute KL divergence between true and imputed Ys
+    KL_y <- yologlik + (n*r/2) * log(2*pi) + (n/2)*as.numeric(determinant(V, logarithm = TRUE)$modulus) +
+            0.5 * tr(Vinv %*% crossprod(Y - mu)) - 0.5 * tr(Vinv %*% y_var)
     
     # Center Y
     Y <- scale(Y, scale=FALSE)
@@ -104,12 +116,13 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
     # ty <- ty + t2["elapsed"] - t1["elapsed"]
     
     # E-step: Update the posterior means of the regression coefficients.
-    out <- mr_mash_update_simple(X,Y,B,V,w0,S0)
+    out <- mr_mash_update_simple(X,Y,B,V,w0,S0, y_var, KL_y)
     B <- out$B 
     
     # Store the largest change in the posterior means.
     delta_B <- abs(max(B - B0))
     maxd[t] <- delta_B
+    ELBO[t] <- out$ELBO
     
     # Print out some info, if requested
     if(verbose)
@@ -128,7 +141,7 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   # Return the updated posterior means of the regression coefficicents
   # (B), the maximum change at each iteration (maxd), the prior weights,
   # and V.
-  return(list(intercept=intercept,B = B,maxd = maxd,w0=w0,V=V))
+  return(list(intercept = intercept,B = B,maxd = maxd,w0 = w0,V = V,ELBO = ELBO))
 }
 
 
@@ -155,6 +168,11 @@ mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
   
   # This variable is used to keep track of the algorithm's progress.
   maxd <- rep(0,numiter)
+  ELBO <- rep(0,numiter)
+  
+  # Set quantities needed for computing the ELBO with missing Ys to 0
+  y_var <- matrix(0, r, r)
+  KL_y <- 0
 
   # Iterate the updates.
   for (t in 1:numiter) {
@@ -179,12 +197,13 @@ mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
     }
       
     # E-step: Update the posterior means of the regression coefficients.
-    out <- mr_mash_update_simple(X,Y,B,V,w0,S0)
+    out <- mr_mash_update_simple(X,Y,B,V,w0,S0, y_var, KL_y)
     B <- out$B 
     
-    # Store the largest change in the posterior means.
+    # Store the ELBO and the largest change in the posterior means.
     delta_B <- abs(max(B - B0))
     maxd[t] <- delta_B
+    ELBO[t] <- out$ELBO
     
     # Print out some info, if requested
     if(verbose)
@@ -201,7 +220,7 @@ mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
   # Return the updated posterior means of the regression coefficicents
   # (B), the maximum change at each iteration (maxd), the prior weights,
   # and V.
-  return(list(intercept=intercept,B = B,maxd = maxd,w0 = w0,V = V,ELBO = out$ELBO))
+  return(list(intercept=intercept,B = B,maxd = maxd,w0 = w0,V = V,ELBO = ELBO))
 }
 
 # Perform a single pass of the co-ordinate ascent updates for the
@@ -214,7 +233,7 @@ mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
 # tried to make the code as simple as possible, with an emphasis on
 # clarity. Very little effort has been devoted to making the
 # implementation efficient, or the code concise.
-mr_mash_update_simple <- function (X, Y, B, V, w0, S0) {
+mr_mash_update_simple <- function (X, Y, B, V, w0, S0, yvar, KLy) {
 
   # Make sure B is a matrix.
   B <- as.matrix(B)
@@ -270,7 +289,13 @@ mr_mash_update_simple <- function (X, Y, B, V, w0, S0) {
   
   # Compute the ELBO
   tr_wERSS <- tr(Vinv%*%(crossprod(R))) + var_part_tr_wERSS
-  ELBO <- -log(n)/2 - (n*r)/2*log(2*pi) - n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 0.5*tr_wERSS + neg_KL
+  if(all(yvar!=0)){
+    e2 <- tr(Vinv%*%yvar)
+  } else {
+    e2 <- 0
+  }
+  ELBO <- -log(n)/2 - (n*r)/2*log(2*pi) - n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 
+    0.5*(tr_wERSS+e2) + neg_KL - KLy
 
   # Output the updated predictors.
   return(list(B=drop(B), W1=W1, var_part_ERSS=var_part_ERSS, ELBO=drop(ELBO)))
