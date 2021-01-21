@@ -260,6 +260,7 @@ mr_mash_update_simple <- function (X, Y, B, V, w0, S0, yvar, KLy) {
   # Repeat for each predictor.
   for (i in 1:p) {
     x <- X[,i]
+    xtx <- crossprod(x)
     b <- B[i,]
     
     # Disregard the ith predictor in the expected residuals.
@@ -275,11 +276,10 @@ mr_mash_update_simple <- function (X, Y, B, V, w0, S0, yvar, KLy) {
     W1[i,] <- out$w1
     
     # Update quantity needed to update V
-    var_part_ERSS <- var_part_ERSS + out$S1*sum(x^2)
+    var_part_ERSS <- var_part_ERSS + out$S1*xtx
     
     # Update quantities needed for the ELBO
     b_mat <- matrix(b, ncol=1)
-    xtx <- crossprod(x)
     var_part_tr_wERSS <- var_part_tr_wERSS + (tr(Vinv%*%out$S1)*xtx)
     neg_KL <- neg_KL + (out$logbf +0.5*(-2*tr(tcrossprod(Vinv, R)%*%tcrossprod(matrix(x, ncol=1), b_mat))+
                                            tr(Vinv%*%(out$S1+tcrossprod(b_mat)))*xtx))
