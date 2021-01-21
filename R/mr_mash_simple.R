@@ -260,7 +260,7 @@ mr_mash_update_simple <- function (X, Y, B, V, w0, S0, yvar, KLy) {
   # Repeat for each predictor.
   for (i in 1:p) {
     x <- X[,i]
-    xtx <- crossprod(x)
+    xtx <- sum(x^2)
     b <- B[i,]
     
     # Disregard the ith predictor in the expected residuals.
