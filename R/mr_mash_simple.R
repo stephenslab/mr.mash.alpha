@@ -289,10 +289,10 @@ mr_mash_update_simple <- function (X, Y, B, V, w0, S0, yvar, KLy) {
   
   # Compute the ELBO
   tr_wERSS <- tr(Vinv%*%(crossprod(R))) + var_part_tr_wERSS
-  if(all(yvar!=0)){
-    e2 <- tr(Vinv%*%yvar)
-  } else {
+  if(all(yvar==0)){
     e2 <- 0
+  } else {
+    e2 <- tr(Vinv%*%yvar)
   }
   ELBO <- -log(n)/2 - (n*r)/2*log(2*pi) - n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 
     0.5*(tr_wERSS+e2) + neg_KL - KLy
