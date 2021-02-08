@@ -20,7 +20,6 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
   }
   
   Y[is.na(Y)] <- 0
-  Y_orig <- Y
   
   # ty <- 0
   
@@ -76,7 +75,6 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
         y_var <- y_var + y_var_i
         
         # Compute mean
-        Y <- Y_orig
         imp_mean = mu[i, miss_i] - y_var_mm %*% Vinv_mo %*% (Y[i, non_miss_i] - mu[i, non_miss_i])
         Y[i, miss_i] = imp_mean
         
