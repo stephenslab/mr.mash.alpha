@@ -19,8 +19,11 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
     non_miss[[i]] <- non_miss_i
   }
   
+  # Center Y
+  Y <- scale(Y, scale=FALSE)
+  muy <- attr(Y,"scaled:center")
+  
   Y[is.na(Y)] <- 0
-  Y_orig <- Y
   
   # ty <- 0
   
@@ -76,7 +79,6 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
         y_var <- y_var + y_var_i
         
         # Compute mean
-        Y <- Y_orig
         imp_mean = mu[i, miss_i] - y_var_mm %*% Vinv_mo %*% (Y[i, non_miss_i] - mu[i, non_miss_i])
         Y[i, miss_i] = imp_mean
         
@@ -84,10 +86,6 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
         sum_entropy_Y = sum_entropy_Y + (0.5 * as.numeric(determinant((2*pi*exp(1))*Vinv_mm, logarithm = TRUE)$modulus))
       }
     }
-    
-    # Center Y
-    Y <- scale(Y, scale=FALSE)
-    muy <- attr(Y,"scaled:center")
     
     # t2 <- proc.time()
     # ty <- ty + t2["elapsed"] - t1["elapsed"]
@@ -153,7 +151,11 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
     Vi <- V[non_miss_i, non_miss_i]
     V_inv[[i]] <- chol2inv(chol(Vi))
   }
-  
+
+  # Center Y
+  Y <- scale(Y, scale=FALSE)
+  muy <- attr(Y,"scaled:center")
+    
   Y[is.na(Y)] <- 0
   
   # ty <- 0
@@ -232,10 +234,6 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
     KL_y <- yologlik + (n*r/2) * log(2*pi) + (n/2)*as.numeric(determinant(V, logarithm = TRUE)$modulus) +
             0.5 * tr(Vinv %*% crossprod(Y - mu)) - 0.5 * tr(Vinv %*% y_var)
     
-    # Center Y
-    Y <- scale(Y, scale=FALSE)
-    muy <- attr(Y,"scaled:center")
-
     # t2 <- proc.time()
     # ty <- ty + t2["elapsed"] - t1["elapsed"]
     
