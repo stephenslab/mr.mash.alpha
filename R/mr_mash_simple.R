@@ -116,7 +116,7 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
   # Return the updated posterior means of the regression coefficicents
   # (B), the maximum change at each iteration (maxd), the prior weights,
   # and V.
-  return(list(intercept = intercept,B = B,maxd = maxd,w0 = w0,V = V,ELBO = ELBO[1:t]))
+  return(list(intercept = intercept,B = B,maxd = maxd,w0 = w0,V = V,ELBO = ELBO[1:t],Y = Y))
 }
 
 
@@ -263,7 +263,7 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   # Return the updated posterior means of the regression coefficicents
   # (B), the maximum change at each iteration (maxd), the prior weights,
   # and V.
-  return(list(intercept = intercept,B = B,maxd = maxd,w0 = w0,V = V,ELBO = ELBO[1:t]))
+  return(list(intercept = intercept,B = B,maxd = maxd,w0 = w0,V = V,ELBO = ELBO[1:t],Y = Y))
 }
 
 
