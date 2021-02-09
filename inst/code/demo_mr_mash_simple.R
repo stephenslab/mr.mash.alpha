@@ -74,7 +74,8 @@ Y_miss[11:15, 2] <- NA
 # FIT MR-MASH MODEL ALLOWING FOR MISSING Ys
 # -----------------
 # Run 20 co-ordinate ascent updates.
-fit_miss <- mr_mash_simple_missing_Y(X,Y_miss,V,S0,w0,B0,20,update_w0 = TRUE,
+intercept <- rep(0, r)
+fit_miss <- mr_mash_simple_missing_Y(X,Y_miss,V,S0,w0,B0,interecept, 20,update_w0 = TRUE,
                                      update_V = TRUE,verbose = TRUE)
 
 # Compare the posterior mean estimates of the regression coefficients

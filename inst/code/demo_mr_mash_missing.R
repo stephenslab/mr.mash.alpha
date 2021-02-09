@@ -61,8 +61,9 @@ Y[i2,2] <- NA
 # ------------------------------------------
 # Run 20 co-ordinate ascent updates.
 B0 <- matrix(0,p,r)
+intercept <- rep(0,r)
 t1 <- proc.time()
-fit <- mr_mash_simple_missing_Y(X,Y,V,S0,w0,B0,numiter = 20,tol = 1e-6,
+fit <- mr_mash_simple_missing_Y(X,Y,V,S0,w0,B0,intercept,numiter = 20,tol = 1e-6,
                                 update_w0 = TRUE,update_V = TRUE,
                                 verbose = TRUE)
 t2 <- proc.time()
