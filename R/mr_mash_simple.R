@@ -432,7 +432,7 @@ mr_mash_update_simple <- function (X, Y, B, V, w0, S0, yvar, KLy) {
     ent_intercept <- -0.5 * as.numeric(determinant((2*pi*exp(1)/n)*V, logarithm = TRUE)$modulus)
   }
   ELBO <- -log(n)/2 - (n*r)/2*log(2*pi) - n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 
-    0.5*(tr_wERSS+e2) + neg_KL + KLy - ent_intercept
+    0.5*(tr_wERSS+e2+e3) + neg_KL + KLy - ent_intercept
 
   # Output the updated predictors.
   return(list(B=drop(B), W1=W1, var_part_ERSS=var_part_ERSS, ELBO=drop(ELBO)))
