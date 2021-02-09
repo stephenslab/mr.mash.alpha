@@ -1,13 +1,12 @@
 # New function -- uses precision matrix, and entropy of Y to 
 # compute the ELBO. To be checked against the older function before 
 # replacing it.
-mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
+mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, intercept, numiter = 100,
                                         tol=1e-4, update_w0=TRUE, update_V=FALSE,
                                         verbose=FALSE) {
   
   r <- ncol(Y)
   n <- nrow(Y)
-  
   
   # Compute inverse of V and store missingness patterns for each individual
   miss <- vector("list", n)
@@ -33,6 +32,8 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
   
   # Iterate the updates.
   for (t in 1:numiter) {
+    # Compute expected Y
+    mu <- X%*%B + matrix(intercept, n, r, byrow=TRUE)
     
     # Save the current estimates of the posterior means.
     B0 <- B
@@ -47,7 +48,7 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
       
       # Update V, if requested
       if(update_V){
-        R <- Y - X%*%B
+        R <- Y - mu
         ERSS <- crossprod(R) + out$var_part_ERSS + y_var
         V <- ERSS/n
       }
@@ -56,7 +57,6 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
     # t1 <- proc.time()
     
     # Impute missing Y (code adapted from Yuxin)
-    mu <- X%*%B
     y_var <- matrix(0, r, r)
     sum_entropy_Y <- 0
     Vinv <- chol2inv(chol(V)) 
@@ -94,6 +94,12 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
     out <- mr_mash_update_simple_1(X,Y,B,V,w0,S0, y_var, sum_entropy_Y)
     B <- out$B 
     
+    # Update the intercept
+    intercept <- drop(muy - mux %*% B)
+    
+    # Add the intercept back into Y
+    Y <- t(t(Y)+intercept)
+    
     # Store the largest change in the posterior means.
     delta_B <- abs(max(B - B0))
     maxd[t] <- delta_B
@@ -107,9 +113,6 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
     if(delta_B<tol)
       break
   }
-  
-  # Compute the intercept
-  intercept <- drop(muy - mux %*% B)
   
   # print(ty)
   
@@ -130,7 +133,7 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
 # tried to make the code as simple as possible, with an emphasis on
 # clarity. Very little effort has been devoted to making the
 # implementation efficient, or the code concise.
-mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
+mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, intercept, numiter = 100,
                                       tol=1e-4, update_w0=TRUE, update_V=FALSE,
                                       verbose=FALSE) {
   
@@ -166,6 +169,8 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   
   # Iterate the updates.
   for (t in 1:numiter) {
+    # Compute expected Y
+    mu <- X%*%B + matrix(intercept, n, r, byrow=TRUE)
     
     # Save the current estimates of the posterior means.
     B0 <- B
@@ -180,7 +185,7 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
       
       # Update V, if requested
       if(update_V){
-        R <- Y - X%*%B
+        R <- Y - mu
         ERSS <- crossprod(R) + out$var_part_ERSS + y_var
         V <- ERSS/n
         
@@ -197,7 +202,6 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
     # t1 <- proc.time()
     
     # Impute missing Y (code adapted from Yuxin)
-    mu <- X%*%B
     y_var <- matrix(0, r, r)
     yologlik <- 0
     Vinv <- chol2inv(chol(V)) 
@@ -240,6 +244,12 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
     # E-step: Update the posterior means of the regression coefficients.
     out <- mr_mash_update_simple(X,Y,B,V,w0,S0, y_var, KL_y)
     B <- out$B 
+    
+    # Update the intercept
+    intercept <- drop(muy - mux %*% B)
+    
+    # Add the intercept back into Y
+    Y <- t(t(Y)+intercept)
     
     # Store the largest change in the posterior means.
     delta_B <- abs(max(B - B0))
