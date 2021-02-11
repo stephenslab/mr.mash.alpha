@@ -79,7 +79,7 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, intercept, numiter =
         Y[i, miss_i] = imp_mean
         
         # Compute sum of the negative entropy of Y missing
-        sum_entropy_Y = sum_entropy_Y + (0.5 * as.numeric(determinant((2*pi*exp(1))*Vinv_mm, logarithm = TRUE)$modulus))
+        sum_entropy_Y = sum_entropy_Y + (0.5 * as.numeric(determinant(1/(2*pi*exp(1))*Vinv_mm, logarithm = TRUE)$modulus))
       }
     }
     
