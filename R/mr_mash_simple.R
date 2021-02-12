@@ -241,8 +241,7 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, intercept, numiter = 1
     out <- mr_mash_update_simple(X,Y,B,V,w0,S0, y_var, KL_y)
     B <- out$B 
     
-    # Update the intercept
-    intercept <- drop(muy - mux %*% B)
+    intercept <- drop(muy)
     
     # Add the intercept back into Y
     Y <- t(t(Y)+intercept)
@@ -261,15 +260,12 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, intercept, numiter = 1
       break
   }
   
-  # Compute the intercept
-  intercept <- drop(muy - mux %*% B)
-
   # print(ty)
   
   # Return the updated posterior means of the regression coefficicents
   # (B), the maximum change at each iteration (maxd), the prior weights,
   # and V.
-  return(list(intercept = intercept,B = B,maxd = maxd,w0 = w0,V = V,ELBO = ELBO[1:t],Y = Y))
+  return(list(intercept = drop(muy - mux %*% B),B = B,maxd = maxd,w0 = w0,V = V,ELBO = ELBO[1:t],Y = Y))
 }
 
 
