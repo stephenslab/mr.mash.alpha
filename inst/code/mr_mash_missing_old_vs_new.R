@@ -16,9 +16,9 @@ V <- rbind(c(1.0,0.2),
 r <- nrow(V)
 
 # True effects used to simulate the data.
-B <- rbind(c(-2.0, -1.5),
-           c( 1.0,  1.0),
-           matrix(0,p - 2,r))
+B <- 10*rbind(c(-2.0, -1.5),
+              c( 1.0,  1.0),
+              matrix(0,p - 2,r))
 
 # Covariances in the mixture-of-normals prior on the regression
 # coefficients.
@@ -41,7 +41,7 @@ w0 <- c(0.1,0.2,0.2,0.1,0.4)
 # -------------
 set.seed(1)
 X <- matrix(rnorm(n*p),n,p)
-X <- scale(X,scale = FALSE)
+# X <- scale(X,scale = FALSE)
 
 # Simulate Y ~ MN(X*B,I,V). Note that matrix.normal from the MBSP
 # package appears to be much faster than rmatrixnorm from the
@@ -57,14 +57,19 @@ Y_miss[11:15, 2] <- NA
 # -----------------
 # Run 20 co-ordinate ascent updates (older function).
 B0  <- matrix(0,p,r)
-intercept <- rep(0,r)
-fit_miss <- mr_mash_simple_missing_Y(X,Y_miss,V,S0,w0,B0,intercept,20,update_w0 = TRUE,
-                                     update_V = TRUE,verbose = TRUE)
+intercept <- rep(-1,r)
+# fit_miss <- mr_mash_simple_missing_Y(X,Y_miss,V,S0,w0,B0,intercept,20,update_w0 = TRUE,
+#                                      update_V = TRUE,verbose = TRUE)
 
 # Run 20 co-ordinate ascent updates (newer function).
 fit_miss_1 <- mr_mash_simple_missing_Y_1(X,Y_miss,V,S0,w0,B0,intercept,20,update_w0 = TRUE,
                                          update_V = TRUE,verbose = TRUE)
 
+i <- which(is.na(Y_miss))
+plot(Y[i],fit_miss_1$Y[i],pch = 20)
+abline(a = 0,b = 1,col = "skyblue",lty = "dotted")
+
+stop()
 
 # Compare the posterior mean estimates of the regression coefficients
 plot(fit_miss$B,fit_miss_1$B,pch = 20,xlab = "Old",ylab = "New", main = "Effects")
