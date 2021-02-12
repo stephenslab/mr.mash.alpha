@@ -1,7 +1,7 @@
 # New function -- uses precision matrix, and entropy of Y to 
 # compute the ELBO. To be checked against the older function before 
 # replacing it.
-mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, intercept, numiter = 100,
+mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
                                         tol=1e-4, update_w0=TRUE, update_V=FALSE,
                                         verbose=FALSE) {
   
@@ -18,7 +18,10 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, intercept, numiter =
     non_miss[[i]] <- non_miss_i
   }
   
-  Y[is.na(Y)] <- 0
+  # Initialize missing Ys and intercept
+  muy <- colMeans(Y, na.rm=TRUE)
+  Y[is.na(Y)] <- muy
+  intercept <- muy
   
   # ty <- 0
   
@@ -129,7 +132,7 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, intercept, numiter =
 # tried to make the code as simple as possible, with an emphasis on
 # clarity. Very little effort has been devoted to making the
 # implementation efficient, or the code concise.
-mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, intercept, numiter = 100,
+mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
                                       tol=1e-4, update_w0=TRUE, update_V=FALSE,
                                       verbose=FALSE) {
   
@@ -151,7 +154,10 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, intercept, numiter = 1
     V_inv[[i]] <- chol2inv(chol(Vi))
   }
   
-  Y[is.na(Y)] <- 0
+  # Initialize missing Ys and intercept
+  muy <- colMeans(Y, na.rm=TRUE)
+  Y[is.na(Y)] <- muy
+  intercept <- muy
   
   # ty <- 0
   
