@@ -57,12 +57,11 @@ Y_miss[11:15, 2] <- NA
 # -----------------
 # Run 20 co-ordinate ascent updates (older function).
 B0  <- matrix(0,p,r)
-intercept <- rep(-1,r)
 # fit_miss <- mr_mash_simple_missing_Y(X,Y_miss,V,S0,w0,B0,intercept,20,update_w0 = TRUE,
 #                                      update_V = TRUE,verbose = TRUE)
 
 # Run 20 co-ordinate ascent updates (newer function).
-fit_miss_1 <- mr_mash_simple_missing_Y_1(X,Y_miss,V,S0,w0,B0,intercept,20,update_w0 = TRUE,
+fit_miss_1 <- mr_mash_simple_missing_Y_1(X,Y_miss,V,S0,w0,B0,20,update_w0 = TRUE,
                                          update_V = TRUE,verbose = TRUE)
 
 i <- which(is.na(Y_miss))
