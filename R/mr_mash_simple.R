@@ -29,14 +29,15 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
   X <- scale(X, scale=FALSE)
   mux <- attr(X,"scaled:center")
   
+  # Compute expected Y
+  mu <- X%*%B + matrix(intercept, n, r, byrow=TRUE)
+  
   # These variables is used to keep track of the algorithm's progress.
   maxd <- rep(0,numiter)
   ELBO <- rep(0,numiter)
   
   # Iterate the updates.
   for (t in 1:numiter) {
-    # Compute expected Y
-    mu <- X%*%B + matrix(intercept, n, r, byrow=TRUE)
     
     # Save the current estimates of the posterior means.
     B0 <- B
@@ -48,6 +49,13 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
         w0 <- colSums(out$W1)
         w0 <- w0/sum(w0)
       }
+      
+      # Update the intercept
+      intercept <- drop(muy)
+      Y <- t(t(Y) + intercept)
+      
+      # Compute expected Y
+      mu <- X%*%B + matrix(intercept, n, r, byrow=TRUE)
       
       # Update V, if requested
       if(update_V){
@@ -95,11 +103,6 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
     out <- mr_mash_update_simple_1(X,Y,B,V,w0,S0, y_var, sum_entropy_Y)
     B <- out$B 
     
-    intercept <- drop(muy)
-    
-    # Add the intercept back into Y
-    Y <- t(t(Y) + intercept)
-    
     # Store the largest change in the posterior means.
     delta_B <- abs(max(B - B0))
     maxd[t] <- delta_B
@@ -118,7 +121,7 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
   # (B), the maximum change at each iteration (maxd), the prior weights,
   # and V.
   return(list(intercept = drop(muy - mux %*% B),B = B,maxd = maxd,w0 = w0,
-              V = V,ELBO = ELBO[1:t],Y = Y))
+              V = V,ELBO = ELBO[1:t],Y = t(t(Y) + drop(muy))))
 }
 
 
@@ -165,15 +168,15 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   X <- scale(X, scale=FALSE)
   mux <- attr(X,"scaled:center")
   
+  # Compute expected Y
+  mu <- X%*%B + matrix(intercept, n, r, byrow=TRUE)
+  
   # These variables is used to keep track of the algorithm's progress.
   maxd <- rep(0,numiter)
   ELBO <- rep(0,numiter)
   
   # Iterate the updates.
   for (t in 1:numiter) {
-    # Compute expected Y
-    mu <- X%*%B + matrix(intercept, n, r, byrow=TRUE)
-    
     # Save the current estimates of the posterior means.
     B0 <- B
     
@@ -184,6 +187,13 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
         w0 <- colSums(out$W1)
         w0 <- w0/sum(w0)
       }
+      
+      # Update the intercept
+      intercept <- drop(muy)
+      Y <- t(t(Y) + intercept)
+      
+      # Compute expected Y
+      mu <- X%*%B + matrix(intercept, n, r, byrow=TRUE)
       
       # Update V, if requested
       if(update_V){
@@ -247,11 +257,6 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
     out <- mr_mash_update_simple(X,Y,B,V,w0,S0, y_var, KL_y)
     B <- out$B 
     
-    intercept <- drop(muy)
-    
-    # Add the intercept back into Y
-    Y <- t(t(Y)+intercept)
-    
     # Store the largest change in the posterior means.
     delta_B <- abs(max(B - B0))
     maxd[t] <- delta_B
@@ -271,7 +276,8 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   # Return the updated posterior means of the regression coefficicents
   # (B), the maximum change at each iteration (maxd), the prior weights,
   # and V.
-  return(list(intercept = drop(muy - mux %*% B),B = B,maxd = maxd,w0 = w0,V = V,ELBO = ELBO[1:t],Y = Y))
+  return(list(intercept = drop(muy - mux %*% B),B = B,maxd = maxd,w0 = w0,
+              V = V,ELBO = ELBO[1:t],Y = t(t(Y) + drop(muy))))
 }
 
 
