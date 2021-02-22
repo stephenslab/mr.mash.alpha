@@ -422,15 +422,11 @@ mr_mash_update_simple <- function (X, Y, B, V, w0, S0, yvar, KLy) {
   tr_wERSS <- tr(Vinv%*%(crossprod(R))) + var_part_tr_wERSS
   if(all(yvar==0)){
     e2 <- 0
-    e3 <- 0
-    ent_intercept <- 0
   } else {
     e2 <- tr(Vinv%*%yvar)
-    e3 <- r
-    ent_intercept <- -0.5 * as.numeric(determinant((2*pi*exp(1)/n)*V, logarithm = TRUE)$modulus)
   }
   ELBO <- -log(n)/2 - (n*r)/2*log(2*pi) - n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 
-    0.5*(tr_wERSS+e2+e3) + neg_KL + KLy - ent_intercept
+    0.5*(tr_wERSS+e2) + neg_KL + KLy
 
   # Output the updated predictors.
   return(list(B=drop(B), W1=W1, var_part_ERSS=var_part_ERSS, ELBO=drop(ELBO)))
@@ -497,15 +493,11 @@ mr_mash_update_simple_1 <- function (X, Y, B, V, w0, S0, yvar, sum_ent_Y) {
   tr_wERSS <- tr(Vinv%*%(crossprod(R))) + var_part_tr_wERSS
   if(all(yvar==0)){
     e2 <- 0
-    e3 <- 0
-    ent_intercept <- 0
   } else {
     e2 <- tr(Vinv%*%yvar)
-    e3 <- r
-    ent_intercept <- -0.5 * as.numeric(determinant((2*pi*exp(1)/n)*V, logarithm = TRUE)$modulus)
   }
   ELBO <- -log(n)/2 - (n*r)/2*log(2*pi) - n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 
-    0.5*(tr_wERSS+e2+e3) + neg_KL - sum_ent_Y - ent_intercept
+    0.5*(tr_wERSS+e2) + neg_KL - sum_ent_Y
   
   # Output the updated predictors.
   return(list(B=drop(B), W1=W1, var_part_ERSS=var_part_ERSS, ELBO=drop(ELBO)))
