@@ -20,7 +20,9 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
   
   # Initialize missing Ys and intercept
   muy <- colMeans(Y, na.rm=TRUE)
-  Y[is.na(Y)] <- muy
+  for(l in 1:r){
+    Y[is.na(Y[, l]), l] <- muy[l]
+  }
   intercept <- muy
   
   # ty <- 0
@@ -30,7 +32,7 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
   mux <- attr(X,"scaled:center")
   
   # Compute expected Y
-  mu <- X%*%B + matrix(intercept, n, r, byrow=TRUE)
+  mu <- t(t(X%*%B) + intercept)
   
   # These variables is used to keep track of the algorithm's progress.
   maxd <- rep(0,numiter)
@@ -55,7 +57,7 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
       Y <- t(t(Y) + intercept)
       
       # Compute expected Y
-      mu <- X%*%B + matrix(intercept, n, r, byrow=TRUE)
+      mu <- t(t(X%*%B) + intercept)
       
       # Update V, if requested
       if(update_V){
@@ -159,7 +161,9 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   
   # Initialize missing Ys and intercept
   muy <- colMeans(Y, na.rm=TRUE)
-  Y[is.na(Y)] <- muy
+  for(l in 1:r){
+    Y[is.na(Y[, l]), l] <- muy[l]
+  }
   intercept <- muy
   
   # ty <- 0
@@ -169,7 +173,7 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   mux <- attr(X,"scaled:center")
   
   # Compute expected Y
-  mu <- X%*%B + matrix(intercept, n, r, byrow=TRUE)
+  mu <- t(t(X%*%B) + intercept)
   
   # These variables is used to keep track of the algorithm's progress.
   maxd <- rep(0,numiter)
@@ -193,7 +197,7 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
       Y <- t(t(Y) + intercept)
       
       # Compute expected Y
-      mu <- X%*%B + matrix(intercept, n, r, byrow=TRUE)
+      mu <- t(t(X%*%B) + intercept)
       
       # Update V, if requested
       if(update_V){
