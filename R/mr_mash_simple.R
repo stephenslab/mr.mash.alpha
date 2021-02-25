@@ -19,11 +19,10 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
   }
   
   # Initialize missing Ys and intercept
-  muy <- colMeans(Y, na.rm=TRUE)
+  intercept <- colMeans(Y, na.rm=TRUE)
   for(l in 1:r){
-    Y[is.na(Y[, l]), l] <- muy[l]
+    Y[is.na(Y[, l]), l] <- intercept[l]
   }
-  intercept <- muy
   
   # ty <- 0
   
@@ -53,8 +52,7 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
       }
       
       # Update the intercept
-      intercept <- drop(muy)
-      Y <- t(t(Y) + intercept)
+      intercept <- colMeans(Y)
       
       # Compute expected Y
       mu <- t(t(X%*%B) + intercept)
@@ -94,15 +92,11 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
       }
     }
     
-    # Center Y
-    Y <- scale(Y, scale=FALSE)
-    muy <- attr(Y,"scaled:center")
-    
     # t2 <- proc.time()
     # ty <- ty + t2["elapsed"] - t1["elapsed"]
     
     # E-step: Update the posterior means of the regression coefficients.
-    out <- mr_mash_update_simple_1(X,Y,B,V,w0,S0, y_var, sum_entropy_Y)
+    out <- mr_mash_update_simple_1(X,scale(Y, scale=FALSE),B,V,w0,S0, y_var, sum_entropy_Y)
     B <- out$B 
     
     # Store the largest change in the posterior means.
@@ -122,8 +116,8 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
   # Return the updated posterior means of the regression coefficicents
   # (B), the maximum change at each iteration (maxd), the prior weights,
   # and V.
-  return(list(intercept = drop(muy - mux %*% B),B = B,maxd = maxd,w0 = w0,
-              V = V,ELBO = ELBO[1:t],Y = t(t(Y) + drop(muy))))
+  return(list(intercept = drop(colMeans(Y) - mux %*% B),B = B,maxd = maxd,w0 = w0,
+              V = V,ELBO = ELBO[1:t],Y = Y))
 }
 
 
