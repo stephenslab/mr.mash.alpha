@@ -30,9 +30,6 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
   X <- scale(X, scale=FALSE)
   mux <- attr(X,"scaled:center")
   
-  # Compute expected Y
-  mu <- t(t(X%*%B) + intercept)
-  
   # These variables is used to keep track of the algorithm's progress.
   maxd <- rep(0,numiter)
   ELBO <- rep(0,numiter)
@@ -43,6 +40,9 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
     # Save the current estimates of the posterior means.
     B0 <- B
     
+    # Compute expected Y
+    mu <- t(t(X%*%B) + intercept)
+    
     # M-step, if not the first iteration
     if(t!=1){
       # Update mixture weights, if requested
@@ -50,12 +50,6 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
         w0 <- colSums(out$W1)
         w0 <- w0/sum(w0)
       }
-      
-      # Update the intercept
-      intercept <- colMeans(Y)
-      
-      # Compute expected Y
-      mu <- t(t(X%*%B) + intercept)
       
       # Update V, if requested
       if(update_V){
@@ -95,6 +89,9 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
     # t2 <- proc.time()
     # ty <- ty + t2["elapsed"] - t1["elapsed"]
     
+    # Update the intercept
+    intercept <- colMeans(Y)
+    
     # E-step: Update the posterior means of the regression coefficients.
     out <- mr_mash_update_simple_1(X,scale(Y, scale=FALSE),B,V,w0,S0, y_var, sum_entropy_Y)
     B <- out$B 
@@ -116,7 +113,7 @@ mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
   # Return the updated posterior means of the regression coefficicents
   # (B), the maximum change at each iteration (maxd), the prior weights,
   # and V.
-  return(list(intercept = drop(colMeans(Y) - mux %*% B),B = B,maxd = maxd,w0 = w0,
+  return(list(intercept = drop(intercept - mux %*% B),B = B,maxd = maxd,w0 = w0,
               V = V,ELBO = ELBO[1:t],Y = Y))
 }
 
@@ -154,20 +151,16 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   }
   
   # Initialize missing Ys and intercept
-  muy <- colMeans(Y, na.rm=TRUE)
+  intercept <- colMeans(Y, na.rm=TRUE)
   for(l in 1:r){
-    Y[is.na(Y[, l]), l] <- muy[l]
+    Y[is.na(Y[, l]), l] <- intercept[l]
   }
-  intercept <- muy
   
   # ty <- 0
   
   # Center X
   X <- scale(X, scale=FALSE)
   mux <- attr(X,"scaled:center")
-  
-  # Compute expected Y
-  mu <- t(t(X%*%B) + intercept)
   
   # These variables is used to keep track of the algorithm's progress.
   maxd <- rep(0,numiter)
@@ -178,6 +171,9 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
     # Save the current estimates of the posterior means.
     B0 <- B
     
+    # Compute expected Y
+    mu <- t(t(X%*%B) + intercept)
+    
     # M-step, if not the first iteration
     if(t!=1){
       # Update mixture weights, if requested
@@ -185,13 +181,6 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
         w0 <- colSums(out$W1)
         w0 <- w0/sum(w0)
       }
-      
-      # Update the intercept
-      intercept <- drop(muy)
-      Y <- t(t(Y) + intercept)
-      
-      # Compute expected Y
-      mu <- t(t(X%*%B) + intercept)
       
       # Update V, if requested
       if(update_V){
@@ -244,15 +233,14 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
     KL_y <- yologlik + (n*r/2) * log(2*pi) + (n/2)*as.numeric(determinant(V, logarithm = TRUE)$modulus) +
             0.5 * tr(Vinv %*% crossprod(Y - mu)) + 0.5 * tr(Vinv %*% y_var)
     
-    # Center Y
-    Y <- scale(Y, scale=FALSE)
-    muy <- attr(Y,"scaled:center")
-
     # t2 <- proc.time()
     # ty <- ty + t2["elapsed"] - t1["elapsed"]
     
+    # Update the intercept
+    intercept <- colMeans(Y)
+    
     # E-step: Update the posterior means of the regression coefficients.
-    out <- mr_mash_update_simple(X,Y,B,V,w0,S0, y_var, KL_y)
+    out <- mr_mash_update_simple(X,scale(Y, scale=FALSE),B,V,w0,S0, y_var, KL_y)
     B <- out$B 
     
     # Store the largest change in the posterior means.
@@ -274,8 +262,8 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
   # Return the updated posterior means of the regression coefficicents
   # (B), the maximum change at each iteration (maxd), the prior weights,
   # and V.
-  return(list(intercept = drop(muy - mux %*% B),B = B,maxd = maxd,w0 = w0,
-              V = V,ELBO = ELBO[1:t],Y = t(t(Y) + drop(muy))))
+  return(list(intercept = drop(intercept - mux %*% B),B = B,maxd = maxd,w0 = w0,
+              V = V,ELBO = ELBO[1:t],Y = Y))
 }
 
 
