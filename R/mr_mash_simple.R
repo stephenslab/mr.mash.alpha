@@ -1,275 +1,5 @@
-# New function -- uses precision matrix, and entropy of Y to 
-# compute the ELBO. To be checked against the older function before 
-# replacing it.
-mr_mash_simple_missing_Y_1 <- function (X, Y, V, S0, w0, B, numiter = 100,
-                                        tol=1e-4, update_w0=TRUE, update_V=FALSE,
-                                        verbose=FALSE) {
-  
-  r <- ncol(Y)
-  n <- nrow(Y)
-  
-  # Compute inverse of V and store missingness patterns for each individual
-  miss <- vector("list", n)
-  non_miss <- vector("list", n)
-  for(i in 1:n){
-    miss_i <- is.na(Y[i, ])
-    non_miss_i <- !miss_i
-    miss[[i]] <- miss_i
-    non_miss[[i]] <- non_miss_i
-  }
-  
-  # Initialize missing Ys and intercept
-  intercept <- colMeans(Y, na.rm=TRUE)
-  for(l in 1:r){
-    Y[is.na(Y[, l]), l] <- intercept[l]
-  }
-  
-  # ty <- 0
-  
-  # Center X
-  X <- scale(X, scale=FALSE)
-  mux <- attr(X,"scaled:center")
-  
-  # These variables is used to keep track of the algorithm's progress.
-  maxd <- rep(0,numiter)
-  ELBO <- rep(0,numiter)
-  
-  # Iterate the updates.
-  for (t in 1:numiter) {
-    
-    # Save the current estimates of the posterior means.
-    B0 <- B
-    
-    # Compute expected Y
-    mu <- t(t(X%*%B) + intercept)
-    
-    # M-step, if not the first iteration
-    if(t!=1){
-      # Update mixture weights, if requested
-      if(update_w0){
-        w0 <- colSums(out$W1)
-        w0 <- w0/sum(w0)
-      }
-      
-      # Update V, if requested
-      if(update_V){
-        R <- Y - mu
-        ERSS <- crossprod(R) + out$var_part_ERSS + y_var
-        V <- ERSS/n
-      }
-    }
-    
-    # Impute missing Y (code adapted from Yuxin)
-    y_var <- matrix(0, r, r)
-    sum_entropy_Y <- 0
-    Vinv <- chol2inv(chol(V)) 
-    
-    for (i in 1:n){
-      non_miss_i <- non_miss[[i]]
-      miss_i <- miss[[i]]
-      Vinv_mo = Vinv[miss_i, non_miss_i, drop=FALSE]
-      Vinv_mm = Vinv[miss_i, miss_i, drop=FALSE]
-      if(any(miss_i)){
-        # Compute variance
-        y_var_i = matrix(0, r, r)
-        y_var_mm <- chol2inv(chol(Vinv_mm))
-        y_var_i[miss_i, miss_i] = y_var_mm
-        
-        y_var <- y_var + y_var_i
-        
-        # Compute mean
-        imp_mean = mu[i, miss_i] - y_var_mm %*% Vinv_mo %*% (Y[i, non_miss_i] - mu[i, non_miss_i])
-        Y[i, miss_i] = imp_mean
-        
-        # Compute sum of the negative entropy of Y missing
-        sum_entropy_Y = sum_entropy_Y + (0.5 * as.numeric(determinant(1/(2*pi*exp(1))*Vinv_mm, logarithm = TRUE)$modulus))
-      }
-    }
-    
-    # t2 <- proc.time()
-    # ty <- ty + t2["elapsed"] - t1["elapsed"]
-    
-    # Update the intercept
-    intercept <- colMeans(Y)
-    
-    # E-step: Update the posterior means of the regression coefficients.
-    out <- mr_mash_update_simple_1(X,scale(Y, scale=FALSE),B,V,w0,S0, y_var, sum_entropy_Y)
-    B <- out$B 
-    
-    # Store the largest change in the posterior means.
-    delta_B <- abs(max(B - B0))
-    maxd[t] <- delta_B
-    ELBO[t] <- out$ELBO
-    
-    # Print out some info, if requested
-    if(verbose)
-      cat("Iter:", t, "    max_deltaB:", delta_B, "\n")
-    
-    # Break if convergence is reached
-    if(delta_B<tol)
-      break
-  }
-  
-  # Return the updated posterior means of the regression coefficicents
-  # (B), the maximum change at each iteration (maxd), the prior weights,
-  # and V.
-  return(list(intercept = drop(intercept - mux %*% B),B = B,maxd = maxd,w0 = w0,
-              V = V,ELBO = ELBO[1:t],Y = Y))
-}
-
-
 # Run several iterations of the co-ordinate ascent updates for the
-# mr-mash model allowing for missing values in Y.
-#
-# The special case of univariate regression, when Y is a vector or a
-# matrix with 1 column, is also handled.
-#
-# This implementation is meant to be "instructive"---that is, I've
-# tried to make the code as simple as possible, with an emphasis on
-# clarity. Very little effort has been devoted to making the
-# implementation efficient, or the code concise.
-mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
-                                      tol=1e-4, update_w0=TRUE, update_V=FALSE,
-                                      verbose=FALSE) {
-  
-  r <- ncol(Y)
-  n <- nrow(Y)
-  
-  
-  # Compute inverse of V and store missingness patterns for each individual
-  V_inv <- vector("list", n)
-  miss <- vector("list", n)
-  non_miss <- vector("list", n)
-  for(i in 1:n){
-    miss_i <- is.na(Y[i, ])
-    non_miss_i <- !miss_i
-    miss[[i]] <- miss_i
-    non_miss[[i]] <- non_miss_i
-    
-    Vi <- V[non_miss_i, non_miss_i]
-    V_inv[[i]] <- chol2inv(chol(Vi))
-  }
-  
-  # Initialize missing Ys and intercept
-  intercept <- colMeans(Y, na.rm=TRUE)
-  for(l in 1:r){
-    Y[is.na(Y[, l]), l] <- intercept[l]
-  }
-  
-  # ty <- 0
-  
-  # Center X
-  X <- scale(X, scale=FALSE)
-  mux <- attr(X,"scaled:center")
-  
-  # These variables is used to keep track of the algorithm's progress.
-  maxd <- rep(0,numiter)
-  ELBO <- rep(0,numiter)
-  
-  # Iterate the updates.
-  for (t in 1:numiter) {
-    # Save the current estimates of the posterior means.
-    B0 <- B
-    
-    # Compute expected Y
-    mu <- t(t(X%*%B) + intercept)
-    
-    # M-step, if not the first iteration
-    if(t!=1){
-      # Update mixture weights, if requested
-      if(update_w0){
-        w0 <- colSums(out$W1)
-        w0 <- w0/sum(w0)
-      }
-      
-      # Update V, if requested
-      if(update_V){
-        R <- Y - mu
-        ERSS <- crossprod(R) + out$var_part_ERSS + y_var
-        V <- ERSS/n
-        
-        # Compute inverse of V for each individual
-        V_inv <- list()
-        for(i in 1:n){
-          non_miss_i <- non_miss[[i]]
-          Vi <- V[non_miss_i, non_miss_i]
-          V_inv[[i]] <- chol2inv(chol(Vi))
-        }
-      }
-    }
-    
-    # t1 <- proc.time()
-    
-    # Impute missing Y (code adapted from Yuxin)
-    y_var <- matrix(0, r, r)
-    yologlik <- 0
-    Vinv <- chol2inv(chol(V)) 
-      
-    for (i in 1:n){
-      non_miss_i <- non_miss[[i]]
-      miss_i <- miss[[i]]
-      V_mo = V[miss_i, non_miss_i, drop=FALSE]
-      if(any(miss_i)){
-        # Compute first moment
-        imp_mean = mu[i, miss_i] + V_mo %*% V_inv[[i]] %*%
-          (Y[i, non_miss_i] - mu[i, non_miss_i])
-        Y[i, miss_i] = imp_mean
-        
-        # Compute second moment (needed for computing the ELBO and V)
-        y_var_i = matrix(0, r, r)
-        y_var_mm <- V[miss_i, miss_i] - V_mo %*% tcrossprod(V_inv[[i]], V_mo)
-        y_var_i[miss_i, miss_i] = y_var_mm
-          
-        y_var <- y_var + y_var_i
-      }
-      
-      yologlik = yologlik + mvtnorm::dmvnorm(x = Y[i,non_miss_i],
-                                             mean=mu[i,non_miss_i],
-                                             sigma = V[non_miss_i, non_miss_i, drop=FALSE], 
-                                             log = TRUE)
-    }
-    
-    # Compute KL divergence between true and imputed Ys
-    KL_y <- yologlik + (n*r/2) * log(2*pi) + (n/2)*as.numeric(determinant(V, logarithm = TRUE)$modulus) +
-            0.5 * tr(Vinv %*% crossprod(Y - mu)) + 0.5 * tr(Vinv %*% y_var)
-    
-    # t2 <- proc.time()
-    # ty <- ty + t2["elapsed"] - t1["elapsed"]
-    
-    # Update the intercept
-    intercept <- colMeans(Y)
-    
-    # E-step: Update the posterior means of the regression coefficients.
-    out <- mr_mash_update_simple(X,scale(Y, scale=FALSE),B,V,w0,S0, y_var, KL_y)
-    B <- out$B 
-    
-    # Store the largest change in the posterior means.
-    delta_B <- abs(max(B - B0))
-    maxd[t] <- delta_B
-    ELBO[t] <- out$ELBO
-    
-    # Print out some info, if requested
-    if(verbose)
-      cat("Iter:", t, "    max_deltaB:", delta_B, "\n")
-    
-    # Break if convergence is reached
-    if(delta_B<tol)
-      break
-  }
-  
-  # print(ty)
-  
-  # Return the updated posterior means of the regression coefficicents
-  # (B), the maximum change at each iteration (maxd), the prior weights,
-  # and V.
-  return(list(intercept = drop(intercept - mux %*% B),B = B,maxd = maxd,w0 = w0,
-              V = V,ELBO = ELBO[1:t],Y = Y))
-}
-
-
-
-# Run several iterations of the co-ordinate ascent updates for the
-# mr-mash model.
+# mr-mash model, allowing for missing values in Y.
 #
 # The special case of univariate regression, when Y is a vector or a
 # matrix with 1 column, is also handled.
@@ -279,28 +9,63 @@ mr_mash_simple_missing_Y <- function (X, Y, V, S0, w0, B, numiter = 100,
 # clarity. Very little effort has been devoted to making the
 # implementation efficient, or the code concise.
 mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
-                            tol=1e-4, update_w0=TRUE, update_V=TRUE,
+                            tol=1e-4, update_w0=TRUE, update_V=FALSE,
                             verbose=FALSE) {
   
-  #Center X and Y
-  X <- scale(X, scale=FALSE)
-  Y <- scale(Y, scale=FALSE)
-  mux <- attr(X,"scaled:center")
-  muy <- attr(Y,"scaled:center")
+  r <- ncol(Y)
+  n <- nrow(Y)
   
-  # This variable is used to keep track of the algorithm's progress.
+  Y_has_missing <- any(is.na(Y))
+  
+  if(Y_has_missing){
+    # Compute inverse of V and store missingness patterns for each individual
+    miss <- vector("list", n)
+    non_miss <- vector("list", n)
+    for(i in 1:n){
+      miss_i <- is.na(Y[i, ])
+      non_miss_i <- !miss_i
+      miss[[i]] <- miss_i
+      non_miss[[i]] <- non_miss_i
+    }
+    
+    # Initialize missing Ys and intercept
+    intercept <- colMeans(Y, na.rm=TRUE)
+    for(l in 1:r){
+      Y[is.na(Y[, l]), l] <- intercept[l]
+    }
+  } else {
+    # Center Y
+    Y <- scale(Y, scale=FALSE)
+    muy <- attr(Y,"scaled:center")
+  }
+  
+  # ty <- 0
+  
+  # Center X
+  X <- scale(X, scale=FALSE)
+  mux <- attr(X,"scaled:center")
+  
+  # These variables is used to keep track of the algorithm's progress.
   maxd <- rep(0,numiter)
   ELBO <- rep(0,numiter)
   
-  # Set quantities needed for computing the ELBO with missing Ys to 0
-  y_var <- matrix(0, r, r)
-  KL_y <- 0
-
   # Iterate the updates.
   for (t in 1:numiter) {
-
+    
     # Save the current estimates of the posterior means.
     B0 <- B
+    
+    if(Y_has_missing){
+      # Compute expected Y
+      mu <- t(t(X%*%B) + intercept)
+    } else {
+      # Compute expected Y
+      mu <- X%*%B
+      
+      # Set quantities needed for computing the ELBO with missing Ys to 0
+      y_var <- matrix(0, r, r)
+      sum_entropy_Y <- 0
+    }
     
     # M-step, if not the first iteration
     if(t!=1){
@@ -312,17 +77,56 @@ mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
       
       # Update V, if requested
       if(update_V){
-        R <- Y - X%*%B
-        ERSS <- crossprod(R) + out$var_part_ERSS
-        V <- ERSS/nrow(Y)
+        R <- Y - mu
+        ERSS <- crossprod(R) + out$var_part_ERSS + y_var
+        V <- ERSS/n
       }
     }
+    
+    if(Y_has_missing){
+      # Impute missing Y (code adapted from Yuxin)
+      y_var <- matrix(0, r, r)
+      sum_entropy_Y <- 0
+      Vinv <- chol2inv(chol(V)) 
       
-    # E-step: Update the posterior means of the regression coefficients.
-    out <- mr_mash_update_simple(X,Y,B,V,w0,S0, y_var, KL_y)
+      for (i in 1:n){
+        non_miss_i <- non_miss[[i]]
+        miss_i <- miss[[i]]
+        Vinv_mo = Vinv[miss_i, non_miss_i, drop=FALSE]
+        Vinv_mm = Vinv[miss_i, miss_i, drop=FALSE]
+        if(any(miss_i)){
+          # Compute variance
+          y_var_i = matrix(0, r, r)
+          y_var_mm <- chol2inv(chol(Vinv_mm))
+          y_var_i[miss_i, miss_i] = y_var_mm
+          
+          y_var <- y_var + y_var_i
+          
+          # Compute mean
+          imp_mean = mu[i, miss_i] - y_var_mm %*% Vinv_mo %*% (Y[i, non_miss_i] - mu[i, non_miss_i])
+          Y[i, miss_i] = imp_mean
+          
+          # Compute sum of the negative entropy of Y missing
+          sum_entropy_Y = sum_entropy_Y + (0.5 * as.numeric(determinant(1/(2*pi*exp(1))*Vinv_mm, logarithm = TRUE)$modulus))
+        }
+      }
+      
+      # t2 <- proc.time()
+      # ty <- ty + t2["elapsed"] - t1["elapsed"]
+      
+      # Update the intercept
+      intercept <- colMeans(Y)
+      
+      # E-step: Update the posterior means of the regression coefficients.
+      out <- mr_mash_update_simple(X,scale(Y, scale=FALSE),B,V,w0,S0, y_var, sum_entropy_Y)
+    } else {
+      out <- mr_mash_update_simple(X,Y,B,V,w0,S0, y_var, sum_entropy_Y)
+    }
+    
+    
     B <- out$B 
     
-    # Store the ELBO and the largest change in the posterior means.
+    # Store the largest change in the posterior means.
     delta_B <- abs(max(B - B0))
     maxd[t] <- delta_B
     ELBO[t] <- out$ELBO
@@ -337,13 +141,19 @@ mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
   }
   
   # Compute the intercept
-  intercept <- drop(muy - mux %*% B)
-
+  if(Y_has_missing){
+    intercept <- drop(intercept - mux %*% B)
+  } else {
+    intercept <- drop(muy - mux %*% B)
+  }
+  
   # Return the updated posterior means of the regression coefficicents
   # (B), the maximum change at each iteration (maxd), the prior weights,
   # and V.
-  return(list(intercept=intercept,B = B,maxd = maxd,w0 = w0,V = V,ELBO = ELBO[1:t]))
+  return(list(intercept = intercept,B = B,maxd = maxd,w0 = w0,
+         V = V,ELBO = ELBO[1:t],Y = Y))
 }
+
 
 # Perform a single pass of the co-ordinate ascent updates for the
 # mr-mash model.
@@ -355,78 +165,7 @@ mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
 # tried to make the code as simple as possible, with an emphasis on
 # clarity. Very little effort has been devoted to making the
 # implementation efficient, or the code concise.
-mr_mash_update_simple <- function (X, Y, B, V, w0, S0, yvar, KLy) {
-
-  # Make sure B is a matrix.
-  B <- as.matrix(B)
-  
-  # Get the number of predictors, responses, and mixture components.
-  p <- ncol(X)
-  k <- length(w0)
-  r <- ncol(Y)
-  n <- nrow(Y)
-
-  # Create matrix to store posterior assignment probabilities
-  W1 <- matrix(as.numeric(NA), p, k)
-  
-  # Initialize quantities need to update V and ELBO
-  var_part_tr_wERSS <- 0
-  neg_KL <- 0
-  var_part_ERSS <- matrix(0, nrow=r, ncol=r)
-  
-  # Compute inverse of V
-  Vinv <- chol2inv(chol(V))
-  
-  # Compute the expected residuals.
-  R <- Y - X %*% B
-
-  # Repeat for each predictor.
-  for (i in 1:p) {
-    x <- X[,i]
-    xtx <- sum(x^2)
-    b <- B[i,]
-    
-    # Disregard the ith predictor in the expected residuals.
-    R <- R + outer(x,b)
-
-    # Update the posterior of the regression coefficients for the ith
-    # predictor.
-    out   <- bayes_mvr_mix_simple(x,R,V,w0,S0)
-    b     <- out$mu1
-    B[i,] <- b
-    
-    # Update the posterior assignment probabilities for the ith predictor
-    W1[i,] <- out$w1
-    
-    # Update quantity needed to update V
-    var_part_ERSS <- var_part_ERSS + out$S1*xtx
-    
-    # Update quantities needed for the ELBO
-    b_mat <- matrix(b, ncol=1)
-    var_part_tr_wERSS <- var_part_tr_wERSS + (tr(Vinv%*%out$S1)*xtx)
-    neg_KL <- neg_KL + (out$logbf +0.5*(-2*tr(tcrossprod(Vinv, R)%*%tcrossprod(matrix(x, ncol=1), b_mat))+
-                                           tr(Vinv%*%(out$S1+tcrossprod(b_mat)))*xtx))
-    # Update the expected residuals.
-    R <- R - outer(x,b)
-  }
-  
-  # Compute the ELBO
-  tr_wERSS <- tr(Vinv%*%(crossprod(R))) + var_part_tr_wERSS
-  if(all(yvar==0)){
-    e2 <- 0
-  } else {
-    e2 <- tr(Vinv%*%yvar)
-  }
-  ELBO <- -log(n)/2 - (n*r)/2*log(2*pi) - n/2 * as.numeric(determinant(V, logarithm = TRUE)$modulus) - 
-    0.5*(tr_wERSS+e2) + neg_KL + KLy
-
-  # Output the updated predictors.
-  return(list(B=drop(B), W1=W1, var_part_ERSS=var_part_ERSS, ELBO=drop(ELBO)))
-}
-
-# New function -- uses entropy of Y to compute the ELBO. 
-# To be checked against the older function before replacing it.
-mr_mash_update_simple_1 <- function (X, Y, B, V, w0, S0, yvar, sum_ent_Y) {
+mr_mash_update_simple <- function (X, Y, B, V, w0, S0, yvar, sum_ent_Y) {
   
   # Make sure B is a matrix.
   B <- as.matrix(B)
