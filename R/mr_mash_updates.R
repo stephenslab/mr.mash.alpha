@@ -171,10 +171,46 @@ update_V_fun <- function(Y, X, mu1_t, var_part_ERSS){
   return(V)
 }
 
+
 ###Update mixture weights
 update_weights_em <- function(x){
   w <- colSums(x)
   w <- w/sum(w)
   return(w)
+}
+
+
+###Impute/update missing Y
+impute_missing_Y <- function(Y, mu, Vinv, miss, non_miss){
+  n <- nrow(Y)
+  r <- ncol(Y)
+  
+  Y_cov <- matrix(0, r, r)
+  sum_neg_ent_Y_mm <- 0
+  
+  for (i in 1:n){
+    non_miss_i <- non_miss[[i]]
+    miss_i <- miss[[i]]
+    Vinv_mo <- Vinv[miss_i, non_miss_i, drop=FALSE]
+    Vinv_mm <- Vinv[miss_i, miss_i, drop=FALSE]
+    if(any(miss_i)){
+      # Compute variance
+      Y_cov_i <- matrix(0, r, r)
+      R <- chol(Vinv_mm)
+      Y_cov_mm <- chol2inv(R)
+      Y_cov_i[miss_i, miss_i] <- Y_cov_mm
+      
+      Y_cov <- Y_cov + Y_cov_i
+      
+      # Compute mean
+      Y[i, miss_i] <- mu[i, miss_i] - Y_cov_mm %*% Vinv_mo %*% (Y[i, non_miss_i] - mu[i, non_miss_i])
+      
+      # Compute sum of the negative entropy of Y missing
+      #sum_neg_ent_Y_mm <- sum_neg_ent_Y_mm + (0.5 * as.numeric(determinant(1/(2*pi*exp(1))*Vinv_mm, logarithm = TRUE)$modulus))
+      sum_neg_ent_Y_mm <- sum_neg_ent_Y_mm + (0.5 * (log((1/(2*pi*exp(1)))^ncol(R)) + chol2ldet(R))) # log(det(kA)) = log(k^r) + log(det(A)) where is the size of the matrix
+    }
+  }
+  
+  return(list(Y=Y, Y_cov=Y_cov, sum_neg_ent_Y_mm=sum_neg_ent_Y_mm))
 }
 
