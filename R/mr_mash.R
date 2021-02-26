@@ -200,8 +200,6 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     stop("Y must be a matrix.")
   if(!is.matrix(X))
     stop("X must be a matrix.")
-  if(any(is.na(Y)))
-    stop("Y must not contain missing values.")
   if(any(is.na(X)))
     stop("X must not contain missing values.")
   if(!is.null(V)){
@@ -233,17 +231,31 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ###numerical stability)
   S0 <- lapply(S0, makePD, e=e)
   
-  ###Center Y, and center (and, optionally, scale) X
-  outY <- scale_fast2(Y, scale=FALSE)
+  ###Check if Y has missing values
+  Y_has_missing <- any(is.na(Y))
+  
+  ###Center (and, optionally, scale) X
   outX <- scale_fast2(X, scale=standardize)
-  muy <- outY$means
   mux <- outX$means
   if (standardize)
     sx <- outX$sds
-  Y <- outY$M
-  rm(outY)
   X <- outX$M
   rm(outX)
+  
+  ###Center Y, if no missing value is present
+  if(!Y_has_missing){
+    outY <- scale_fast2(Y, scale=FALSE)
+    muy <- outY$means
+    Y <- outY$M
+    rm(outY)
+  }
+  
+  ###Extract per-individual Y missingness patterns, if missing values are present
+  if(Y_has_missing){
+    Y_miss_patterns <- extract_missing_Y_pattern(Y)
+  } else {
+    Y_miss_patterns <- NULL
+  }
   
   ###Scale mu1_init, if X is standardized 
   if(standardize)
@@ -251,12 +263,18 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   
   ###Compute V, if not provided by the user
   if(is.null(V)){
-    V <- compute_V_init(X, Y, mu1_init)
+    if(!Y_has_missing){
+      V <- compute_V_init(X, Y, mu1_init, method="cov")
+    } else {
+      V <- compute_V_init(X, Y, mu1_init, method="flash")
+    }
+    
     if(update_V_method=="diagonal")
       V <- diag(diag(V))
   }
   
-  ###Initilize mu1, S1, w1, delta_mu1, delta_ELBO, delta_conv, ELBO, iterator, and progress
+  ###Initilize mu1, S1, w1, delta_mu1, delta_ELBO, delta_conv, ELBO, iterator, progress,
+  ###missing Ys, and intercept (i.e., muy)
   mu1_t <- mu1_init 
   delta_mu1 <- matrix(Inf, nrow=p, ncol=r)
   delta_ELBO <- Inf
@@ -272,6 +290,12 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     progress$ELBO_diff <- as.numeric(NA)
     progress$ELBO <- as.numeric(NA)
   }
+  if(Y_has_missing){
+    muy <- colMeans(Y, na.rm=TRUE)
+    for(l in 1:r){
+      Y[is.na(Y[, l]), l] <- muy[l]
+    }
+  }
   
   ###Set eps
   eps <- .Machine$double.eps
@@ -283,8 +307,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     comps$xtx <- xtx
   }
   
-  if(compute_ELBO || !standardize)
-    ###Compute inverse of V (needed for the ELBO and unstandardized X)
+  if(Y_has_missing || compute_ELBO || !standardize)
+    ###Compute inverse of V (needed for imputing missing Ys, the ELBO and unstandardized X)
     Vinv <- chol2inv(comps$V_chol)
   else {
     if(version=="R")
@@ -339,6 +363,13 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     
     ##Update iterator
     t <- t+1
+    
+    ##Compute expected Y
+    if(Y_has_missing){
+      mu <- addtocols(X%*%mu1_t, muy)
+    } else {
+      mu <- X%*%mu1_t
+    }
 
     ##Exit loop if maximum number of iterations is reached
     if(t>max_iter){
@@ -351,7 +382,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     if(t > 1){
       ##Update V if requested
       if(update_V){
-        V     <- update_V_fun(Y, X, mu1_t, var_part_ERSS)
+        V <- update_V_fun(Y, mu, var_part_ERSS, Y_cov)
         if(update_V_method=="diagonal")
           V <- diag(diag(V))
         
@@ -383,14 +414,15 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     # E-STEP
     # ------
     ###Update variational parameters
-    ups <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, V=V, Vinv=Vinv,
-                                  ldetV=ldetV, w0=w0, S0=S0, 
+    ups <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, mu=mu, V=V,
+                                  Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
                                   precomp_quants=comps,
                                   compute_ELBO=compute_ELBO,
                                   standardize=standardize,
                                   update_V=update_V, version=version, 
                                   update_order=update_order, eps=eps,
-                                  nthreads=nthreads)
+                                  nthreads=nthreads, 
+                                  Y_miss_patterns=Y_miss_patterns)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t
@@ -398,6 +430,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
       ELBO <- ups$ELBO
     if(update_V)
       var_part_ERSS <- ups$var_part_ERSS
+    if(Y_has_missing){
+      Y <- ups$Y
+      muy <- ups$muy
+    }
     
     ##End timing
     time2 <- proc.time()

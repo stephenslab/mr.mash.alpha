@@ -262,11 +262,68 @@ scale_fast2 <- function(M, scale=TRUE, na.rm=TRUE){
   return(list(M=M, means=means, sds=sds))
 }
 
+###Compute covariance matrix using flash (from Ga)
+#' @importFrom matrixStats colSds
+#' @importFrom flashier flash prior.normal prior.normal.scale.mix
+compute_cov_flash <- function(Y, error_cache = NULL){
+  covar <- diag(ncol(Y))
+  tryCatch({
+    fl <- flash(Y, var.type = 2, prior.family = c(prior.normal(), prior.normal.scale.mix()), backfit = TRUE, verbose.lvl=0)
+    if(fl$n.factors==0){
+      covar <- diag(fl$residuals.sd^2)
+    } else {
+      fsd <- sapply(fl$fitted.g[[1]], '[[', "sd")
+      covar <- diag(fl$residuals.sd^2) + crossprod(t(fl$flash.fit$EF[[2]]) * fsd)
+    }
+    if (nrow(covar) == 0) {
+      covar <- diag(ncol(Y))
+      stop("Computed covariance matrix has zero rows")
+    }
+  }, error = function(e) {
+    if (!is.null(error_cache)) {
+      saveRDS(list(data=Y, message=warning(e)), error_cache)
+      warning("FLASH failed. Using Identity matrix instead.")
+      warning(e)
+    } else {
+      stop(e)
+    }
+  })
+  s <- colSds(Y, na.rm=TRUE)
+  if (length(s)>1) s = diag(s)
+  else s = matrix(s,1,1)
+  covar <- s%*%cov2cor(covar)%*%s
+  return(covar)
+}
+
 ###Compute initial estimate of V
-compute_V_init <- function(X, Y, B){
+compute_V_init <- function(X, Y, B, method=c("cov", "flash")){
+  method <- match.arg(method)
+  
   R <- Y - X%*%B
-  V <- cov(R)
+  
+  if(method=="cov"){
+    V <- cov(R)
+  } else if(method=="flash"){
+    V <- compute_cov_flash(R)
+  }
   
   return(V)
+}
+
+###Extract Y missingness patterns for each individual
+extract_missing_Y_pattern <- function(Y){
+  
+  n <- nrow(Y)
+  miss <- vector("list", n)
+  non_miss <- vector("list", n)
+  
+  for(i in 1:n){
+    miss_i <- is.na(Y[i, ])
+    non_miss_i <- !miss_i
+    miss[[i]] <- miss_i
+    non_miss[[i]] <- non_miss_i
+  }
+  
+  return(list(miss=miss, non_miss=non_miss))
 }
 

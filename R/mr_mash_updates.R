@@ -119,11 +119,32 @@ inner_loop_general <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants,
 
 
 ###Perform one iteration of the outer loop with or without scaling X
-mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
+mr_mash_update_general <- function(X, Y, mu1_t, mu, V, Vinv, ldetV, w0, S0,
                                    precomp_quants, compute_ELBO, standardize, 
-                                   update_V, version, update_order, eps, nthreads){
-  ##Compute expected residuals
-  Rbar <- Y - X%*%mu1_t
+                                   update_V, version, update_order, eps, 
+                                   nthreads, Y_miss_patterns){
+  
+  
+  if(!is.null(Y_miss_patterns)){
+    ##Impute missing Ys
+    outY <- impute_missing_Y(Y=Y, mu=mu, Vinv=Vinv, miss=Y_miss_patterns$miss, non_miss=Y_miss_patterns$non_miss)
+    Y <- outY$Y
+    Y_cov <- outY$Y_cov
+    sum_neg_ent_Y_miss <- outY$sum_neg_ent_Y_miss
+    
+    # Update the intercept
+    muy <- colMeans(Y)
+    
+    ##Compute expected residuals
+    Rbar <- scale_fast2(Y, scale=FALSE)$M - mu
+    
+  } else {
+    Y_cov <- NULL
+    sum_neg_ent_Y_miss <- 0
+    
+    ##Compute expected residuals
+    Rbar <- Y - mu
+  }
   
   ##Update variational parameters, expected residuals, and ELBO components
   updates <- inner_loop_general(X=X, Rbar=Rbar, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
@@ -135,37 +156,46 @@ mr_mash_update_general <- function(X, Y, mu1_t, V, Vinv, ldetV, w0, S0,
   w1_t    <- updates$w1
   Rbar    <- updates$Rbar
   
+  out <- list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t)
+  
+  if(!is.null(Y_miss_patterns)){
+    out <- c(Y=Y, muy=muy, out)
+  }
+  
   if(compute_ELBO && update_V){
     ##Compute ELBO
     var_part_tr_wERSS <- updates$var_part_tr_wERSS
     neg_KL <- updates$neg_KL
-    ELBO <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL)
+    ELBO <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, 
+                             neg_KL=neg_KL, Y_cov=Y_cov, sum_neg_ent_Y_miss=sum_neg_ent_Y_miss)
     
     var_part_ERSS <- updates$var_part_ERSS
     
-    return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO, var_part_ERSS=var_part_ERSS))
+    return(c(out, ELBO=ELBO, var_part_ERSS=var_part_ERSS))
   } else if(compute_ELBO && !update_V){
     ##Compute ELBO
     var_part_tr_wERSS <- updates$var_part_tr_wERSS
     neg_KL <- updates$neg_KL
-    ELBO <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL)
+    ELBO <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS,
+                             neg_KL=neg_KL, Y_cov=Y_cov, sum_neg_ent_Y_miss=sum_neg_ent_Y_miss)
     
-    return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, ELBO=ELBO))
+    return(c(out, ELBO=ELBO))
   } else if(!compute_ELBO && update_V){
     var_part_ERSS <- updates$var_part_ERSS
     
-    return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t, var_part_ERSS=var_part_ERSS))
+    return(c(out, var_part_ERSS=var_part_ERSS))
   } else {
-    return(list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t))
+    return(out)
   }
 }
 
 
 ###Update V
-update_V_fun <- function(Y, X, mu1_t, var_part_ERSS){
-  Rbar <- Y - X%*%mu1_t
-  ERSS <- crossprod(Rbar) + var_part_ERSS
+update_V_fun <- function(Y, mu, var_part_ERSS, Y_cov){
   n <- nrow(X)
+  
+  Rbar <- Y - mu
+  ERSS <- crossprod(Rbar) + var_part_ERSS + Y_cov
   V <- ERSS/n
   
   return(V)
@@ -186,7 +216,7 @@ impute_missing_Y <- function(Y, mu, Vinv, miss, non_miss){
   r <- ncol(Y)
   
   Y_cov <- matrix(0, r, r)
-  sum_neg_ent_Y_mm <- 0
+  sum_neg_ent_Y_miss <- 0
   
   for (i in 1:n){
     non_miss_i <- non_miss[[i]]
@@ -207,10 +237,10 @@ impute_missing_Y <- function(Y, mu, Vinv, miss, non_miss){
       
       # Compute sum of the negative entropy of Y missing
       #sum_neg_ent_Y_mm <- sum_neg_ent_Y_mm + (0.5 * as.numeric(determinant(1/(2*pi*exp(1))*Vinv_mm, logarithm = TRUE)$modulus))
-      sum_neg_ent_Y_mm <- sum_neg_ent_Y_mm + (0.5 * (log((1/(2*pi*exp(1)))^ncol(R)) + chol2ldet(R))) # log(det(kA)) = log(k^r) + log(det(A)) where is the size of the matrix
+      sum_neg_ent_Y_miss <- sum_neg_ent_Y_miss + (0.5 * (ncol(R)*log((1/(2*pi*exp(1)))) + chol2ldet(R))) # log(det(kA)) = r*log(k) + log(det(A)) where is the size of the matrix
     }
   }
   
-  return(list(Y=Y, Y_cov=Y_cov, sum_neg_ent_Y_mm=sum_neg_ent_Y_mm))
+  return(list(Y=Y, Y_cov=Y_cov, sum_neg_ent_Y_mm=sum_neg_ent_Y_miss))
 }
 
