@@ -239,6 +239,6 @@ impute_missing_Y <- function(Y, mu, Vinv, miss, non_miss){
     }
   }
   
-  return(list(Y=Y, Y_cov=Y_cov, sum_neg_ent_Y_mm=sum_neg_ent_Y_miss))
+  return(list(Y=Y, Y_cov=Y_cov, sum_neg_ent_Y_miss=sum_neg_ent_Y_miss))
 }
 
