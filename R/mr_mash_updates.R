@@ -159,40 +159,38 @@ mr_mash_update_general <- function(X, Y, mu1_t, mu, V, Vinv, ldetV, w0, S0,
   out <- list(mu1_t=mu1_t, S1_t=S1_t, w1_t=w1_t)
   
   if(!is.null(Y_miss_patterns)){
-    out <- c(Y=Y, muy=muy, out)
+    out$Y <- Y 
+    out$muy <- muy
+    out$Y_cov <- Y_cov
   }
   
   if(compute_ELBO && update_V){
     ##Compute ELBO
     var_part_tr_wERSS <- updates$var_part_tr_wERSS
     neg_KL <- updates$neg_KL
-    ELBO <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, 
-                             neg_KL=neg_KL, Y_cov=Y_cov, sum_neg_ent_Y_miss=sum_neg_ent_Y_miss)
+    out$ELBO <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, 
+                                 neg_KL=neg_KL, Y_cov=Y_cov, sum_neg_ent_Y_miss=sum_neg_ent_Y_miss)
     
-    var_part_ERSS <- updates$var_part_ERSS
+    out$var_part_ERSS <- updates$var_part_ERSS
     
-    return(c(out, ELBO=ELBO, var_part_ERSS=var_part_ERSS))
   } else if(compute_ELBO && !update_V){
     ##Compute ELBO
     var_part_tr_wERSS <- updates$var_part_tr_wERSS
     neg_KL <- updates$neg_KL
-    ELBO <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS,
-                             neg_KL=neg_KL, Y_cov=Y_cov, sum_neg_ent_Y_miss=sum_neg_ent_Y_miss)
+    out$ELBO <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS,
+                                 neg_KL=neg_KL, Y_cov=Y_cov, sum_neg_ent_Y_miss=sum_neg_ent_Y_miss)
     
-    return(c(out, ELBO=ELBO))
   } else if(!compute_ELBO && update_V){
-    var_part_ERSS <- updates$var_part_ERSS
-    
-    return(c(out, var_part_ERSS=var_part_ERSS))
-  } else {
-    return(out)
+    out$var_part_ERSS <- updates$var_part_ERSS
   }
+  
+  return(out)
 }
 
 
 ###Update V
 update_V_fun <- function(Y, mu, var_part_ERSS, Y_cov){
-  n <- nrow(X)
+  n <- nrow(Y)
   
   Rbar <- Y - mu
   ERSS <- crossprod(Rbar) + var_part_ERSS + Y_cov

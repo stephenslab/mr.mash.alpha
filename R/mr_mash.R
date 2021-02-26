@@ -334,6 +334,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                                                  decreasing=FALSE, eps, nthreads)
   }
   
+  if(!Y_has_missing){
+    Y_cov <- matrix(0, nrow=r, ncol=r)
+  }
+  
   if(verbose)
     cat("Done!\n")
 
@@ -385,7 +389,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
         V <- update_V_fun(Y, mu, var_part_ERSS, Y_cov)
         if(update_V_method=="diagonal")
           V <- diag(diag(V))
-        
+
         #Recompute precomputed quantities after updating V
         comps <- precompute_quants(X, V, S0, standardize, version)
         if(!standardize)
@@ -433,6 +437,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     if(Y_has_missing){
       Y <- ups$Y
       muy <- ups$muy
+      Y_cov <- ups$Y_cov
     }
     
     ##End timing
