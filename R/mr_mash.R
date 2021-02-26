@@ -527,6 +527,9 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   if(compute_ELBO)
     ###Append ELBO to the output
     out$ELBO <- ELBO
+  if(Y_has_missing)
+    ###Append Y to the output
+    out$Y <- Y
 
   class(out) <- c("mr.mash", "list")
   
