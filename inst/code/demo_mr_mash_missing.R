@@ -62,8 +62,20 @@ Y[i2,2] <- NA
 # Run 20 co-ordinate ascent updates.
 B0 <- matrix(0,p,r)
 t1 <- proc.time()
-fit <- mr_mash_simple_missing_Y(X,Y,V,S0,w0,B0,numiter = 20,tol = 1e-6,
-                                update_w0 = TRUE,update_V = TRUE,
-                                verbose = TRUE)
+fit <- mr_mash_simple(X,Y,V,S0,w0,B0,numiter = 100,tol = 1e-6,
+                      update_w0 = TRUE,update_V = TRUE,
+                      verbose = TRUE)
 t2 <- proc.time()
 print(t2 - t1)
+
+
+# Compare the posterior mean estimates of the regression coefficients
+# against the coefficients used to simulate the data.
+plot(B,fit$B,pch = 20,xlab = "true",ylab = "estimated", main = "Effects")
+abline(a = 0,b = 1,col = "skyblue",lty = "dotted")
+
+# Compare the estimate of the residual covariance
+# against the true residual covariance used to simulate the data.
+plot(V,fit$V,pch = 20,xlab = "true",ylab = "estimated", main = "Residual covariance")
+abline(a = 0,b = 1,col = "skyblue",lty = "dotted")
+
