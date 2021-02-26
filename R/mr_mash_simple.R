@@ -18,7 +18,7 @@ mr_mash_simple <- function (X, Y, V, S0, w0, B, numiter = 100,
   Y_has_missing <- any(is.na(Y))
   
   if(Y_has_missing){
-    # Compute inverse of V and store missingness patterns for each individual
+    # Store missingness patterns for each individual
     miss <- vector("list", n)
     non_miss <- vector("list", n)
     for(i in 1:n){
