@@ -1,5 +1,7 @@
 #include "bayes_reg_mv.h"
 #include "misc.h"
+#include <algorithm>
+#include <cmath>
 
 using namespace Rcpp;
 using namespace arma;
@@ -40,6 +42,12 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
                          const vec& update_order, double eps, unsigned int nthreads,
                          cube& S1, mat& w1, double& var_part_tr_wERSS, 
                          double& neg_KL, mat& var_part_ERSS);
+
+
+// Missing Y imputation
+void impute_missing_Y (mat& Y, const mat& mu, const mat& Vinv, 
+                       const cube& miss, const cube& non_miss,
+                       mat& Y_cov, double& sum_neg_ent_Y_miss);
 
 
 // FUNCTION DEFINITIONS
@@ -167,3 +175,64 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
   }
 }
 
+
+
+
+
+
+// Impute missing Y
+//
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+List impute_missing_Y_rcpp (arma::mat& Y, const arma::mat& mu, const arma::mat& Vinv, 
+                            const arma::cube& miss, const arma::cube& non_miss) {
+  unsigned int r = Y.n_cols;
+  mat Y_cov(r,r);
+  double sum_neg_ent_Y_miss;
+
+  impute_missing_Y(Y, mu, Vinv, miss, non_miss, Y_cov, sum_neg_ent_Y_miss);
+  return List::create(Named("Y")                  = Y,
+                      Named("Y_cov")              = Y_cov,
+                      Named("sum_neg_ent_Y_miss") = sum_neg_ent_Y_miss);
+}
+
+
+// Perform missing Y imputation
+void impute_missing_Y (mat& Y, const mat& mu, const mat& Vinv, 
+                       const cube& miss, const cube& non_miss,
+                       mat& Y_cov, double& sum_neg_ent_Y_miss){
+  
+  unsigned int n = Y.n_rows;
+  unsigned int r = Y.n_cols;
+  
+  Y_cov.zeros();
+  sum_neg_ent_Y_miss = 0;
+  
+  for (unsigned int i = 0; i < n; i++) {
+    // unsigned int z = non_miss.slice(i).n_elem
+    // unsigned int x = miss.slice(i).n_elem
+    
+    // vec non_miss_i(z);
+    // vec miss_i(x);
+    // mat Vinv_mo(x,z);
+    // mat Vinv_mm(x,x);
+    
+    vec non_miss_i = non_miss.slice(i);
+    vec miss_i = miss.slice(i);
+    mat Vinv_mo = Vinv(miss_i, non_miss_i);
+    mat Vinv_mm = Vinv(miss_i, miss_i);
+    
+    if(std::any_of(miss_i.std::begin(), miss_i.std::end(), [](bool v) { return v; })){
+      mat Y_cov_i.zeros(r,r);
+      mat Vinv_mm_chol = chol(Vinv_mm);
+      mat Y_cov_mm = inv_sympd(Vinv_mm);
+      mat Y_cov_i(miss_i, miss_i) = Y_cov_mm;
+      
+      Y_cov += Y_cov_i;
+      
+      Y(i, miss_i) = mu(i, miss_i) - Y_cov_mm * Vinv_mo * (Y(i, non_miss_i) - mu(i, non_miss_i));
+      
+      sum_neg_ent_Y_miss += (0.5 * (Vinv_mm_chol.n_cols * log((1/(2*M_PI*exp(1)))) + chol2ldet(Vinv_mm_chol)));
+    }
+  }
+}

@@ -127,7 +127,8 @@ mr_mash_update_general <- function(X, Y, mu1_t, mu, V, Vinv, ldetV, w0, S0,
   
   if(!is.null(Y_miss_patterns)){
     ##Impute missing Ys
-    outY <- impute_missing_Y(Y=Y, mu=mu, Vinv=Vinv, miss=Y_miss_patterns$miss, non_miss=Y_miss_patterns$non_miss)
+    outY <- impute_missing_Y(Y=Y, mu=mu, Vinv=Vinv, miss=Y_miss_patterns$miss, non_miss=Y_miss_patterns$non_miss, 
+                             version=version)
     Y <- outY$Y
     Y_cov <- outY$Y_cov
     sum_neg_ent_Y_miss <- outY$sum_neg_ent_Y_miss
@@ -209,7 +210,7 @@ update_weights_em <- function(x){
 
 
 ###Impute/update missing Y
-impute_missing_Y <- function(Y, mu, Vinv, miss, non_miss){
+impute_missing_Y_R <- function(Y, mu, Vinv, miss, non_miss){
   n <- nrow(Y)
   r <- ncol(Y)
   
@@ -242,3 +243,13 @@ impute_missing_Y <- function(Y, mu, Vinv, miss, non_miss){
   return(list(Y=Y, Y_cov=Y_cov, sum_neg_ent_Y_miss=sum_neg_ent_Y_miss))
 }
 
+
+impute_missing_Y <- function(Y, mu, Vinv, miss, non_miss, version){
+  if(version=="R"){
+    out <- impute_missing_Y_R(Y, mu, Vinv, miss, non_miss)
+  } else if(version=="Rcpp"){
+    out <- impute_missing_Y_rcpp(Y, mu, Vinv, simplify2array_custom(miss), simplify2array_custom(non_miss))
+  }
+  
+  return(out)
+}
