@@ -187,7 +187,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
 List impute_missing_Y_rcpp (arma::mat& Y, const arma::mat& mu, const arma::mat& Vinv, 
                             const arma::cube& miss, const arma::cube& non_miss) {
   unsigned int r = Y.n_cols;
-  mat Y_cov(r,r);
+  mat Y_cov(r,r, fill::zeros);
   double sum_neg_ent_Y_miss;
 
   impute_missing_Y(Y, mu, Vinv, miss, non_miss, Y_cov, sum_neg_ent_Y_miss);
@@ -205,32 +205,43 @@ void impute_missing_Y (mat& Y, const mat& mu, const mat& Vinv,
   unsigned int n = Y.n_rows;
   unsigned int r = Y.n_cols;
   
-  Y_cov.zeros();
   sum_neg_ent_Y_miss = 0;
   
   for (unsigned int i = 0; i < n; i++) {
-    // unsigned int z = non_miss.slice(i).n_elem
-    // unsigned int x = miss.slice(i).n_elem
+    unsigned int z = non_miss.slice(i).n_elem;
+    unsigned int x = miss.slice(i).n_elem;
     
-    // vec non_miss_i(z);
-    // vec miss_i(x);
+    vec non_miss_i(z);
+    vec miss_i(x);
     // mat Vinv_mo(x,z);
     // mat Vinv_mm(x,x);
     
-    vec non_miss_i = non_miss.slice(i);
-    vec miss_i = miss.slice(i);
-    mat Vinv_mo = Vinv(miss_i, non_miss_i);
-    mat Vinv_mm = Vinv(miss_i, miss_i);
+    non_miss_i = non_miss.slice(i);
+    miss_i = miss.slice(i);
+    uvec non_miss_i_idx = find(non_miss_i);
+    uvec miss_i_idx = find(miss_i);
     
-    if(std::any_of(miss_i.std::begin(), miss_i.std::end(), [](bool v) { return v; })){
-      mat Y_cov_i.zeros(r,r);
+    mat Vinv_mo = Vinv.submat(miss_i_idx, non_miss_i_idx);
+    mat Vinv_mm = Vinv.submat(miss_i_idx, miss_i_idx);
+    
+    if(std::any_of(miss_i.begin(), miss_i.end(), [](bool v) { return v; })){
+      mat Y_cov_i(r,r,fill::zeros);
       mat Vinv_mm_chol = chol(Vinv_mm);
       mat Y_cov_mm = inv_sympd(Vinv_mm);
-      mat Y_cov_i(miss_i, miss_i) = Y_cov_mm;
+      Y_cov_i.submat(miss_i_idx, miss_i_idx) = Y_cov_mm;
       
       Y_cov += Y_cov_i;
       
-      Y(i, miss_i) = mu(i, miss_i) - Y_cov_mm * Vinv_mo * (Y(i, non_miss_i) - mu(i, non_miss_i));
+      vec Y_i = Y.row(i);
+      vec mu_i_miss = mu.row(i);
+      mu_i_miss = mu_i_miss.elem(miss_i_idx);
+      vec mu_i_non_miss = mu.row(i);
+      mu_i_non_miss = mu_i_non_miss.elem(non_miss_i_idx);
+      vec Y_i_non_miss = Y.row(i);
+      Y_i_non_miss = Y_i_non_miss.elem(non_miss_i_idx);
+      
+      Y_i.elem(miss_i_idx) = mu_i_miss - Y_cov_mm * Vinv_mo * (Y_i_non_miss - mu_i_non_miss);
+      Y.row(i) = Y_i;
       
       sum_neg_ent_Y_miss += (0.5 * (Vinv_mm_chol.n_cols * log((1/(2*M_PI*exp(1)))) + chol2ldet(Vinv_mm_chol)));
     }
