@@ -30,6 +30,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// impute_missing_Y_rcpp
+List impute_missing_Y_rcpp(arma::mat& Y, const arma::mat& mu, const arma::mat& Vinv, const arma::mat& miss, const arma::mat& non_miss);
+RcppExport SEXP _mr_mash_alpha_impute_missing_Y_rcpp(SEXP YSEXP, SEXP muSEXP, SEXP VinvSEXP, SEXP missSEXP, SEXP non_missSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Vinv(VinvSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type miss(missSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type non_miss(non_missSEXP);
+    rcpp_result_gen = Rcpp::wrap(impute_missing_Y_rcpp(Y, mu, Vinv, miss, non_miss));
+    return rcpp_result_gen;
+END_RCPP
+}
 // scale_rcpp
 arma::mat scale_rcpp(const arma::mat& M, const arma::vec& a, const arma::vec& b);
 RcppExport SEXP _mr_mash_alpha_scale_rcpp(SEXP MSEXP, SEXP aSEXP, SEXP bSEXP) {
@@ -92,6 +107,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_mr_mash_alpha_inner_loop_general_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rcpp, 14},
+    {"_mr_mash_alpha_impute_missing_Y_rcpp", (DL_FUNC) &_mr_mash_alpha_impute_missing_Y_rcpp, 5},
     {"_mr_mash_alpha_scale_rcpp", (DL_FUNC) &_mr_mash_alpha_scale_rcpp, 3},
     {"_mr_mash_alpha_scale2_rcpp", (DL_FUNC) &_mr_mash_alpha_scale2_rcpp, 3},
     {"_mr_mash_alpha_rescale_post_mean_covar_rcpp", (DL_FUNC) &_mr_mash_alpha_rescale_post_mean_covar_rcpp, 3},

@@ -46,7 +46,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
 
 // Missing Y imputation
 void impute_missing_Y (mat& Y, const mat& mu, const mat& Vinv, 
-                       const cube& miss, const cube& non_miss,
+                       const mat& miss, const mat& non_miss,
                        mat& Y_cov, double& sum_neg_ent_Y_miss);
 
 
@@ -185,7 +185,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 List impute_missing_Y_rcpp (arma::mat& Y, const arma::mat& mu, const arma::mat& Vinv, 
-                            const arma::cube& miss, const arma::cube& non_miss) {
+                            const arma::mat& miss, const arma::mat& non_miss) {
   unsigned int r = Y.n_cols;
   mat Y_cov(r,r, fill::zeros);
   double sum_neg_ent_Y_miss;
@@ -199,7 +199,7 @@ List impute_missing_Y_rcpp (arma::mat& Y, const arma::mat& mu, const arma::mat& 
 
 // Perform missing Y imputation
 void impute_missing_Y (mat& Y, const mat& mu, const mat& Vinv, 
-                       const cube& miss, const cube& non_miss,
+                       const mat& miss, const mat& non_miss,
                        mat& Y_cov, double& sum_neg_ent_Y_miss){
   
   unsigned int n = Y.n_rows;
@@ -208,16 +208,14 @@ void impute_missing_Y (mat& Y, const mat& mu, const mat& Vinv,
   sum_neg_ent_Y_miss = 0;
   
   for (unsigned int i = 0; i < n; i++) {
-    unsigned int z = non_miss.slice(i).n_elem;
-    unsigned int x = miss.slice(i).n_elem;
+    unsigned int z = non_miss.col(i).n_elem;
+    unsigned int x = miss.col(i).n_elem;
     
     vec non_miss_i(z);
     vec miss_i(x);
-    // mat Vinv_mo(x,z);
-    // mat Vinv_mm(x,x);
-    
-    non_miss_i = non_miss.slice(i);
-    miss_i = miss.slice(i);
+
+    non_miss_i = non_miss.col(i);
+    miss_i = miss.col(i);
     uvec non_miss_i_idx = find(non_miss_i);
     uvec miss_i_idx = find(miss_i);
     
