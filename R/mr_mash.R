@@ -219,7 +219,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   if(convergence_criterion=="ELBO" && !compute_ELBO)
     stop("ELBO needs to be computed with convergence_criterion=\"ELBO\".")
   if(ca_update_order!="consecutive" && any(is.na(Y)))
-    stop("ca_update_order=\"consecutive\" is the only option when Y has missing values")
+    stop("ca_update_order=\"consecutive\" is the only option when Y has missing values.")
 
   ###Obtain dimensions needed from inputs
   p <- ncol(X)
