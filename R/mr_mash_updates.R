@@ -136,7 +136,7 @@ mr_mash_update_general <- function(X, Y, mu1_t, mu, V, Vinv, ldetV, w0, S0,
     muy <- colMeans(Y)
     
     ##Compute expected residuals
-    Rbar <- scale_fast2(Y, scale=FALSE)$M - mu
+    Rbar <- scale_fast2(Y, scale=FALSE)$M - X%*%mu1_t
     
   } else {
     Y_cov <- NULL
@@ -168,7 +168,7 @@ mr_mash_update_general <- function(X, Y, mu1_t, mu, V, Vinv, ldetV, w0, S0,
     ##Compute ELBO
     var_part_tr_wERSS <- updates$var_part_tr_wERSS
     neg_KL <- updates$neg_KL
-    out$ELBO <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, 
+    out$ELBO <- compute_ELBO_fun(Rbar=Rbar, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS, 
                                  neg_KL=neg_KL, Y_cov=Y_cov, sum_neg_ent_Y_miss=sum_neg_ent_Y_miss)
     
     out$var_part_ERSS <- updates$var_part_ERSS
@@ -177,7 +177,7 @@ mr_mash_update_general <- function(X, Y, mu1_t, mu, V, Vinv, ldetV, w0, S0,
     ##Compute ELBO
     var_part_tr_wERSS <- updates$var_part_tr_wERSS
     neg_KL <- updates$neg_KL
-    out$ELBO <- compute_ELBO_fun(Rbar=Rbar, V=V, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS,
+    out$ELBO <- compute_ELBO_fun(Rbar=Rbar, Vinv=Vinv, ldetV=ldetV, var_part_tr_wERSS=var_part_tr_wERSS,
                                  neg_KL=neg_KL, Y_cov=Y_cov, sum_neg_ent_Y_miss=sum_neg_ent_Y_miss)
     
   } else if(!compute_ELBO && update_V){
@@ -224,8 +224,8 @@ impute_missing_Y <- function(Y, mu, Vinv, miss, non_miss){
     if(any(miss_i)){
       # Compute variance
       Y_cov_i <- matrix(0, r, r)
-      R <- chol(Vinv_mm)
-      Y_cov_mm <- chol2inv(R)
+      Vinv_mm_chol <- chol(Vinv_mm)
+      Y_cov_mm <- chol2inv(Vinv_mm_chol)
       Y_cov_i[miss_i, miss_i] <- Y_cov_mm
       
       Y_cov <- Y_cov + Y_cov_i
@@ -234,8 +234,8 @@ impute_missing_Y <- function(Y, mu, Vinv, miss, non_miss){
       Y[i, miss_i] <- mu[i, miss_i] - Y_cov_mm %*% Vinv_mo %*% (Y[i, non_miss_i] - mu[i, non_miss_i])
       
       # Compute sum of the negative entropy of Y missing
-      #sum_neg_ent_Y_mm <- sum_neg_ent_Y_mm + (0.5 * as.numeric(determinant(1/(2*pi*exp(1))*Vinv_mm, logarithm = TRUE)$modulus))
-      sum_neg_ent_Y_miss <- sum_neg_ent_Y_miss + (0.5 * (ncol(R)*log((1/(2*pi*exp(1)))) + chol2ldet(R))) # log(det(kA)) = r*log(k) + log(det(A)) where is the size of the matrix
+      #sum_neg_ent_Y_miss <- sum_neg_ent_Y_miss + (0.5 * as.numeric(determinant(1/(2*pi*exp(1))*Vinv_mm, logarithm = TRUE)$modulus))
+      sum_neg_ent_Y_miss <- sum_neg_ent_Y_miss + (0.5 * (ncol(Vinv_mm_chol)*log((1/(2*pi*exp(1)))) + chol2ldet(Vinv_mm_chol))) # log(det(kA)) = r*log(k) + log(det(A)) where is the size of the matrix
     }
   }
   
