@@ -243,7 +243,7 @@ impute_missing_Y_R <- function(Y, mu, Vinv, miss, non_miss){
   return(list(Y=Y, Y_cov=Y_cov, sum_neg_ent_Y_miss=sum_neg_ent_Y_miss))
 }
 
-
+###Wrapper of impute/update missing Y with R or Rcpp
 impute_missing_Y <- function(Y, mu, Vinv, miss, non_miss, version){
   if(version=="R"){
     out <- impute_missing_Y_R(Y, mu, Vinv, miss, non_miss)
