@@ -215,14 +215,17 @@ void impute_missing_Y (mat& Y, const mat& mu, const mat& Vinv,
     mat Vinv_mm = Vinv.submat(miss_i_idx, miss_i_idx);
     
     if(std::any_of(miss_i.begin(), miss_i.end(), [](bool v) { return v; })){
+      // Compute covariance
       mat Y_cov_i(r,r,fill::zeros);
       mat Vinv_mm_chol = chol(Vinv_mm);
+      unsigned int s = Vinv_mm_chol.n_rows;
       // mat Y_cov_mm = inv_sympd(Vinv_mm);
-      mat Y_cov_mm = solve(trimatu(Vinv_mm_chol), solve(trimatl(trans(Vinv_mm_chol)),eye(Vinv_mm_chol.n_rows, Vinv_mm_chol.n_cols)));
+      mat Y_cov_mm = solve(trimatu(Vinv_mm_chol), solve(trimatl(trans(Vinv_mm_chol)),eye(s,s)));
       Y_cov_i.submat(miss_i_idx, miss_i_idx) = Y_cov_mm;
       
       Y_cov += Y_cov_i;
       
+      // Compute mean
       vec Y_i = Y.row(i);
       vec mu_i_miss = mu.row(i);
       mu_i_miss = mu_i_miss.elem(miss_i_idx);
@@ -230,11 +233,11 @@ void impute_missing_Y (mat& Y, const mat& mu, const mat& Vinv,
       mu_i_non_miss = mu_i_non_miss.elem(non_miss_i_idx);
       vec Y_i_non_miss = Y.row(i);
       Y_i_non_miss = Y_i_non_miss.elem(non_miss_i_idx);
-      
       Y_i.elem(miss_i_idx) = mu_i_miss - Y_cov_mm * Vinv_mo * (Y_i_non_miss - mu_i_non_miss);
+      
       Y.row(i) = Y_i;
       
-      sum_neg_ent_Y_miss += (0.5 * (Vinv_mm_chol.n_cols * log((1/(2*M_PI*exp(1)))) + chol2ldet(Vinv_mm_chol)));
+      sum_neg_ent_Y_miss += (0.5 * (s * log((1/(2*M_PI*exp(1)))) + chol2ldet(Vinv_mm_chol)));
     }
   }
 }
