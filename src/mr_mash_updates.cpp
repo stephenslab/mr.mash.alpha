@@ -188,7 +188,7 @@ List impute_missing_Y_rcpp (arma::mat& Y, const arma::mat& mu, const arma::mat& 
                             const arma::mat& miss, const arma::mat& non_miss) {
   unsigned int r = Y.n_cols;
   mat Y_cov(r,r, fill::zeros);
-  double sum_neg_ent_Y_miss;
+  double sum_neg_ent_Y_miss = 0;
 
   impute_missing_Y(Y, mu, Vinv, miss, non_miss, Y_cov, sum_neg_ent_Y_miss);
   return List::create(Named("Y")                  = Y,
@@ -205,17 +205,9 @@ void impute_missing_Y (mat& Y, const mat& mu, const mat& Vinv,
   unsigned int n = Y.n_rows;
   unsigned int r = Y.n_cols;
   
-  sum_neg_ent_Y_miss = 0;
-  
   for (unsigned int i = 0; i < n; i++) {
-    unsigned int z = non_miss.col(i).n_elem;
-    unsigned int x = miss.col(i).n_elem;
-    
-    vec non_miss_i(z);
-    vec miss_i(x);
-
-    non_miss_i = non_miss.col(i);
-    miss_i = miss.col(i);
+    vec non_miss_i = non_miss.col(i);
+    vec miss_i = miss.col(i);
     uvec non_miss_i_idx = find(non_miss_i);
     uvec miss_i_idx = find(miss_i);
     
@@ -225,7 +217,8 @@ void impute_missing_Y (mat& Y, const mat& mu, const mat& Vinv,
     if(std::any_of(miss_i.begin(), miss_i.end(), [](bool v) { return v; })){
       mat Y_cov_i(r,r,fill::zeros);
       mat Vinv_mm_chol = chol(Vinv_mm);
-      mat Y_cov_mm = inv_sympd(Vinv_mm);
+      // mat Y_cov_mm = inv_sympd(Vinv_mm);
+      mat Y_cov_mm = solve(trimatu(Vinv_mm_chol), solve(trimatl(trans(Vinv_mm_chol)),eye(Vinv_mm_chol.n_rows, Vinv_mm_chol.n_cols)));
       Y_cov_i.submat(miss_i_idx, miss_i_idx) = Y_cov_mm;
       
       Y_cov += Y_cov_i;
