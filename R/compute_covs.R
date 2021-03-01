@@ -53,19 +53,25 @@ compute_canonical_covs <- function(r, singletons=TRUE, hetgrid=c(0, 0.25, 0.5, 0
 #' 
 #' @param n_pcs indicating the number of principal components to be selected.
 #' 
-#' @param non_singleton if \code{TRUE}, \code{flash} matrices where only one response has non-zero variance 
-#'   are excluded.
+#' @param flash_factors factors "default" to use \code{flashr} default function to initialize factors, currently \code{udv_si}. 
+#' "nonneg" to implement a non-negative constraint on the factors
+#' 
+#' @param flash_remove_singleton whether or not factors corresponding to singleton matrices should be removed from output.
 #' 
 #' @param Gamma an r x r correlation matrix for the residuals; must be positive
 #'   definite.
 #'
 #' @return A list containing the (de-noised) data-driven covariance matrices.
 #' 
-#' @importFrom mashr mash_set_data mash_1by1 get_significant_results cov_pca cov_ed
+#' @importFrom mashr mash_set_data mash_1by1 get_significant_results cov_pca cov_flash cov_ed
 #'   
 #' @export
-compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, non_singleton_flash=FALSE,
+compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, flash_factors=c("default", "nonneg"),
+                                     flash_remove_singleton=FALSE,
                                      Gamma=diag(ncol(sumstats$Bhat))){
+  
+  flash_factors <- match.arg(flash_factors)
+  
   ###Obtain strong effects
   data <- mash_set_data(sumstats$Bhat, sumstats$Shat, V=Gamma)
   if(!is.null(subset_thresh)){
@@ -77,7 +83,8 @@ compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, non_
   
   ##Compute data-driven matrices
   U_pca <- cov_pca(data=data, npc=n_pcs, subset=subs)
-  U_flash <- cov_flash(data=data, subset=subs, non_singleton=non_singleton_flash, save_model=NULL)
+  U_flash <- cov_flash(data=data, factors=flash_factors, subset=subs, tag=NULL,
+                       remove_singleton=flash_remove_singleton, output_model=NULL)
   U_emp <- cov_empirical(data=data, subset=subs)
 
   ##De-noise data-driven matrices via extreme deconvolution
@@ -206,75 +213,6 @@ expand_covs <- function(mats, grid, zeromat=TRUE){
   names(U) <- nms
   
   return(U)
-}
-
-###Functions to compute data-driven matrices using flashr
-my_init_fn <- function(Y, K = 1) {
-  ret <- flashr:::udv_si(Y, K)
-  pos_sum <- sum(ret$v[ret$v > 0])
-  neg_sum <- -sum(ret$v[ret$v < 0])
-  if (neg_sum > pos_sum) {
-    return(list(u = -ret$u, d = ret$d, v = -ret$v))
-  } else
-    return(ret)
-}
-
-flash_pipeline <- function(data, ...) {
-  ## current state-of-the art
-  ## suggested by Jason Willwerscheid
-  ## cf: discussion section of
-  ## https://willwerscheid.github.io/MASHvFLASH/MASHvFLASHnn2.html
-  ebnm_fn <- "ebnm_ash"
-  ebnm_param <- list(l = list(mixcompdist = "normal",
-                              optmethod = "mixSQP"),
-                     f = list(mixcompdist = "+uniform",
-                              optmethod = "mixSQP"))
-  
-  ##
-  fl_g <- flashr:::flash_greedy_workhorse(data,
-                                          var_type = "constant",
-                                          ebnm_fn = ebnm_fn,
-                                          ebnm_param = ebnm_param,
-                                          init_fn = my_init_fn,
-                                          stopping_rule = "factors",
-                                          tol = 1e-3,
-                                          verbose_output = "odF")
-  fl_b <- flashr:::flash_backfit_workhorse(data,
-                                           f_init = fl_g,
-                                           var_type = "constant",
-                                           ebnm_fn = ebnm_fn,
-                                           ebnm_param = ebnm_param,
-                                           stopping_rule = "factors",
-                                           tol = 1e-3,
-                                           verbose_output = "odF")
-  return(fl_b)
-}
-
-cov_flash <- function(data, subset = NULL, non_singleton = FALSE, save_model = NULL) {
-  if(is.null(subset)) subset <- 1:mashr:::n_effects(data)
-  b.center <- apply(data$Bhat[subset,], 2, function(x) x - mean(x))
-  ## Only keep factors with at least two values greater than 1 / sqrt(n)
-  find_nonunique_effects <- function(fl) {
-    thresh <- 1/sqrt(ncol(fl$fitted_values))
-    vals_above_avg <- colSums(fl$ldf$f > thresh)
-    nonuniq_effects <- which(vals_above_avg > 1)
-    return(fl$ldf$f[, nonuniq_effects, drop = FALSE])
-  }
-  
-  fmodel <- flash_pipeline(b.center)
-  if (non_singleton)
-    flash_f <- find_nonunique_effects(fmodel)
-  else 
-    flash_f <- fmodel$ldf$f
-  ## row.names(flash_f) <- colnames(b)
-  if (!is.null(save_model)) saveRDS(list(model=fmodel, factors=flash_f), save_model)
-  if(ncol(flash_f) == 0){
-    U.flash <- list("tFLASH" = t(fmodel$fitted_values) %*% fmodel$fitted_values / nrow(fmodel$fitted_values))
-  } else{
-    U.flash <- c(mashr:::cov_from_factors(t(as.matrix(flash_f)), "FLASH"),
-                 list("tFLASH" = t(fmodel$fitted_values) %*% fmodel$fitted_values / nrow(fmodel$fitted_values)))
-  }
-  return(U.flash)
 }
 
 ###Normalize a covariance matrix so its maximum diagonal element is 1.
