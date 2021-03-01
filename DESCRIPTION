@@ -1,7 +1,7 @@
 Encoding: UTF-8
 Type: Package
 Package: mr.mash.alpha
-Version: 0.2-3
+Version: 0.2-4
 Date: 2021-03-01
 Title: Multiple Regression with Multivariate Adaptive Shrinkage
 Description: Provides an implementation of methods for multivariate 
@@ -21,7 +21,6 @@ Imports:
     mvtnorm,
     matrixStats,
     mashr,
-    flashr,
     flashier,
     parallel
 Suggests:
@@ -31,5 +30,5 @@ LinkingTo:
     Rcpp,
     RcppArmadillo,
     RcppParallel
-Remotes: stephenslab/flashr, willwerscheid/flashier
+Remotes: willwerscheid/flashier
 RoxygenNote: 7.1.1
