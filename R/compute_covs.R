@@ -240,7 +240,7 @@ grid_max = function(Bhat,Shat){
 ###Compute empirical covariance
 cov_empirical <- function(data, subset=NULL){
   if(is.null(subset)) 
-    subset <- 1:mashr:::n_effects(data)
+    subset <- 1:nrow(data$Bhat)
   B_center <- apply(data$Bhat[subset, ], 2, function(x) x - mean(x))
   U_emp <- crossprod(B_center) / nrow(B_center)
   
