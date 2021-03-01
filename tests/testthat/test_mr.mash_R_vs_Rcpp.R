@@ -25,6 +25,11 @@ test_that("mr.mash R version and Rcpp version return the same results", {
   ###matrix and V is the residual covariance
   Y <- sim_mvr(X, B, V)
   
+  ###Assign some missing values in Y
+  Y_miss <- Y
+  Y_miss[1:5, 1] <- NA
+  Y_miss[6:10, 2] <- NA
+  
   ###Specify the mixture weights and covariance matrices for the
   ###mixture-of-normals prior
   grid <- seq(1, 5)
@@ -71,6 +76,33 @@ test_that("mr.mash R version and Rcpp version return the same results", {
                             standardize=TRUE, verbose=FALSE, update_V=TRUE,
                             version="R", ca_update_order="decreasing_logBF"))
   fit_scaled_V_declogBF$progress <- fit_scaled_V_declogBF$progress[, -2]
+
+  capture.output(
+    fit_miss <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                   update_w0_method="EM", compute_ELBO=TRUE, standardize=FALSE,
+                   verbose=FALSE, update_V=FALSE, version="R"))
+  fit_miss$progress <- fit_miss$progress[, -2]
+  
+  capture.output(
+    fit_scaled_miss <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                          update_w0_method="EM", compute_ELBO=TRUE, 
+                          standardize=TRUE, verbose=FALSE, update_V=FALSE,
+                          version="R"))
+  fit_scaled_miss$progress <- fit_scaled_miss$progress[, -2]
+  
+  capture.output(
+    fit_V_miss <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                     update_w0_method="EM", compute_ELBO=TRUE, 
+                     standardize=FALSE, verbose=FALSE, update_V=TRUE,
+                     version="R"))
+  fit_V_miss$progress <- fit_V_miss$progress[, -2]
+  
+  capture.output(
+    fit_scaled_V_miss <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                            update_w0_method="EM", compute_ELBO=TRUE, 
+                            standardize=TRUE, verbose=FALSE, update_V=TRUE,
+                            version="R"))
+  fit_scaled_V_miss$progress <- fit_scaled_V_miss$progress[, -2]
   
 
     ###Fit with current implementation (Rcpp version)
@@ -109,6 +141,36 @@ test_that("mr.mash R version and Rcpp version return the same results", {
                                      version="Rcpp", ca_update_order="decreasing_logBF"))
   fit_scaled_V_declogBF_rcpp$progress <- fit_scaled_V_declogBF_rcpp$progress[, -2]
   
+  capture.output(
+    fit_miss_rcpp <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                        update_w0_method="EM", compute_ELBO=TRUE, 
+                        standardize=FALSE, verbose=FALSE, update_V=FALSE,
+                        version="Rcpp"))
+  fit_miss_rcpp$progress <- fit_miss_rcpp$progress[, -2]
+  
+  capture.output(
+    fit_scaled_miss_rcpp <- mr.mash(X, Y_miss, S0mix, w0, V_est,
+                               update_w0=TRUE, update_w0_method="EM",
+                               compute_ELBO=TRUE, standardize=TRUE,
+                               verbose=FALSE, update_V=FALSE, version="Rcpp"))
+  fit_scaled_miss_rcpp$progress <- fit_scaled_miss_rcpp$progress[, -2]
+  
+  capture.output(
+    fit_V_miss_rcpp <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                          update_w0_method="EM", compute_ELBO=TRUE, 
+                          standardize=FALSE, verbose=FALSE, update_V=TRUE,
+                          version="Rcpp"))
+  fit_V_miss_rcpp$progress <- fit_V_miss_rcpp$progress[, -2]
+  
+  capture.output(
+    fit_scaled_V_miss_rcpp <- mr.mash(X, Y_miss, S0mix, w0, V_est,
+                                 update_w0=TRUE, update_w0_method="EM",
+                                 compute_ELBO=TRUE, standardize=TRUE,
+                                 verbose=FALSE, update_V=TRUE, version="Rcpp"))
+  fit_scaled_V_miss_rcpp$progress <- fit_scaled_V_miss_rcpp$progress[, -2]
+  
+  
+  
   
   ###Tests
   expect_equal(fit, fit_rcpp, tolerance=1e-10, scale=1)
@@ -116,4 +178,8 @@ test_that("mr.mash R version and Rcpp version return the same results", {
   expect_equal(fit_V, fit_V_rcpp, tolerance=1e-10, scale=1)
   expect_equal(fit_scaled_V, fit_scaled_V_rcpp, tolerance=1e-10, scale=1)
   expect_equal(fit_scaled_V_declogBF, fit_scaled_V_declogBF_rcpp, tolerance=1e-10, scale=1)
+  expect_equal(fit_miss, fit_miss_rcpp, tolerance=1e-10, scale=1)
+  expect_equal(fit_scaled_miss, fit_scaled_miss_rcpp, tolerance=1e-10, scale=1)
+  expect_equal(fit_V_miss, fit_V_miss_rcpp, tolerance=1e-10, scale=1)
+  expect_equal(fit_scaled_V_miss, fit_scaled_V_miss_rcpp, tolerance=1e-10, scale=1)
 })

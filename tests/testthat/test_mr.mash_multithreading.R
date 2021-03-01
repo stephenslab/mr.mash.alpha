@@ -25,6 +25,11 @@ test_that("mr.mash with 1 or 2 thread(s) return the same results", {
   ###matrix and V is the residual covariance
   Y <- sim_mvr(X, B, V)
   
+  ###Assign some missing values in Y
+  Y_miss <- Y
+  Y_miss[1:5, 1] <- NA
+  Y_miss[6:10, 2] <- NA
+  
   ###Specify the mixture weights and covariance matrices for the
   ###mixture-of-normals prior
   grid <- seq(1, 5)
@@ -44,6 +49,13 @@ test_that("mr.mash with 1 or 2 thread(s) return the same results", {
                    verbose=FALSE, update_V=TRUE, nthreads=1))
   fit_1$progress <- fit_1$progress[, -2] ##This line is needed to remove the timing column -->  
                                          ##hopefully faster when using multiple threads
+  capture.output(
+    fit_1_miss <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                          update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE,
+                          verbose=FALSE, update_V=TRUE, nthreads=1))
+  fit_1_miss$progress <- fit_1_miss$progress[, -2] ##This line is needed to remove the timing column -->  
+  ##hopefully faster when using multiple threads
+  
   
   ###Fit with current implementation (2 threads)
   capture.output(
@@ -52,6 +64,14 @@ test_that("mr.mash with 1 or 2 thread(s) return the same results", {
                      verbose=FALSE, update_V=TRUE, nthreads=2))
   fit_2$progress <- fit_2$progress[, -2]
   
+  capture.output(
+    fit_2_miss <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                          update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE,
+                          verbose=FALSE, update_V=TRUE, nthreads=2))
+  fit_2_miss$progress <- fit_2_miss$progress[, -2]
+  
+  
   ###Test
   expect_equal(fit_1, fit_2, tolerance=1e-10, scale=1)
+  expect_equal(fit_1_miss, fit_2_miss, tolerance=1e-10, scale=1)
 })

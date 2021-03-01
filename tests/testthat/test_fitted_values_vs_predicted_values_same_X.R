@@ -25,6 +25,11 @@ test_that("mr.mash fitted vs predicted values with same X are equal", {
   ###matrix and V is the residual covariance
   Y <- sim_mvr(X, B, V)
   
+  ###Assign some missing values in Y
+  Y_miss <- Y
+  Y_miss[1:5, 1] <- NA
+  Y_miss[6:10, 2] <- NA
+  
   ###Specify the mixture weights and covariance matrices for the
   ###mixture-of-normals prior
   grid  <- seq(1, 5)
@@ -43,16 +48,29 @@ test_that("mr.mash fitted vs predicted values with same X are equal", {
                    update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE,
                    verbose=FALSE, update_V=FALSE, version="R"))
   capture.output(
+    fit_miss <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                        update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE,
+                        verbose=FALSE, update_V=FALSE, version="R"))
+  capture.output(
     fit_rcpp <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
                         update_w0_method="EM", compute_ELBO=TRUE,
                         standardize=TRUE, verbose=FALSE, update_V=FALSE,
                         version="Rcpp"))
+  capture.output(
+    fit_miss_rcpp <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                             update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE,
+                             verbose=FALSE, update_V=FALSE, version="Rcpp"))
   
   ###Predict values with the same X 
-  Yhat      <- predict(fit, X)
+  Yhat <- predict(fit, X)
   Yhat_rcpp <- predict(fit_rcpp, X)
+  Yhat_miss <- predict(fit_miss, X)
+  Yhat_miss_rcpp <- predict(fit_miss_rcpp, X)
+  
   
   ###Tests
   expect_equal(fit$fitted, Yhat, tolerance = 1e-10, scale = 1)
   expect_equal(fit_rcpp$fitted, Yhat_rcpp, tolerance = 1e-10, scale = 1)
+  expect_equal(fit_miss$fitted, Yhat_miss, tolerance = 1e-10, scale = 1)
+  expect_equal(fit_miss_rcpp$fitted, Yhat_miss_rcpp, tolerance = 1e-10, scale = 1)
 })

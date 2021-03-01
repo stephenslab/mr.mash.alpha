@@ -25,6 +25,11 @@ test_that("ELBO does not decrease over iterations", {
   ###matrix and V is the residual covariance
   Y <- sim_mvr(X, B, V)
   
+  ###Assign some missing values in Y
+  Y_miss <- Y
+  Y_miss[1:5, 1] <- NA
+  Y_miss[6:10, 2] <- NA
+  
   ###Specify the mixture weights and covariance matrices for the
   ###mixture-of-normals prior
   grid <- seq(1, 5)
@@ -36,6 +41,7 @@ test_that("ELBO does not decrease over iterations", {
   
   ###Estimate residual covariance
   V_est <- cov(Y)
+  V_miss_est <- cov(Y_miss, use="pairwise.complete.obs")
   
   ###Fit with current implementation (R version)
   capture.output(
@@ -57,6 +63,26 @@ test_that("ELBO does not decrease over iterations", {
                             update_w0_method="EM", compute_ELBO=TRUE, 
                             standardize=TRUE, verbose=FALSE, update_V=TRUE,
                             version="R"))
+  capture.output(
+    fit_miss <- mr.mash(X, Y_miss, S0mix, w0, V_est,  update_w0=TRUE,
+                        update_w0_method="EM", compute_ELBO=TRUE, standardize=FALSE,
+                        verbose=FALSE, update_V=FALSE, version="R"))
+  capture.output(
+    fit_scaled_miss <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                               update_w0_method="EM", compute_ELBO=TRUE, 
+                               standardize=TRUE, verbose=FALSE, update_V=FALSE,
+                               version="R"))
+  capture.output(
+    fit_V_miss <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE, 
+                          update_w0_method="EM", compute_ELBO=TRUE, 
+                          standardize=FALSE, verbose=FALSE, update_V=TRUE,
+                          version="R"))
+  capture.output(
+    fit_scaled_V_miss <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                                 update_w0_method="EM", compute_ELBO=TRUE, 
+                                 standardize=TRUE, verbose=FALSE, update_V=TRUE,
+                                 version="R"))
+  
   
   ###Fit with current implementation (Rcpp version)
   capture.output(
@@ -79,15 +105,43 @@ test_that("ELBO does not decrease over iterations", {
                                  update_w0=TRUE, update_w0_method="EM",
                                  compute_ELBO=TRUE, standardize=TRUE,
                                  verbose=FALSE, update_V=TRUE, version="Rcpp"))
+  capture.output(
+    fit_miss_rcpp <- mr.mash(X, Y_miss, S0mix, w0, V_est,  update_w0=TRUE,
+                        update_w0_method="EM", compute_ELBO=TRUE, standardize=FALSE,
+                        verbose=FALSE, update_V=FALSE, version="Rcpp"))
+  capture.output(
+    fit_scaled_miss_rcpp <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                               update_w0_method="EM", compute_ELBO=TRUE, 
+                               standardize=TRUE, verbose=FALSE, update_V=FALSE,
+                               version="Rcpp"))
+  capture.output(
+    fit_V_miss_rcpp <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE, 
+                          update_w0_method="EM", compute_ELBO=TRUE, 
+                          standardize=FALSE, verbose=FALSE, update_V=TRUE,
+                          version="Rcpp"))
+  capture.output(
+    fit_scaled_V_miss_rcpp <- mr.mash(X, Y_miss, S0mix, w0, V_est, update_w0=TRUE,
+                                 update_w0_method="EM", compute_ELBO=TRUE, 
+                                 standardize=TRUE, verbose=FALSE, update_V=TRUE,
+                                 version="Rcpp"))
+  
   
   ###Tests
   expect_nondecreasing(fit$progress[, "ELBO"], tolerance=1e-10, scale=1)
   expect_nondecreasing(fit_scaled$progress[, "ELBO"], tolerance=1e-10, scale=1)
   expect_nondecreasing(fit_V$progress[, "ELBO"], tolerance=1e-10, scale=1)
   expect_nondecreasing(fit_scaled_V$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_miss$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_scaled_miss$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_V_miss$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_scaled_V_miss$progress[, "ELBO"], tolerance=1e-10, scale=1)
   
-  expect_nondecreasing(fit_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
-  expect_nondecreasing(fit_scaled_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
-  expect_nondecreasing(fit_V_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
-  expect_nondecreasing(fit_scaled_V_rcpp$progress[, "ELBO"],tolerance=1e-10,scale=1)
+  expect_nondecreasing(fit_miss_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_scaled_miss_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_V_miss_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_scaled_V_miss_rcpp$progress[, "ELBO"],tolerance=1e-10,scale=1)
+  expect_nondecreasing(fit_miss_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_scaled_miss_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_V_miss_rcpp$progress[, "ELBO"], tolerance=1e-10, scale=1)
+  expect_nondecreasing(fit_scaled_V_miss_rcpp$progress[, "ELBO"],tolerance=1e-10,scale=1)
 })
