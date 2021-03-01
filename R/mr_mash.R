@@ -196,8 +196,6 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
       nthreads <- defaultNumThreads()
     } else
       setThreadOptions(numThreads = nthreads)
-    if (nthreads > 1)
-      message(sprintf("Using %d RcppParallel threads.",nthreads))
   }
   
   ###Check that the inputs are in the correct format
@@ -355,7 +353,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   # MAIN LOOP
   # ---------
   if(verbose){
-    cat("Fitting the optimization algorithm... \n")
+    if(version=="Rcpp" && nthreads>1)
+      cat(sprintf("Fitting the optimization algorithm using %d RcppParallel threads... \n", nthreads))
+    else
+      cat("Fitting the optimization algorithm... \n")
     cat(" iter    mu1_max.diff")
     if(compute_ELBO)
       cat("     ELBO_diff               ELBO\n")
