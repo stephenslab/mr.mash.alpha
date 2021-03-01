@@ -131,6 +131,9 @@ following elements:
 \item{converged}{\code{TRUE} or \code{FALSE}, indicating whether
   the optimization algorithm converged to a solution within the chosen tolerance
   level.}
+  
+\item{Y}{n x r matrix of responses at last iteration (only relevant when missing values
+  are present in the input Y).}
 }
 \description{
 Performs multivariate multiple regression with
