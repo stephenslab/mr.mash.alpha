@@ -8,7 +8,8 @@ compute_data_driven_covs(
   sumstats,
   subset_thresh = NULL,
   n_pcs = 3,
-  non_singleton_flash = FALSE,
+  flash_factors = c("default", "nonneg"),
+  flash_remove_singleton = FALSE,
   Gamma = diag(ncol(sumstats$Bhat))
 )
 }
@@ -21,11 +22,13 @@ the covariance matrices based on false local sign rate (lfsr) for a response-by-
 
 \item{n_pcs}{indicating the number of principal components to be selected.}
 
+\item{flash_factors}{factors "default" to use \code{flashr} default function to initialize factors, currently \code{udv_si}. 
+"nonneg" to implement a non-negative constraint on the factors}
+
+\item{flash_remove_singleton}{whether or not factors corresponding to singleton matrices should be removed from output.}
+
 \item{Gamma}{an r x r correlation matrix for the residuals; must be positive
 definite.}
-
-\item{non_singleton}{if \code{TRUE}, \code{flash} matrices where only one response has non-zero variance 
-are excluded.}
 }
 \value{
 A list containing the (de-noised) data-driven covariance matrices.
