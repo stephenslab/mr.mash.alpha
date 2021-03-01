@@ -104,6 +104,9 @@
 #' \item{converged}{\code{TRUE} or \code{FALSE}, indicating whether
 #'   the optimization algorithm converged to a solution within the chosen tolerance
 #'   level.}
+#'   
+#' \item{Y}{n x r matrix of responses at last iteration (only relevant when missing values
+#'   are present in the input Y).}
 #'  
 #' @examples 
 #' ###Set seed
@@ -158,16 +161,6 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                     ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
                     nthreads=as.integer(NA)) {
   
-  # Initialize the RcppParallel multithreading using a pre-specified number
-  # of threads, or using the default number of threads when nthreads is NA.
-  if (is.na(nthreads)) {
-    setThreadOptions()
-    nthreads <- defaultNumThreads()
-  } else
-    setThreadOptions(numThreads = nthreads)
-  if (nthreads > 1)
-    message(sprintf("Using %d RcppParallel threads.",nthreads))
-
   if(verbose){
     tic <- Sys.time()
     cat("Processing the inputs... ")
@@ -194,7 +187,19 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ###Select ordering of the coordinate ascent updates (if not specified by user,
   ###consecutive will be used
   ca_update_order <- match.arg(ca_update_order)
-
+  
+  ###Initialize the RcppParallel multithreading using a pre-specified number
+  ###of threads, or using the default number of threads when nthreads is NA.
+  if(version=="Rcpp"){
+    if (is.na(nthreads)) {
+      setThreadOptions()
+      nthreads <- defaultNumThreads()
+    } else
+      setThreadOptions(numThreads = nthreads)
+    if (nthreads > 1)
+      message(sprintf("Using %d RcppParallel threads.",nthreads))
+  }
+  
   ###Check that the inputs are in the correct format
   if(!is.matrix(Y))
     stop("Y must be a matrix.")
@@ -235,6 +240,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   
   ###Check if Y has missing values
   Y_has_missing <- any(is.na(Y))
+  
+  ###Throw an error if Y has missing values in the univariate case
+  if(Y_has_missing && r==1)
+    stop("Y must not contain missing values in the univariate case.")
   
   ###Center (and, optionally, scale) X
   outX <- scale_fast2(X, scale=standardize)
