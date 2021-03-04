@@ -77,6 +77,8 @@ compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, flas
   if(!is.null(subset_thresh)){
     m_1by1 <- mash_1by1(data)
     subs <- get_significant_results(m_1by1, subset_thresh)
+    if(length(subs) < 5)
+      stop("Too few strong effects with current subset_thresh value.")
   } else {
     subs <- NULL
   }
