@@ -20,7 +20,7 @@ Imports:
     MBSP,
     mvtnorm,
     matrixStats,
-    mashr,
+    mashr (>= 0.2.41),
     flashier,
     parallel
 Suggests:
