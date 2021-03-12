@@ -236,6 +236,11 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
 
   # PRE-PROCESSING STEPS
   # --------------------
+  ###Store dimensions names of the inputs
+  X_colnames <- colnames(X)
+  Y_colnames <- colnames(Y)
+  Y_rownames <- rownames(Y)
+  
   ###Add number to diagonal elements of the prior matrices (improves
   ###numerical stability)
   S0 <- lapply(S0, makePD, e=e)
@@ -521,22 +526,24 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   intercept <- drop(muy - mux %*% mu1_t)
   
   ###Assign names to outputs dimensions
-  rownames(mu1_t) <- colnames(X)
-  colnames(mu1_t) <- colnames(Y)
-  dimnames(S1_t)[[1]] <- colnames(Y)
-  dimnames(S1_t)[[2]] <- colnames(Y)
-  dimnames(S1_t)[[3]] <- colnames(X)
-  rownames(w1_t) <- colnames(X)
+  rownames(mu1_t) <- X_colnames
+  colnames(mu1_t) <- Y_colnames
+  dimnames(S1_t)[[1]] <- Y_colnames
+  dimnames(S1_t)[[2]] <- Y_colnames
+  dimnames(S1_t)[[3]] <- X_colnames
+  rownames(w1_t) <- X_colnames
   colnames(w1_t) <- names(S0)
   names(w0) <- names(S0)
-  rownames(V) <- colnames(Y)
-  colnames(V) <- colnames(Y)
-  rownames(fitted_vals) <- rownames(Y)
-  colnames(fitted_vals) <- colnames(Y)
-  rownames(cov_fitted) <- colnames(Y)
-  colnames(cov_fitted) <- colnames(Y)
-  names(pve) <- colnames(Y)
-  names(intercept) <- colnames(Y)
+  rownames(V) <- Y_colnames
+  colnames(V) <- Y_colnames
+  rownames(Y) <- Y_rownames
+  colnames(Y) <- Y_colnames
+  rownames(fitted_vals) <- Y_rownames
+  colnames(fitted_vals) <- Y_colnames
+  rownames(cov_fitted) <- Y_colnames
+  colnames(cov_fitted) <- Y_colnames
+  names(pve) <- Y_colnames
+  names(intercept) <- Y_colnames
   
   ###Remove unused rows of progress
   progress <- progress[rowSums(is.na(progress)) != ncol(progress), ]
