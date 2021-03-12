@@ -123,6 +123,10 @@ following elements:
 
 \item{fitted}{n x r matrix of fitted values.}
 
+\item{G}{r x r covariance matrix of fitted values.}
+
+\item{pve}{r-vector of proportion of variance explained by the covariates.}
+
 \item{ELBO}{Evidence Lower Bound (ELBO) at last iteration.}
 
 \item{progress}{A data frame including information regarding
