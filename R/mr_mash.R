@@ -96,6 +96,10 @@
 #' 
 #' \item{fitted}{n x r matrix of fitted values.}
 #' 
+#' \item{G}{r x r covariance matrix of fitted values.}
+#' 
+#' \item{pve}{r-vector of proportion of variance explained by the covariates.}
+#' 
 #' \item{ELBO}{Evidence Lower Bound (ELBO) at last iteration.}
 #' 
 #' \item{progress}{A data frame including information regarding
@@ -494,6 +498,11 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   # --------------------
   ###Compute the "fitted" values.
   fitted_vals <- addtocols(X %*% mu1_t, muy)
+  
+  ###Compute covariance of fitted values and PVE
+  cov_fitted <- cov(fitted_vals)
+  var_fitted <- diag(cov_fitted)
+  pve <- var_fitted/(var_fitted+diag(V))
 
   if(standardize){
     ###Rescale posterior means and covariance of coefficients. In the
@@ -524,6 +533,10 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   colnames(V) <- colnames(Y)
   rownames(fitted_vals) <- rownames(Y)
   colnames(fitted_vals) <- colnames(Y)
+  rownames(cov_fitted) <- rownames(Y)
+  colnames(cov_fitted) <- colnames(Y)
+  names(pve) <- colnames(Y)
+  names(intercept) <- colnames(Y)
   
   ###Remove unused rows of progress
   progress <- progress[rowSums(is.na(progress)) != ncol(progress), ]
@@ -533,9 +546,12 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ###covariance of the coefficients (S1), the residual covariance (V),
   ###the prior weights (w0), the intercept (intercept), the fitted values (fitted), 
   ###and the progress data frame (progress), the prior covariance (S0), convergence
-  ### status and, if computed, the Evidence Lower Bound (ELBO).
+  ###status, the covariance of the fitted values (G), the proportion of variance explained (pve),
+  ###the Evidence Lower Bound (ELBO; if computed) and imputed responses (Y; if 
+  ###missing values were present).
   out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, w0=w0, S0=simplify2array_custom(S0), 
-              intercept=intercept, fitted=fitted_vals, progress=progress, converged=converged)
+              intercept=intercept, fitted=fitted_vals, G=G, pve=pve, progress=progress, 
+              converged=converged)
   if(compute_ELBO)
     ###Append ELBO to the output
     out$ELBO <- ELBO
