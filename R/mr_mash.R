@@ -533,7 +533,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   colnames(V) <- colnames(Y)
   rownames(fitted_vals) <- rownames(Y)
   colnames(fitted_vals) <- colnames(Y)
-  rownames(cov_fitted) <- rownames(Y)
+  rownames(cov_fitted) <- colnames(Y)
   colnames(cov_fitted) <- colnames(Y)
   names(pve) <- colnames(Y)
   names(intercept) <- colnames(Y)
@@ -550,7 +550,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ###the Evidence Lower Bound (ELBO; if computed) and imputed responses (Y; if 
   ###missing values were present).
   out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, w0=w0, S0=simplify2array_custom(S0), 
-              intercept=intercept, fitted=fitted_vals, G=G, pve=pve, progress=progress, 
+              intercept=intercept, fitted=fitted_vals, G=cov_fitted, pve=pve, progress=progress, 
               converged=converged)
   if(compute_ELBO)
     ###Append ELBO to the output
