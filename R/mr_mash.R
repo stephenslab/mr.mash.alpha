@@ -532,8 +532,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   dimnames(S1_t)[[1]] <- Y_colnames
   dimnames(S1_t)[[2]] <- Y_colnames
   dimnames(S1_t)[[3]] <- X_colnames
-  S0 <- lapply(S0, function(x){rownames(x) <- Y_colnames; return(x)})
-  S0 <- lapply(S0, function(x){colnames(x) <- Y_colnames; return(x)})
+  S0 <- lapply(S0, function(x){rownames(x) <- colnames(x) <- Y_colnames; return(x)})
   rownames(w1_t) <- X_colnames
   colnames(w1_t) <- S0_names
   names(w0) <- S0_names
