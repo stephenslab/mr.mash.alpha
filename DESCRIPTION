@@ -30,5 +30,6 @@ LinkingTo:
     Rcpp,
     RcppArmadillo,
     RcppParallel
-Remotes: willwerscheid/flashier
+Remotes: willwerscheid/flashier, 
+         stephenslab/mashr
 RoxygenNote: 7.1.1
