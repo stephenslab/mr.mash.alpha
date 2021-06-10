@@ -123,6 +123,8 @@ compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, flas
 #' @export
 compute_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.response=FALSE, mc.cores=1){
   r <- ncol(Y)
+  variable_names <- colnames(X)
+  response_names <- colnames(Y)
   
   X <- scale_fast2(X, scale=standardize)$M 
   Y <- scale_fast2(Y, scale=standardize.response)$M
@@ -151,8 +153,13 @@ compute_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.res
   } else {
     out <- lapply(1:r, linreg, X, Y)
   }
+
+  Bhat <- sapply(out,"[[","bhat")
+  Shat <- sapply(out,"[[","shat")
+  colnames(Bhat) <- colnames(Shat) <- response_names
+  rownames(Bhat) <- rownames(Shat) <- variable_names
   
-  return(list(Bhat=sapply(out,"[[","bhat"), Shat=sapply(out,"[[","shat")))
+  return(list(Bhat=Bhat, Shat=Shat))
 }
 
 #' @title Compute a grid of standard deviations to scale the canonical covariance matrices.
