@@ -428,14 +428,14 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
         #Drop components with mixture weight <= w0_threshold
         if(t>15 && any(w0 < w0_threshold)){
           to_keep <- which(w0 >= w0_threshold)
-          if(length(to_keep>1)){
-	    w0 <- w0[to_keep]
+          if(length(to_keep) > 1){
+            w0 <- w0[to_keep]
             w0 <- w0/sum(w0)
             S0 <- S0[to_keep]
             comps <- filter_precomputed_quants(comps, to_keep, standardize, version)
-	  } else {
-	    stop("Only one component left. Consider lowering w0_threshold.")
-	  }
+          } else {
+            stop("Only one component left. Consider lowering w0_threshold.")
+          }
         }
       }
     }
