@@ -435,10 +435,18 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
             w0 <- w0/sum(w0)
             S0 <- S0[to_keep]
             comps <- filter_precomputed_quants(comps, to_keep, standardize, version)
-          } else {
+          } else if(length(to_keep) == 1 & all((S0[[to_keep]] - (diag(nrow(S0[[to_keep]]))*e)) < eps)){ #null component is the only one left
+            w0 <- w0[to_keep]
+            S0 <- S0[to_keep]
+            mu1_t <- matrix(0, nrow=p, ncol=r)
+            S1_t <- array(0, c(r, r, p))
+            w1_t <- matrix(1, nrow=p, ncol=1)
+            warning("Only the null component is left. Estimated coefficients are set to 0.")
+            break
+          } else { #some other component is the only one left
             stop("Only one component left. Consider lowering w0_threshold.")
           }
-        }
+	}
       }
     }
     
