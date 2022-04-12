@@ -267,7 +267,8 @@ scale_fast2 <- function(M, scale=TRUE, na.rm=TRUE){
 #' @importFrom matrixStats colSds
 #' @importFrom ebnm ebnm_normal
 #' @importFrom ebnm ebnm_normal_scale_mixture
-#' @importFrom flashier flash prior.normal prior.normal.scale.mix
+#' @importFrom flashier flash
+#' 
 compute_cov_flash <- function(Y, error_cache = NULL){
   covar <- diag(ncol(Y))
   tryCatch({
