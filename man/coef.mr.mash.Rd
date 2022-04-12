@@ -4,10 +4,12 @@
 \alias{coef.mr.mash}
 \title{Extract coefficients from mr.mash fit.}
 \usage{
-\method{coef}{mr.mash}(object)
+\method{coef}{mr.mash}(object, ...)
 }
 \arguments{
 \item{object}{a mr.mash fit.}
+
+\item{\dots}{Other arguments (not used).}
 }
 \value{
 (p+1) x r matrix of coefficients.

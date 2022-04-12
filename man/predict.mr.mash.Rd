@@ -4,7 +4,7 @@
 \alias{predict.mr.mash}
 \title{Predict future observations from mr.mash fit.}
 \usage{
-\method{predict}{mr.mash}(object, newx)
+\method{predict}{mr.mash}(object, newx, ...)
 }
 \arguments{
 \item{object}{a mr.mash fit.}

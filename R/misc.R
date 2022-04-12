@@ -296,6 +296,8 @@ scale_fast2 <- function(M, scale=TRUE, na.rm=TRUE){
 ## }
 
 ###Compute initial estimate of V
+#
+#' @importFrom stats cov
 compute_V_init <- function(X, Y, B, method=c("cov", "flash")){
   method <- match.arg(method)
   
@@ -304,7 +306,8 @@ compute_V_init <- function(X, Y, B, method=c("cov", "flash")){
   if(method=="cov"){
     V <- cov(R)
   } else if(method=="flash"){
-    V <- compute_cov_flash(R)
+    stop("method = \"flash\" is currently not implemented")
+    # V <- compute_cov_flash(R)
   }
   
   return(V)

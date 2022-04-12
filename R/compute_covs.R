@@ -117,7 +117,9 @@ compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, flas
 #' \item{Bhat}{p x r matrix of the regression coeffcients.}
 #'
 #' \item{Shat}{p x r matrix of the standard errors for regression coeffcients.}
-#' 
+#'
+#' @importFrom stats lm
+#' @importFrom stats coef
 #' @importFrom parallel makeCluster parLapply stopCluster
 #' 
 #' @export

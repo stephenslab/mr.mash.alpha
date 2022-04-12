@@ -5,11 +5,11 @@
 #' @param newx a new value for X at which to do predictions.
 #' 
 #' @return Matrix of predicted values.
-#' 
+#'
 #' @export
 #' @export predict.mr.mash
 #' 
-predict.mr.mash <- function(object, newx){
+predict.mr.mash <- function(object, newx, ...){
   if(!is.matrix(newx))
     stop("X must be a matrix.")
   if (any(is.na(newx)))
@@ -20,13 +20,15 @@ predict.mr.mash <- function(object, newx){
 #' @title Extract coefficients from mr.mash fit.
 #' 
 #' @param object a mr.mash fit.
+#'
+#' @param \dots Other arguments (not used).
 #' 
 #' @return (p+1) x r matrix of coefficients.
 #' 
 #' @export
 #' @export coef.mr.mash
 #' 
-coef.mr.mash <- function(object){
+coef.mr.mash <- function(object, ...){
   coeffs <- rbind(object$intercept, object$mu1)
   rownames(coeffs)[1] <- "(Intercept)"
   return(coeffs)
