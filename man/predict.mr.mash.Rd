@@ -10,6 +10,8 @@
 \item{object}{a mr.mash fit.}
 
 \item{newx}{a new value for X at which to do predictions.}
+
+\item{\dots}{Additional arguments (not used).}
 }
 \value{
 Matrix of predicted values.

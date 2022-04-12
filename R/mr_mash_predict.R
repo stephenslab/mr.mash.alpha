@@ -3,6 +3,8 @@
 #' @param object a mr.mash fit.
 #' 
 #' @param newx a new value for X at which to do predictions.
+#'
+#' @param \dots Additional arguments (not used).
 #' 
 #' @return Matrix of predicted values.
 #'

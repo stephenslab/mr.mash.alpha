@@ -66,8 +66,10 @@
 #' 
 #' 
 #' @examples
-#' dat <- simulate_mr_mash_data(n=50, p=40, p_causal=20, r=5, r_causal=list(1:2, 3:4), intercepts=rep(1, 5),
-#'                              pve=0.2, B_cor=c(0, 1), B_scale=c(0.5, 1), w=c(0.5, 0.5), X_cor=0.5, X_scale=1, 
+#' dat <- simulate_mr_mash_data(n=50, p=40, p_causal=20, r=5,
+#'                              r_causal=list(1:2, 3:4), intercepts=rep(1, 5),
+#'                              pve=0.2, B_cor=c(0, 1), B_scale=c(0.5, 1),
+#'                              w=c(0.5, 0.5), X_cor=0.5, X_scale=1, 
 #'                              V_cor=0)
 #'                              
 #'                              
