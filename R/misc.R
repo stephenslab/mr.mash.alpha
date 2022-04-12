@@ -262,38 +262,43 @@ scale_fast2 <- function(M, scale=TRUE, na.rm=TRUE){
   return(list(M=M, means=means, sds=sds))
 }
 
-###Compute covariance matrix using flash (from Ga)
-## #' @importFrom matrixStats colSds
-## #' @importFrom flashier flash prior.normal prior.normal.scale.mix
-## compute_cov_flash <- function(Y, error_cache = NULL){
-##   covar <- diag(ncol(Y))
-##   tryCatch({
-##     fl <- flash(Y, var.type = 2, prior.family = c(prior.normal(), prior.normal.scale.mix()), backfit = TRUE, verbose.lvl=0)
-##     if(fl$n.factors==0){
-##       covar <- diag(fl$residuals.sd^2)
-##     } else {
-##       fsd <- sapply(fl$fitted.g[[1]], '[[', "sd")
-##       covar <- diag(fl$residuals.sd^2) + crossprod(t(fl$flash.fit$EF[[2]]) * fsd)
-##     }
-##     if (nrow(covar) == 0) {
-##       covar <- diag(ncol(Y))
-##       stop("Computed covariance matrix has zero rows")
-##     }
-##   }, error = function(e) {
-##     if (!is.null(error_cache)) {
-##       saveRDS(list(data=Y, message=warning(e)), error_cache)
-##       warning("FLASH failed. Using Identity matrix instead.")
-##       warning(e)
-##     } else {
-##       stop(e)
-##     }
-##   })
-##   s <- colSds(Y, na.rm=TRUE)
-##   if (length(s)>1) s = diag(s)
-##   else s = matrix(s,1,1)
-##   covar <- s%*%cov2cor(covar)%*%s
-##   return(covar)
-## }
+# Compute covariance matrix using flash (from Gao).
+#
+#' @importFrom matrixStats colSds
+#' @importFrom ebnm ebnm_normal
+#' @importFrom ebnm ebnm_normal_scale_mixture
+#' @importFrom flashier flash prior.normal prior.normal.scale.mix
+compute_cov_flash <- function(Y, error_cache = NULL){
+  covar <- diag(ncol(Y))
+  tryCatch({
+    fl <- flash(Y, var.type = 2,
+                ebnm.fn = c(ebnm_normal,ebnm_normal_scale_mixture),
+                backfit = TRUE,verbose = 0)
+    if (fl$n.factors == 0) {
+      covar <- diag(fl$residuals.sd^2)
+    } else {
+      fsd <- sapply(fl$L.ghat,"[[","sd")
+      covar <- diag(fl$residuals.sd^2) + crossprod(t(fl$F.pm) * fsd)
+    }
+    if (nrow(covar) == 0) {
+    covar <- diag(ncol(Y))
+    stop("Computed covariance matrix has zero rows")
+    }
+  }, error = function(e) {
+    if (!is.null(error_cache)) {
+      saveRDS(list(data=Y, message=warning(e)), error_cache)
+      warning("FLASH failed. Using Identity matrix instead.")
+      warning(e)
+    } else {
+      stop(e)
+    }
+  })
+  s <- colSds(Y, na.rm=TRUE)
+  if (length(s)>1) s = diag(s)
+  else s = matrix(s,1,1)
+  covar <- s%*%cov2cor(covar)%*%s
+  return(covar)
+}
 
 ###Compute initial estimate of V
 #
@@ -303,12 +308,10 @@ compute_V_init <- function(X, Y, B, method=c("cov", "flash")){
   
   R <- Y - X%*%B
   
-  if(method=="cov"){
+  if(method=="cov")
     V <- cov(R)
-  } else if(method=="flash"){
-    stop("method = \"flash\" is currently not implemented")
-    # V <- compute_cov_flash(R)
-  }
+  else if(method=="flash")
+    V <- compute_cov_flash(R)
   
   return(V)
 }

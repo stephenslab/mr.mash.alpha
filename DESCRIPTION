@@ -1,8 +1,8 @@
 Encoding: UTF-8
 Type: Package
 Package: mr.mash.alpha
-Version: 0.2-15
-Date: 2022-04-11
+Version: 0.2-16
+Date: 2022-04-12
 Title: Multiple Regression with Multivariate Adaptive Shrinkage
 Description: Provides an implementation of methods for multivariate 
     multiple regression with adaptive shrinkage priors.
@@ -21,6 +21,7 @@ Imports:
     mvtnorm,
     matrixStats,
     mashr (>= 0.2.41),
+    ebnm,
     flashier,
     parallel
 Suggests:
