@@ -1,23 +1,24 @@
 # mr.mash.alpha
-R package implementing methods for multivariate multiple regression with adaptive shrinkage priors (mr.mash).
+
+R package implementing methods for multivariate multiple regression
+with adaptive shrinkage priors (mr.mash).
 
 ## Quick Start
 
-To install the latest version of the `mr.mash.alpha` package
-from GitHub, clone the repository:
-
-```bash
-git clone git@github.com:stephenslab/mr.mash.alpha.git
-cd mr.mash.alpha
-```
-and use [devtools][devtools]:
+Install and load the package using [remotes][remotes]:
 
 ```R
-install.packages("devtools")
-devtools::install_local()
+remotes::install_github("stephenslab/mr.mash.alpha")
+library(mr.mash.alpha)
 ```
+
+Note that installing the package will require a C++ compiler setup
+that is appropriate for the version of R installed on your
+computer. For details, refer to the documentation on the
+[CRAN website][cran].
 
 This command should automatically install all required packages if
 they are not installed already.
 
-[devtools]: https://github.com/r-lib/devtools
+[remotes]: https://github.com/r-lib/remotes
+[cran]: https://cran.r-project.org
