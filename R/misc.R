@@ -264,6 +264,7 @@ scale_fast2 <- function(M, scale=TRUE, na.rm=TRUE){
 
 # Compute covariance matrix using flash (from Gao).
 #
+#' @importFrom stats cov2cor
 #' @importFrom matrixStats colSds
 #' @importFrom ebnm ebnm_normal
 #' @importFrom ebnm ebnm_normal_scale_mixture
