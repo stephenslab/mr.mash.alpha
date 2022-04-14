@@ -18,7 +18,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mr.mash.alpha</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2-12</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2-21</span>
       </span>
     </div>
 
@@ -196,45 +196,234 @@ following elements:</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="co">###Set seed</span>
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span>
-
-<span class="co">###Simulate X and Y</span>
-<span class="co">##Set parameters</span>
-<span class="va">n</span>  <span class="op">&lt;-</span> <span class="fl">1000</span>
-<span class="va">p</span> <span class="op">&lt;-</span> <span class="fl">100</span>
-<span class="va">p_causal</span> <span class="op">&lt;-</span> <span class="fl">20</span>
-<span class="va">r</span> <span class="op">&lt;-</span> <span class="fl">5</span>
-
-<span class="co">###Simulate data</span>
-<span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="simulate_mr_mash_data.html">simulate_mr_mash_data</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">p</span>, <span class="va">p_causal</span>, <span class="va">r</span>, pve<span class="op">=</span><span class="fl">0.5</span>, B_cor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, B_scale<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, X_cor<span class="op">=</span><span class="fl">0</span>, X_scale<span class="op">=</span><span class="fl">1</span>, V_cor<span class="op">=</span><span class="fl">0</span><span class="op">)</span>
-
-<span class="co">###Split the data in training and test sets</span>
-<span class="va">Ytrain</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>, <span class="op">]</span>
-<span class="va">Xtrain</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>, <span class="op">]</span>
-<span class="va">Ytest</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>, <span class="op">]</span>
-<span class="va">Xtest</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>, <span class="op">]</span>
-
-<span class="co">###Specify the covariance matrices for the mixture-of-normals prior.</span>
-<span class="va">univ_sumstats</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute_univariate_sumstats.html">compute_univariate_sumstats</a></span><span class="op">(</span><span class="va">Xtrain</span>, <span class="va">Ytrain</span>, standardize<span class="op">=</span><span class="cn">TRUE</span>, standardize.response<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span>
-<span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="autoselect.mixsd.html">autoselect.mixsd</a></span><span class="op">(</span><span class="va">univ_sumstats</span>, mult<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span>
-<span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute_canonical_covs.html">compute_canonical_covs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">Ytrain</span><span class="op">)</span>, singletons<span class="op">=</span><span class="cn">TRUE</span>, hetgrid<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span>
-<span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="expand_covs.html">expand_covs</a></span><span class="op">(</span><span class="va">S0</span>, <span class="va">grid</span>, zeromat<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>
-
-<span class="co">###Fit mr.mash</span>
-<span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">mr.mash</span><span class="op">(</span><span class="va">Xtrain</span>, <span class="va">Ytrain</span>, <span class="va">S0</span>, update_V<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>
-
-<span class="co"># Compare the "fitted" values of Y against the true Y in the training set.</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">fitted</span>,<span class="va">Ytrain</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,
-     ylab <span class="op">=</span> <span class="st">"fitted"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span>
-
-<span class="co"># Predict the multivariate outcomes in the test set using the fitted model.</span>
-<span class="va">Ytest_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit</span>,<span class="va">Xtest</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">Ytest_est</span>,<span class="va">Ytest</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,
-     ylab <span class="op">=</span> <span class="st">"predicted"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span>
-
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co">###Set seed</span></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co">###Simulate X and Y</span></span>
+<span class="r-in"><span class="co">##Set parameters</span></span>
+<span class="r-in"><span class="va">n</span>  <span class="op">&lt;-</span> <span class="fl">1000</span></span>
+<span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<span class="r-in"><span class="va">p_causal</span> <span class="op">&lt;-</span> <span class="fl">20</span></span>
+<span class="r-in"><span class="va">r</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co">###Simulate data</span></span>
+<span class="r-in"><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="simulate_mr_mash_data.html">simulate_mr_mash_data</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">p</span>, <span class="va">p_causal</span>, <span class="va">r</span>, pve<span class="op">=</span><span class="fl">0.5</span>, B_cor<span class="op">=</span><span class="fl">1</span>,</span>
+<span class="r-in">                             B_scale<span class="op">=</span><span class="fl">1</span>, X_cor<span class="op">=</span><span class="fl">0</span>, X_scale<span class="op">=</span><span class="fl">1</span>, V_cor<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co">###Split the data in training and test sets</span></span>
+<span class="r-in"><span class="va">Ytrain</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>, <span class="op">]</span></span>
+<span class="r-in"><span class="va">Xtrain</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>, <span class="op">]</span></span>
+<span class="r-in"><span class="va">Ytest</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>, <span class="op">]</span></span>
+<span class="r-in"><span class="va">Xtest</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>, <span class="op">]</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co">###Specify the covariance matrices for the mixture-of-normals prior.</span></span>
+<span class="r-in"><span class="va">univ_sumstats</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute_univariate_sumstats.html">compute_univariate_sumstats</a></span><span class="op">(</span><span class="va">Xtrain</span>, <span class="va">Ytrain</span>,</span>
+<span class="r-in">                   standardize<span class="op">=</span><span class="cn">TRUE</span>, standardize.response<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="autoselect.mixsd.html">autoselect.mixsd</a></span><span class="op">(</span><span class="va">univ_sumstats</span>, mult<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span></span>
+<span class="r-in"><span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute_canonical_covs.html">compute_canonical_covs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">Ytrain</span><span class="op">)</span>, singletons<span class="op">=</span><span class="cn">TRUE</span>,</span>
+<span class="r-in">                             hetgrid<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="expand_covs.html">expand_covs</a></span><span class="op">(</span><span class="va">S0</span>, <span class="va">grid</span>, zeromat<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co">###Fit mr.mash</span></span>
+<span class="r-in"><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">mr.mash</span><span class="op">(</span><span class="va">Xtrain</span>, <span class="va">Ytrain</span>, <span class="va">S0</span>, update_V<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Processing the inputs... Done!</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fitting the optimization algorithm using 4 RcppParallel threads... </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  iter    mu1_max.diff     ELBO_diff               ELBO</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    1       1.71e+00            Inf      -1.17642529463347200362e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    2       3.16e-01       3.86e+02      -1.13785637059042273904e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    3       7.32e-02       2.38e+01      -1.13547399263873048767e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    4       2.64e-02       2.75e+00      -1.13519874963371403283e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    5       1.63e-02       1.28e+00      -1.13507113883505189733e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    6       1.23e-02       7.76e-01      -1.13499353194769155380e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    7       9.55e-03       5.23e-01      -1.13494121034913623589e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    8       7.63e-03       3.77e-01      -1.13490351448482251726e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    9       6.23e-03       2.85e-01      -1.13487496705359881162e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   10       5.18e-03       2.25e-01      -1.13485247759129561018e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   11       4.38e-03       1.83e-01      -1.13483418498666960659e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   12       3.76e-03       1.53e-01      -1.13481890973898334778e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   13       3.27e-03       1.30e-01      -1.13480587225331200898e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   14       2.87e-03       1.13e-01      -1.13479453880556593504e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   15       2.54e-03       1.00e-01      -1.13478453302035195520e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   16       2.27e-03       8.95e-02      -1.13477558277724110667e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   17       2.05e-03       8.10e-02      -1.13476748714051100251e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   18       1.86e-03       7.39e-02      -1.13476009505299771263e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   19       1.70e-03       6.80e-02      -1.13475329118713616481e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   20       1.56e-03       6.30e-02      -1.13474698629157774121e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   21       1.44e-03       5.88e-02      -1.13474111044581350143e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   22       1.34e-03       5.50e-02      -1.13473560824759751995e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   23       1.24e-03       5.17e-02      -1.13473043531740622711e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   24       1.16e-03       4.88e-02      -1.13472555572093006049e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   25       1.15e-03       4.62e-02      -1.13472094004458704148e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   26       1.14e-03       4.38e-02      -1.13471656394390265632e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   27       1.13e-03       4.16e-02      -1.13471240703959247185e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   28       1.11e-03       3.95e-02      -1.13470845207260881580e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   29       1.09e-03       3.77e-02      -1.13470468425409617339e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   30       1.06e-03       3.59e-02      -1.13470109076327444200e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   31       1.03e-03       3.43e-02      -1.13469766035832471971e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   32       9.99e-04       3.28e-02      -1.13469438307399304904e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   33       9.66e-04       3.13e-02      -1.13469124998599418177e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   34       9.32e-04       3.00e-02      -1.13468825302697750885e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   35       8.97e-04       2.87e-02      -1.13468538484235305077e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   36       8.62e-04       2.75e-02      -1.13468263867695677618e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   37       8.45e-04       2.63e-02      -1.13468000828559906950e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   38       8.27e-04       2.52e-02      -1.13467748786209594982e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   39       8.08e-04       2.42e-02      -1.13467507198262501333e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   40       7.88e-04       2.32e-02      -1.13467275556018321367e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   41       7.69e-04       2.22e-02      -1.13467053380766210466e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   42       7.48e-04       2.13e-02      -1.13466840220762533136e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   43       7.28e-04       2.05e-02      -1.13466635648730698449e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   44       7.08e-04       1.96e-02      -1.13466439259770686476e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   45       6.87e-04       1.89e-02      -1.13466250669590608595e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   46       6.67e-04       1.81e-02      -1.13466069512992762611e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   47       6.46e-04       1.74e-02      -1.13465895442564869882e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   48       6.26e-04       1.67e-02      -1.13465728127534348459e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   49       6.06e-04       1.61e-02      -1.13465567252757282404e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   50       5.86e-04       1.55e-02      -1.13465412517817003391e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   51       5.67e-04       1.49e-02      -1.13465263636214604048e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   52       5.48e-04       1.43e-02      -1.13465120334636267216e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   53       5.29e-04       1.38e-02      -1.13464982352285896923e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   54       5.10e-04       1.33e-02      -1.13464849440273919754e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   55       4.92e-04       1.28e-02      -1.13464721361054143927e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   56       4.74e-04       1.23e-02      -1.13464597887902673392e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   57       4.57e-04       1.19e-02      -1.13464478804433110781e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   58       4.40e-04       1.15e-02      -1.13464363904144338449e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   59       4.23e-04       1.11e-02      -1.13464252989995929966e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   60       4.07e-04       1.07e-02      -1.13464145874008609098e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   61       3.91e-04       1.03e-02      -1.13464042376887045975e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   62       3.76e-04       1.00e-02      -1.13463942327661479794e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   63       3.61e-04       9.68e-03      -1.13463845563347349525e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   64       3.47e-04       9.36e-03      -1.13463751928620313265e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   65       3.32e-04       9.07e-03      -1.13463661275504564401e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   66       3.19e-04       8.78e-03      -1.13463573463074662868e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   67       3.06e-04       8.51e-03      -1.13463488357167952927e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   68       2.93e-04       8.25e-03      -1.13463405830108058581e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   69       2.80e-04       8.01e-03      -1.13463325760437292047e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   70       2.68e-04       7.77e-03      -1.13463248032658666489e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   71       2.57e-04       7.55e-03      -1.13463172536985803163e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   72       2.45e-04       7.34e-03      -1.13463099169100987638e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   73       2.34e-04       7.13e-03      -1.13463027829920665681e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   74       2.24e-04       6.94e-03      -1.13462958425368451572e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   75       2.14e-04       6.76e-03      -1.13462890866154957621e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   76       2.04e-04       6.58e-03      -1.13462825067564572237e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   77       1.95e-04       6.41e-03      -1.13462760949249059195e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   78       1.86e-04       6.25e-03      -1.13462698435027650703e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   79       1.80e-04       6.10e-03      -1.13462637452693834348e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   80       1.74e-04       5.95e-03      -1.13462577933828670211e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   81       1.69e-04       5.81e-03      -1.13462519813620401692e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   82       1.65e-04       5.68e-03      -1.13462463030690068990e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   83       1.60e-04       5.55e-03      -1.13462407526924489503e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   84       1.55e-04       5.43e-03      -1.13462353247314367763e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   85       1.51e-04       5.31e-03      -1.13462300139798917371e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   86       1.47e-04       5.20e-03      -1.13462248155116994894e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   87       1.43e-04       5.09e-03      -1.13462197246663490660e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   88       1.38e-04       4.99e-03      -1.13462147370352431608e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   89       1.35e-04       4.89e-03      -1.13462098484485013614e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   90       1.31e-04       4.79e-03      -1.13462050549624327687e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   91       1.27e-04       4.70e-03      -1.13462003528474579070e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   92       1.23e-04       4.61e-03      -1.13461957385766636435e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   93       1.20e-04       4.53e-03      -1.13461912088148419571e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   94       1.17e-04       4.45e-03      -1.13461867604080362071e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   95       1.13e-04       4.37e-03      -1.13461823903736094508e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   96       1.10e-04       4.29e-03      -1.13461780958908111643e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   97       1.13e-04       4.22e-03      -1.13461738742917714262e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   98       1.17e-04       4.15e-03      -1.13461697230529589433e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   99       1.20e-04       4.08e-03      -1.13461656397870901856e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  100       1.23e-04       4.02e-03      -1.13461616222354532511e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  101       1.25e-04       3.95e-03      -1.13461576682606155373e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  102       1.28e-04       3.89e-03      -1.13461537758395334095e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  103       1.30e-04       3.83e-03      -1.13461499430570183904e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  104       1.32e-04       3.77e-03      -1.13461461680995817005e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  105       1.34e-04       3.72e-03      -1.13461424492495752929e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  106       1.36e-04       3.66e-03      -1.13461387848796657636e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  107       1.38e-04       3.61e-03      -1.13461351734476611455e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  108       1.40e-04       3.56e-03      -1.13461316134915432485e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  109       1.41e-04       3.51e-03      -1.13461281036248619785e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  110       1.43e-04       3.46e-03      -1.13461246425323170115e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  111       1.44e-04       3.41e-03      -1.13461212289656486973e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  112       1.45e-04       3.37e-03      -1.13461178617397163180e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  113       1.46e-04       3.32e-03      -1.13461145397288491949e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  114       1.47e-04       3.28e-03      -1.13461112618633414968e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  115       1.48e-04       3.23e-03      -1.13461080271262308088e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  116       1.48e-04       3.19e-03      -1.13461048345501912991e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  117       1.49e-04       3.15e-03      -1.13461016832146342495e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  118       1.50e-04       3.11e-03      -1.13460985722429759335e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  119       1.50e-04       3.07e-03      -1.13460955008001055830e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  120       1.50e-04       3.03e-03      -1.13460924680898842780e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  121       1.51e-04       2.99e-03      -1.13460894733529294172e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  122       1.51e-04       2.96e-03      -1.13460865158644264739e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  123       1.51e-04       2.92e-03      -1.13460835949321244698e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  124       1.51e-04       2.89e-03      -1.13460807098944133031e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  125       1.51e-04       2.85e-03      -1.13460778601185193111e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  126       1.51e-04       2.82e-03      -1.13460750449988463515e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  127       1.50e-04       2.78e-03      -1.13460722639553459885e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  128       1.50e-04       2.75e-03      -1.13460695164320277399e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  129       1.50e-04       2.71e-03      -1.13460668018955493608e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  130       1.49e-04       2.68e-03      -1.13460641198338671529e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  131       1.49e-04       2.65e-03      -1.13460614697549990524e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  132       1.49e-04       2.62e-03      -1.13460588511858259153e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  133       1.48e-04       2.59e-03      -1.13460562636709782964e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  134       1.47e-04       2.56e-03      -1.13460537067717923492e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  135       1.47e-04       2.53e-03      -1.13460511800652911916e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  136       1.46e-04       2.50e-03      -1.13460486831433081534e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  137       1.45e-04       2.47e-03      -1.13460462156115299877e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  138       1.45e-04       2.44e-03      -1.13460437770887328952e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  139       1.44e-04       2.41e-03      -1.13460413672059548844e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  140       1.43e-04       2.38e-03      -1.13460389856057845464e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  141       1.42e-04       2.35e-03      -1.13460366319416516490e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  142       1.41e-04       2.33e-03      -1.13460343058771777578e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  143       1.40e-04       2.30e-03      -1.13460320070855414087e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  144       1.39e-04       2.27e-03      -1.13460297352489287732e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  145       1.38e-04       2.25e-03      -1.13460274900579624955e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  146       1.37e-04       2.22e-03      -1.13460252712111705478e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  147       1.36e-04       2.19e-03      -1.13460230784145296639e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  148       1.35e-04       2.17e-03      -1.13460209113809833070e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  149       1.34e-04       2.14e-03      -1.13460187698300251213e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  150       1.33e-04       2.12e-03      -1.13460166534872714692e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  151       1.32e-04       2.09e-03      -1.13460145620840958145e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  152       1.31e-04       2.07e-03      -1.13460124953572612867e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  153       1.30e-04       2.04e-03      -1.13460104530485768919e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  154       1.29e-04       2.02e-03      -1.13460084349045864656e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  155       1.28e-04       1.99e-03      -1.13460064406762630824e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  156       1.27e-04       1.97e-03      -1.13460044701187216560e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  157       1.25e-04       1.95e-03      -1.13460025229909697373e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  158       1.24e-04       1.92e-03      -1.13460005990556564939e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  159       1.23e-04       1.90e-03      -1.13459986980788125948e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  160       1.22e-04       1.88e-03      -1.13459968198296628543e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  161       1.21e-04       1.86e-03      -1.13459949640804261435e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  162       1.19e-04       1.83e-03      -1.13459931306060934730e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  163       1.18e-04       1.81e-03      -1.13459913191842588276e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  164       1.17e-04       1.79e-03      -1.13459895295949809224e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  165       1.16e-04       1.77e-03      -1.13459877616205958475e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  166       1.14e-04       1.75e-03      -1.13459860150455879193e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  167       1.13e-04       1.73e-03      -1.13459842896564441617e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  168       1.12e-04       1.70e-03      -1.13459825852415324334e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  169       1.11e-04       1.68e-03      -1.13459809015910159360e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  170       1.09e-04       1.66e-03      -1.13459792384966785903e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  171       1.08e-04       1.64e-03      -1.13459775957519086660e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  172       1.07e-04       1.62e-03      -1.13459759731515332533e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  173       1.06e-04       1.60e-03      -1.13459743704917909781e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  174       1.05e-04       1.58e-03      -1.13459727875702319579e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  175       1.03e-04       1.56e-03      -1.13459712241856323089e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  176       1.02e-04       1.54e-03      -1.13459696801379523095e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  177       1.01e-04       1.52e-03      -1.13459681552283000201e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  178       9.98e-05       1.51e-03      -1.13459666492588166875e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Done!</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Processing the outputs... Done!</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mr.mash successfully executed in 0.2228629 minutes!</span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co"># Compare the "fitted" values of Y against the true Y in the training set.</span></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">fitted</span>,<span class="va">Ytrain</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,</span>
+<span class="r-in">     ylab <span class="op">=</span> <span class="st">"fitted"</span><span class="op">)</span></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></span>
+<span class="r-plt img"><img src="mr.mash-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co"># Predict the multivariate outcomes in the test set using the fitted model.</span></span>
+<span class="r-in"><span class="va">Ytest_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit</span>,<span class="va">Xtest</span><span class="op">)</span></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">Ytest_est</span>,<span class="va">Ytest</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,</span>
+<span class="r-in">     ylab <span class="op">=</span> <span class="st">"predicted"</span><span class="op">)</span></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></span>
+<span class="r-plt img"><img src="mr.mash-2.png" alt="" width="700" height="433"></span>
+<span class="r-in"></span>
 </code></pre></div>
     </div>
   </div>
