@@ -14,6 +14,9 @@ jobs:
             - r-pkg-cache-{{ arch }}-
       - checkout
       - run:
+          name: Install GSL
+            sudo apt-get update
+            sudo apt-get install libgsl-dev
           name: Install package dependencies
           command: |
             mkdir -p ~/R/Library
