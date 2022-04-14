@@ -19,6 +19,12 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       _R_CHECK_FORCE_SUGGESTS_: false
     steps:
+      - name: Install system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update
+          sudo apt-get update
+          sudo apt-get -y install libgsl-dev
       - name: Install GSL
         run: sudo apt-get install -y libgsl-dev
       - uses: actions/checkout@v2
