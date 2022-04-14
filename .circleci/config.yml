@@ -14,12 +14,10 @@ jobs:
             - r-pkg-cache-{{ arch }}-
       - checkout
       - run:
-          name: Install GSL
+          name: Install package dependencies
           command: |
             sudo apt-get update
             sudo apt-get install libgsl-dev
-          name: Install package dependencies
-          command: |
             mkdir -p ~/R/Library
             Rscript -e 'install.packages(c("devtools","Rcpp","RcppArmadillo","RcppParallel","MBSP","mvtnorm","matrixStats","testthat","varbvs"))'
             Rscript -e 'devtools::install_github("stephenslab/ebnm",upgrade="never",force=TRUE)'
