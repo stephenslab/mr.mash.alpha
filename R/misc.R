@@ -34,7 +34,7 @@ addtocols <- function (A, b)
 
 ###Function to simulate from MN distribution
 #
-#' @importFrom MBSP matrix.normal
+#' @importFrom MBSP matrix_normal
 #' 
 sim_mvr <- function (X, B, V) {
   
@@ -45,7 +45,7 @@ sim_mvr <- function (X, B, V) {
   # Simulate the responses, Y.
   M <- X%*%B
   U <- diag(n)
-  Y <- matrix.normal(M, U, V)
+  Y <- matrix_normal(M, U, V)
   
   # Output the simulated responses.
   return(Y)
