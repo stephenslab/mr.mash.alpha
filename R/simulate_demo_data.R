@@ -198,7 +198,7 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
 #   diag(V) <- Var_E
 #   
 #   ##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix and V is the residual covariance  
-#   Y <- matrix.normal(G + matrix(intercepts, n, r, byrow=TRUE), diag(n), V)
+#   Y <- matrix_normal(G + matrix(intercepts, n, r, byrow=TRUE), diag(n), V)
 #   
 #   return(list(X=X, Y=Y, B=B, causal_variables=sort(causal_variables), V=V, Sigma=Sigma, Gamma=Gamma))
 # }
