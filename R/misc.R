@@ -32,6 +32,10 @@ tr <- function(x)
 addtocols <- function (A, b)
   t(t(A) + b)
 
+# Remove b[i] from each column A[,i].
+removefromcols <- function (A, b)
+  t(t(A) - b)
+
 ###Function to simulate from MN distribution
 #
 #' @importFrom MBSP matrix_normal
@@ -305,10 +309,10 @@ compute_cov_flash <- function(Y, error_cache = NULL){
 ###Compute initial estimate of V
 #
 #' @importFrom stats cov
-compute_V_init <- function(X, Y, B, method=c("cov", "flash")){
+compute_V_init <- function(X, Y, B, intercept, method=c("cov", "flash")){
   method <- match.arg(method)
   
-  R <- Y - X%*%B
+  R <- removefromcols(Y, intercept) - X%*%B
   
   if(method=="cov")
     V <- cov(R)

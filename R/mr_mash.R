@@ -285,18 +285,6 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   if(standardize)
     mu1_init <- mu1_init*sx 
   
-  ###Compute V, if not provided by the user
-  if(is.null(V)){
-    if(!Y_has_missing){
-      V <- compute_V_init(X, Y, mu1_init, method="cov")
-    } else {
-      V <- compute_V_init(X, Y, mu1_init, method="flash")
-    }
-    
-    if(update_V_method=="diagonal")
-      V <- diag(diag(V))
-  }
-  
   ###Initilize mu1, S1, w1, delta_mu1, delta_ELBO, delta_conv, ELBO, iterator, progress,
   ###missing Ys, and intercept (i.e., muy)
   mu1_t <- mu1_init 
@@ -321,6 +309,18 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     }
   }
   
+  ###Compute V, if not provided by the user
+  if(is.null(V)){
+    if(!Y_has_missing){
+      V <- compute_V_init(X, Y, mu1_init, rep(0, r), method="cov")
+    } else {
+      V <- compute_V_init(X, Y, mu1_init, muy, method="flash")
+    }
+
+    if(update_V_method=="diagonal")
+      V <- diag(diag(V))
+  }
+
   ###Set eps
   eps <- .Machine$double.eps
 
