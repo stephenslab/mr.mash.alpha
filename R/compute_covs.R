@@ -119,7 +119,6 @@ compute_data_driven_covs <- function(sumstats, subset_thresh=NULL, n_pcs=3, flas
 #' \item{Shat}{p x r matrix of the standard errors for regression coeffcients.}
 #'
 #' @importFrom stats lm
-#' @importFrom stats coef
 #' @importFrom parallel makeCluster parLapply stopCluster
 #' 
 #' @export
@@ -128,8 +127,13 @@ compute_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.res
   variable_names <- colnames(X)
   response_names <- colnames(Y)
   
-  X <- scale_fast2(X, scale=standardize)$M 
-  Y <- scale_fast2(Y, scale=standardize.response)$M
+  if(standardize){
+    X <- scale_fast2(X, scale=TRUE)$M
+  }
+  
+  if(standardize.response){
+    Y <- scale_fast2(Y, scale=TRUE)$M
+  }
   
   linreg <- function(i, X, Y){
     p <- ncol(X)
@@ -137,9 +141,9 @@ compute_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.res
     shat <- rep(as.numeric(NA), p)
     
     for(j in 1:p){
-      fit <- lm(Y[, i] ~ X[, j]-1)
-      bhat[j] <- coef(fit)
-      shat[j] <- summary(fit)$coefficients[1, 2]
+      fit <- lm(Y[, i] ~ X[, j])
+      bhat[j] <- summary(fit)$coefficients[2, 1]
+      shat[j] <- summary(fit)$coefficients[2, 2]
     }
     
     return(list(bhat=bhat, shat=shat))
