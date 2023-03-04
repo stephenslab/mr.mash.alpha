@@ -1,11 +1,10 @@
 ###Update variational parameters, expected residuals, and ELBO components with or without scaling X
-inner_loop_general_R <- function(X, Rbar, mu1, V, Vinv, w0, S0, ###note: V is only needed when not scaling X
+inner_loop_general_rss_R <- function(n, XtXmu1, mu1, V, Vinv, w0, S0, ###note: V is only needed when not scaling X
                                precomp_quants, standardize, compute_ELBO, update_V,
                                update_order, eps){
   ###Create variables to store quantities
-  n <- nrow(Rbar)
-  r <- ncol(Rbar)
-  p <- ncol(X)
+  r <- ncol(XtXmu1)
+  p <- ncol(XtX)
   K <- length(S0)
   S1    <- array(0, c(r, r, p))
   w1    <- matrix(0, nrow=p, ncol=K)
@@ -16,15 +15,17 @@ inner_loop_general_R <- function(X, Rbar, mu1, V, Vinv, w0, S0, ###note: V is on
   ##Loop through the variables
   for(j in update_order){
     
+    xtx <- XtX[j , j]
+    
     #Remove j-th effect from expected residuals 
-    Rbar_j <- Rbar + outer(X[, j], mu1[j, ])
+    xTRbar_j <- XtY[j, ] - XtXmu1[j, ] + xtx*mu1[j,]
     
     #Run Bayesian SLR
     if(standardize){
-      bfit <- bayes_mvr_mix_standardized_X(X[, j], Rbar_j, w0, S0, precomp_quants$S, precomp_quants$S1, 
+      bfit <- bayes_mvr_mix_standardized_X(n, xTRbar_j, w0, S0, precomp_quants$S, precomp_quants$S1, 
                                      precomp_quants$SplusS0_chol, precomp_quants$S_chol, eps)      
     } else {
-      bfit <- bayes_mvr_mix_centered_X(X[, j], Rbar_j, V, w0, S0, precomp_quants$xtx[j], Vinv, 
+      bfit <- bayes_mvr_mix_centered_X(xTRbar_j, V, w0, S0, precomp_quants$xtx[j], Vinv, 
                                           precomp_quants$V_chol, precomp_quants$d, 
                                           precomp_quants$QtimesV_chol, eps)
     }
