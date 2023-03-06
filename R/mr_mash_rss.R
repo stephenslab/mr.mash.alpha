@@ -174,7 +174,7 @@
 #' @export
 #' 
 mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
-                        mu1_init=matrix(0, nrow=nrow(Z), ncol=ncol(Z)), tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
+                        mu1_init, tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
                         max_iter=5000, update_w0=TRUE, update_w0_method="EM", 
                         w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                         update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("R", "Rcpp"), e=1e-8,
@@ -239,7 +239,7 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
     stop("Elements of w0 must sum to 1.")
   if(length(S0)!=length(w0))
     stop("S0 and w0 must have the same length.")
-  if(!is.matrix(mu1_init))
+  if(!missing(mu1_init) && !is.matrix(mu1_init))
     stop("mu1_init must be a matrix.")
   if(convergence_criterion=="ELBO" && !compute_ELBO)
     stop("ELBO needs to be computed with convergence_criterion=\"ELBO\".")
@@ -274,6 +274,11 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   ###Add number to diagonal elements of the prior matrices (improves
   ###numerical stability)
   S0 <- lapply(S0, makePD, e=e)
+  
+  ##Initialize regression coefficients to 0 if not provided
+  if(missing(mu1_init)){
+    mu1_init <- matrix(0, nrow=p, ncol=r)
+  }
   
   ###Scale mu1_init, if X is standardized 
   if(standardize)
