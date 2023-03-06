@@ -4,7 +4,7 @@ inner_loop_general_rss_R <- function(n, XtXmu1, mu1, V, Vinv, w0, S0, ###note: V
                                update_order, eps){
   ###Create variables to store quantities
   r <- ncol(XtXmu1)
-  p <- ncol(XtX)
+  p <- nrow(mu1)
   K <- length(S0)
   S1    <- array(0, c(r, r, p))
   w1    <- matrix(0, nrow=p, ncol=K)
