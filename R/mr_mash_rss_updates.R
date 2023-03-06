@@ -140,7 +140,7 @@ mr_mash_update_general_rss <- function(n, XtX, XtY, mu1_t, V, Vinv, ldetV, w0, S
     ##Compute ELBO
     var_part_tr_wERSS <- updates$var_part_tr_wERSS
     neg_KL <- updates$neg_KL
-    out$ELBO <- compute_ELBO_rss_fun(n=n, RbartRbar=RbartRbar, mu1_t=mu1_t, Vinv=Vinv, ldetV=ldetV, 
+    out$ELBO <- compute_ELBO_rss_fun(n=n, RbartRbar=RbartRbar, Vinv=Vinv, ldetV=ldetV, 
                                      var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL)
     
     out$var_part_ERSS <- updates$var_part_ERSS
@@ -150,7 +150,7 @@ mr_mash_update_general_rss <- function(n, XtX, XtY, mu1_t, V, Vinv, ldetV, w0, S
     ##Compute ELBO
     var_part_tr_wERSS <- updates$var_part_tr_wERSS
     neg_KL <- updates$neg_KL
-    out$ELBO <- compute_ELBO_rss_fun(n=n, RbartRbar=RbartRbar, mu1_t=mu1_t, Vinv=Vinv, ldetV=ldetV, 
+    out$ELBO <- compute_ELBO_rss_fun(n=n, RbartRbar=RbartRbar, Vinv=Vinv, ldetV=ldetV, 
                                      var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL)
     
   } else if(!compute_ELBO && update_V){
