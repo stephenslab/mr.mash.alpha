@@ -1,53 +1,3 @@
-# Bayesian multivariate regression with Normal prior with standardized X
-#
-# The outputs are: mu1, the posterior mean of the
-# regression coefficients; logbf, the log-Bayes factor.
-bayes_mvr_ridge_standardized_X_rss <- function (b, S0, S, S1, SplusS0_chol, S_chol) {
-  
-  # Compute the log-Bayes factor.
-  logbf <- (chol2ldet(S_chol) - chol2ldet(SplusS0_chol) +
-              dot(b,backsolve(S_chol, forwardsolve(t(S_chol), b))) - 
-              dot(b,backsolve(SplusS0_chol, forwardsolve(t(SplusS0_chol), b))))/2
-  
-  # Compute the posterior mean assuming a multivariate
-  # normal prior with zero mean and covariance S0.
-  mu1 <- drop(S1%*%backsolve(S_chol, forwardsolve(t(S_chol), b)))
-  
-  # Return the posterior mean
-  # (mu1), and the log-Bayes factor (logbf)
-  return(list(mu1 = mu1, logbf = logbf))
-}
-
-
-# Bayesian multivariate regression with Normal prior with transformed 
-# xtilde = x%*%solve(chol(V)) [this calculation is not needed but useful
-# to understand the derivation] that allows to precompute some
-# quantities
-#
-# The outputs are: mu1, the posterior mean of the
-# regression coefficients; S1, the posterior covariance of the
-# regression coefficients; logbf, the log-Bayes factor.
-bayes_mvr_ridge_centered_X_rss <- function (V, b, S, S0, xtx, Vinv, V_chol, S_chol, d, QtimesV_chol) {
-  
-  # Compute the log-Bayes factor.
-  SplusS0_chol <- chol(S+S0)
-  logbf <- (chol2ldet(S_chol) - chol2ldet(SplusS0_chol) +
-              dot(b,backsolve(S_chol, forwardsolve(t(S_chol), b))) -
-              dot(b,backsolve(SplusS0_chol, forwardsolve(t(SplusS0_chol), b))))/2
-  #logbf <- dmvnorm(b, rep(0, times=length(b)), (S+S0)) - dmvnorm(b, rep(0, times=length(b)), S)
-  
-  # Compute the posterior mean assuming a multivariate
-  # normal prior with zero mean and covariance S0.
-  dx <- d/(1 + xtx*d)
-  A <- sqrt(dx)*QtimesV_chol
-  S1 <- crossprod(A)
-  mu1 <- drop(crossprod(A, (A %*% (Vinv %*% (xtx*b)))))
-  # Return the posterior mean and covariance
-  # (mu1, S1), and the log-Bayes factor (logbf)
-  return(list(mu1 = mu1, S1=S1, logbf=logbf))
-}
-
-
 # Bayesian multivariate regression with mixture-of-normals prior
 # (mixture weights w0 and covariance matrices S0) with standardized X.
 #
@@ -69,7 +19,7 @@ bayes_mvr_mix_standardized_X_rss <- function (n, xtY, w0, S0, S, S1, SplusS0_cho
   # Compute the Bayes factors and posterior statistics separately for
   # each mixture component.
   bayes_mvr_ridge_lapply <- function(i){
-    bayes_mvr_ridge_standardized_X_rss(b, S0[[i]], S, S1[[i]], SplusS0_chol[[i]], S_chol)
+    bayes_mvr_ridge_standardized_X(b, S0[[i]], S, S1[[i]], SplusS0_chol[[i]], S_chol)
   }
   out <- lapply(1:K, bayes_mvr_ridge_lapply)
   
@@ -127,7 +77,7 @@ bayes_mvr_mix_centered_X_rss <- function (xtY, V, w0, S0, xtx, Vinv, V_chol, d, 
   # Compute the Bayes factors and posterior statistics separately for
   # each mixture component.
   bayes_mvr_ridge_lapply <- function(i){
-    bayes_mvr_ridge_centered_X_rss(V, b, S, S0[[i]], xtx, Vinv, V_chol, S_chol, d[[i]], QtimesV_chol[[i]])
+    bayes_mvr_ridge_centered_X(V, b, S, S0[[i]], xtx, Vinv, V_chol, S_chol, d[[i]], QtimesV_chol[[i]])
   }
   out <- lapply(1:K, bayes_mvr_ridge_lapply)
   

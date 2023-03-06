@@ -4,9 +4,20 @@
 #' @description Performs multivariate multiple regression with
 #'   mixture-of-normals prior.
 #' 
-#' @param Y n x r matrix of responses.
+#' @param Bhat p x r matrix of regression coefficients from univariate
+#'  simple linear regression.
 #' 
-#' @param X n x p matrix of covariates.
+#' @param Shat p x r matrix of standard errors of the regression coefficients 
+#'  from univariate simple linear regression.
+#'  
+#' @param Z p x r matrix of Z-scores from univariate
+#'  simple linear regression.
+#'  
+#' @param R p x p correlation matrix among the variables.
+#' 
+#' @param covY r x r covariance matrix across responses.
+#' 
+#' @param n scalar indicating the sample size.
 #' 
 #' @param V r x r residual covariance matrix.
 #' 
@@ -162,7 +173,7 @@
 #'
 #' @export
 #' 
-mr.mash.rss <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
+mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
                         mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
                         max_iter=5000, update_w0=TRUE, update_w0_method="EM", 
                         w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
@@ -208,12 +219,12 @@ mr.mash.rss <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   }
   
   ###Check that the inputs are in the correct format
-  if(!is.matrix(Y))
-    stop("Y must be a matrix.")
-  if(!is.matrix(X))
-    stop("X must be a matrix.")
-  if(any(is.na(X)))
-    stop("X must not contain missing values.")
+  # if(!is.matrix(Y))
+  #   stop("Y must be a matrix.")
+  # if(!is.matrix(X))
+  #   stop("X must be a matrix.")
+  # if(any(is.na(X)))
+  #   stop("X must not contain missing values.")
   if(!is.null(V)){
     if(!is.matrix(V) || !isSymmetric(V))
       stop("V must be a symmetric matrix.")
@@ -236,58 +247,39 @@ mr.mash.rss <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     stop("ca_update_order=\"consecutive\" is the only option when Y has missing values.")
 
   ###Obtain dimensions needed from inputs
-  p <- ncol(X)
-  n <- nrow(X)
-  r <- ncol(Y)
+  if(!missing(Bhat)){
+    p <- nrow(Bhat)
+    r <- ncol(Bhat)
+  } else if(!missing(Z)){
+    p <- nrow(Z)
+    r <- ncol(Z)
+  } else{
+    stop("Z or Bhat should be provided.")
+  }  
+  
   K <- length(S0)
 
   # PRE-PROCESSING STEPS
   # --------------------
+  
+  ##Compute Z scores
+  if(missing(Z)){
+    Z <- Bhat/Shat
+  }
+  
   ###Store dimensions names of the inputs
-  X_colnames <- colnames(X)
-  Y_colnames <- colnames(Y)
-  Y_rownames <- rownames(Y)
+  Z_colnames <- colnames(Z)
+  Z_rownames <- rownames(Z)
   
   ###Add number to diagonal elements of the prior matrices (improves
   ###numerical stability)
   S0 <- lapply(S0, makePD, e=e)
   
-  ###Check if Y has missing values
-  Y_has_missing <- any(is.na(Y))
-  
-  ###Throw an error if Y has missing values in the univariate case
-  if(Y_has_missing && r==1)
-    stop("Y must not contain missing values in the univariate case.")
-  
-  ###Center (and, optionally, scale) X
-  outX <- scale_fast2(X, scale=standardize)
-  mux <- outX$means
-  if (standardize)
-    sx <- outX$sds
-  X <- outX$M
-  rm(outX)
-  
-  ###Center Y, if no missing value is present
-  if(!Y_has_missing){
-    outY <- scale_fast2(Y, scale=FALSE)
-    muy <- outY$means
-    Y <- outY$M
-    rm(outY)
-  }
-  
-  ###Extract per-individual Y missingness patterns, if missing values are present
-  if(Y_has_missing){
-    Y_miss_patterns <- extract_missing_Y_pattern(Y)
-  } else {
-    Y_miss_patterns <- NULL
-  }
-  
   ###Scale mu1_init, if X is standardized 
   if(standardize)
     mu1_init <- mu1_init*sx 
   
-  ###Initilize mu1, S1, w1, delta_mu1, delta_ELBO, delta_conv, ELBO, iterator, progress,
-  ###missing Ys, and intercept (i.e., muy)
+  ###Initilize mu1, S1, w1, delta_mu1, delta_ELBO, delta_conv, ELBO, iterator, progress
   mu1_t <- mu1_init 
   delta_mu1 <- matrix(Inf, nrow=p, ncol=r)
   delta_ELBO <- Inf
@@ -303,21 +295,11 @@ mr.mash.rss <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     progress$ELBO_diff <- as.numeric(NA)
     progress$ELBO <- as.numeric(NA)
   }
-  if(Y_has_missing){
-    muy <- colMeans(Y, na.rm=TRUE)
-    for(l in 1:r){
-      Y[is.na(Y[, l]), l] <- muy[l]
-    }
-  }
-  
+
   ###Compute V, if not provided by the user
   if(is.null(V)){
-    if(!Y_has_missing){
-      V <- compute_V_init(X, Y, mu1_init, rep(0, r), method="cov")
-    } else {
-      V <- compute_V_init(X, Y, mu1_init, muy, method="flash")
-    }
-
+    # How to do so with sumstats??
+    
     if(update_V_method=="diagonal")
       V <- diag(diag(V))
   }
@@ -332,7 +314,7 @@ mr.mash.rss <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     comps$xtx <- xtx
   }
   
-  if(Y_has_missing || compute_ELBO || !standardize)
+  if(compute_ELBO || !standardize)
     ###Compute inverse of V (needed for imputing missing Ys, the ELBO and unstandardized X)
     Vinv <- chol2inv(comps$V_chol)
   else {
@@ -351,16 +333,33 @@ mr.mash.rss <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ###Set the ordering of the coordinate ascent updates
   if(ca_update_order=="consecutive"){
     update_order <- 1:p
-  } else if(ca_update_order=="decreasing_logBF"){
-    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, 
-                                                 decreasing=TRUE, eps, nthreads)
-  } else if(ca_update_order=="increasing_logBF"){
-    update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, 
-                                                 decreasing=FALSE, eps, nthreads)
+  } # else if(ca_update_order=="decreasing_logBF"){
+  #   update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, 
+  #                                                decreasing=TRUE, eps, nthreads)
+  # } else if(ca_update_order=="increasing_logBF"){
+  #   update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, 
+  #                                                decreasing=FALSE, eps, nthreads)
+  # }
+  
+  ##Compute pve-adjusted Z scores, if n is provided
+  if(!missing(n)) {
+    adj <- (n-1)/(Z^2 + n - 2)
+    Z   <- sqrt(adj) * Z
   }
   
-  if(!Y_has_missing){
-    Y_cov <- matrix(0, nrow=r, ncol=r)
+  ##If covariance of Y and standard errors are provided,
+  ##the effects are on the *original scale*.
+  if(!missing(covY) & !missing(Shat)){
+    XTXdiag <- rowMeans(matrix(diag(covY), nrow=p, ncol=r, byrow=TRUE) * adj/(Shat^2))
+    XTX <- t(R * sqrt(XTXdiag)) * sqrt(XTXdiag)
+    XTX <- (XTX + t(XTX))/2
+    XTY <- Z * sqrt(adj) * matrix(diag(covY), nrow=p, ncol=r, byrow=TRUE) / Shat
+    
+  } else {
+    ##The effects are on the *standardized* X, y scale.
+    XTX <- R*(n-1)
+    XTY <- Z*sqrt(n-1)
+    covY <- cov2cor(V)
   }
   
   if(verbose)
@@ -396,13 +395,6 @@ mr.mash.rss <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     ##Update iterator
     t <- t+1
     
-    ##Compute expected Y
-    if(Y_has_missing){
-      mu <- addtocols(X%*%mu1_t, muy)
-    } else {
-      mu <- X%*%mu1_t
-    }
-
     ##Exit loop if maximum number of iterations is reached
     if(t>max_iter){
       warning("Max number of iterations reached. Try increasing max_iter.")
@@ -414,7 +406,7 @@ mr.mash.rss <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     if(t > 1){
       ##Update V if requested
       if(update_V){
-        V <- update_V_fun(Y, mu, var_part_ERSS, Y_cov)
+        V <- update_V_rss_fun(n, RbartRbar, var_part_ERSS)
         if(update_V_method=="diagonal")
           V <- diag(diag(V))
 
@@ -455,16 +447,19 @@ mr.mash.rss <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
     
     # E-STEP
     # ------
+    mr_mash_update_general_rss <- function(n, XtX, XtY, mu1, V, Vinv, ldetV, w0, S0,
+                                           precomp_quants, compute_ELBO, standardize, 
+                                           update_V, version, update_order, eps, 
+                                           nthreads)
     ###Update variational parameters
-    ups <- mr_mash_update_general(X=X, Y=Y, mu1_t=mu1_t, mu=mu, V=V,
+    ups <- mr_mash_update_general_rss(n=n, XtX=XtX, XtY=XtY, mu1_t=mu1_t, mu=mu, V=V,
                                   Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
                                   precomp_quants=comps,
                                   compute_ELBO=compute_ELBO,
                                   standardize=standardize,
                                   update_V=update_V, version=version, 
                                   update_order=update_order, eps=eps,
-                                  nthreads=nthreads, 
-                                  Y_miss_patterns=Y_miss_patterns)
+                                  nthreads=nthreads)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t
@@ -472,12 +467,7 @@ mr.mash.rss <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
       ELBO <- ups$ELBO
     if(update_V)
       var_part_ERSS <- ups$var_part_ERSS
-    if(Y_has_missing){
-      Y <- ups$Y
-      muy <- ups$muy
-      Y_cov <- ups$Y_cov
-    }
-    
+
     ##End timing
     time2 <- proc.time()
     
@@ -519,12 +509,12 @@ mr.mash.rss <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   # POST-PROCESSING STEPS
   # --------------------
   ###Compute the "fitted" values.
-  fitted_vals <- addtocols(X %*% mu1_t, muy)
+#  fitted_vals <- addtocols(X %*% mu1_t, muy)
   
   ###Compute covariance of fitted values and PVE
-  cov_fitted <- cov(fitted_vals)
-  var_fitted <- diag(cov_fitted)
-  pve <- var_fitted/(var_fitted+diag(V))
+#  cov_fitted <- cov(fitted_vals)
+#  var_fitted <- diag(cov_fitted)
+#  pve <- var_fitted/(var_fitted+diag(V))
 
   if(standardize){
     ###Rescale posterior means and covariance of coefficients. In the
@@ -540,29 +530,27 @@ mr.mash.rss <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ###with respect to the *rescaled* coefficients to recover the
   ###correct fitted values. This is why this is done after rescaling
   ###the coefficients above.
-  intercept <- drop(muy - mux %*% mu1_t)
+#  intercept <- drop(muy - mux %*% mu1_t)
   
   ###Assign names to outputs dimensions
   S0_names <- names(S0)
-  rownames(mu1_t) <- X_colnames
-  colnames(mu1_t) <- Y_colnames
-  dimnames(S1_t)[[1]] <- Y_colnames
-  dimnames(S1_t)[[2]] <- Y_colnames
-  dimnames(S1_t)[[3]] <- X_colnames
-  S0 <- lapply(S0, function(x){rownames(x) <- colnames(x) <- Y_colnames; return(x)})
-  rownames(w1_t) <- X_colnames
+  rownames(mu1_t) <- Z_rownames
+  colnames(mu1_t) <- Z_colnames
+  dimnames(S1_t)[[1]] <- Z_colnames
+  dimnames(S1_t)[[2]] <- Z_colnames
+  dimnames(S1_t)[[3]] <- Z_rownames
+  S0 <- lapply(S0, function(x){rownames(x) <- colnames(x) <- Z_colnames; return(x)})
+  rownames(w1_t) <- Z_rownames
   colnames(w1_t) <- S0_names
   names(w0) <- S0_names
-  rownames(V) <- Y_colnames
-  colnames(V) <- Y_colnames
-  rownames(Y) <- Y_rownames
-  colnames(Y) <- Y_colnames
-  rownames(fitted_vals) <- Y_rownames
-  colnames(fitted_vals) <- Y_colnames
-  rownames(cov_fitted) <- Y_colnames
-  colnames(cov_fitted) <- Y_colnames
-  names(pve) <- Y_colnames
-  names(intercept) <- Y_colnames
+  rownames(V) <- Z_colnames
+  colnames(V) <- Z_colnames
+  # rownames(fitted_vals) <- Y_rownames
+  # colnames(fitted_vals) <- Y_colnames
+  # rownames(cov_fitted) <- Y_colnames
+  # colnames(cov_fitted) <- Y_colnames
+  # names(pve) <- Y_colnames
+  # names(intercept) <- Y_colnames
   
   ###Remove unused rows of progress
   progress <- progress[rowSums(is.na(progress)) != ncol(progress), ]
@@ -576,14 +564,11 @@ mr.mash.rss <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   ###the Evidence Lower Bound (ELBO; if computed) and imputed responses (Y; if 
   ###missing values were present).
   out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, w0=w0, S0=simplify2array_custom(S0), 
-              intercept=intercept, fitted=fitted_vals, G=cov_fitted, pve=pve, progress=progress, 
+              progress=progress, #intercept=intercept, fitted=fitted_vals, G=cov_fitted, pve=pve,
               converged=converged)
   if(compute_ELBO)
     ###Append ELBO to the output
     out$ELBO <- ELBO
-  if(Y_has_missing)
-    ###Append Y to the output
-    out$Y <- Y
 
   class(out) <- c("mr.mash", "list")
   
