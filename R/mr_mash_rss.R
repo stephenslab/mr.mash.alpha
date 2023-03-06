@@ -174,10 +174,10 @@
 #' @export
 #' 
 mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
-                        mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
+                        mu1_init=matrix(0, nrow=nrow(Z), ncol=ncol(Z)), tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
                         max_iter=5000, update_w0=TRUE, update_w0_method="EM", 
                         w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
-                        update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
+                        update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("R", "Rcpp"), e=1e-8,
                         ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
                         nthreads=as.integer(NA)) {
   
@@ -243,8 +243,8 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
     stop("mu1_init must be a matrix.")
   if(convergence_criterion=="ELBO" && !compute_ELBO)
     stop("ELBO needs to be computed with convergence_criterion=\"ELBO\".")
-  if(ca_update_order!="consecutive" && any(is.na(Y)))
-    stop("ca_update_order=\"consecutive\" is the only option when Y has missing values.")
+  if(ca_update_order!="consecutive")
+    stop("ca_update_order=\"consecutive\" is the only option with summary data for now.")
 
   ###Obtain dimensions needed from inputs
   if(!missing(Bhat)){
@@ -306,16 +306,36 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
 
   ###Set eps
   eps <- .Machine$double.eps
+  
+  ##Compute pve-adjusted Z scores, if n is provided
+  if(!missing(n)) {
+    adj <- (n-1)/(Z^2 + n - 2)
+    Z   <- sqrt(adj) * Z
+  }
+  
+  ##If covariance of Y and standard errors are provided,
+  ##the effects are on the *original scale*.
+  if(!missing(covY) & !missing(Shat)){
+    XtXdiag <- rowMeans(matrix(diag(covY), nrow=p, ncol=r, byrow=TRUE) * adj/(Shat^2))
+    XtX <- t(R * sqrt(XtXdiag)) * sqrt(XtXdiag)
+    XtX <- (XtX + t(XtX))/2
+    XtY <- Z * sqrt(adj) * matrix(diag(covY), nrow=p, ncol=r, byrow=TRUE) / Shat
+    
+  } else {
+    ##The effects are on the *standardized* X, y scale.
+    XtX <- R*(n-1)
+    XtY <- Z*sqrt(n-1)
+    covY <- cov2cor(V)
+  }
 
   ###Precompute quantities
-  comps <- precompute_quants(X, V, S0, standardize, version)
+  comps <- precompute_quants(n, V, S0, standardize, version)
   if(!standardize){
-    xtx <- colSums(X^2)
-    comps$xtx <- xtx
+    comps$xtx <- diag(XtX)
   }
   
   if(compute_ELBO || !standardize)
-    ###Compute inverse of V (needed for imputing missing Ys, the ELBO and unstandardized X)
+    ###Compute inverse of V (needed for the ELBO and unstandardized X)
     Vinv <- chol2inv(comps$V_chol)
   else {
     if(version=="R")
@@ -340,27 +360,6 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   #   update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, 
   #                                                decreasing=FALSE, eps, nthreads)
   # }
-  
-  ##Compute pve-adjusted Z scores, if n is provided
-  if(!missing(n)) {
-    adj <- (n-1)/(Z^2 + n - 2)
-    Z   <- sqrt(adj) * Z
-  }
-  
-  ##If covariance of Y and standard errors are provided,
-  ##the effects are on the *original scale*.
-  if(!missing(covY) & !missing(Shat)){
-    XTXdiag <- rowMeans(matrix(diag(covY), nrow=p, ncol=r, byrow=TRUE) * adj/(Shat^2))
-    XTX <- t(R * sqrt(XTXdiag)) * sqrt(XTXdiag)
-    XTX <- (XTX + t(XTX))/2
-    XTY <- Z * sqrt(adj) * matrix(diag(covY), nrow=p, ncol=r, byrow=TRUE) / Shat
-    
-  } else {
-    ##The effects are on the *standardized* X, y scale.
-    XTX <- R*(n-1)
-    XTY <- Z*sqrt(n-1)
-    covY <- cov2cor(V)
-  }
   
   if(verbose)
     cat("Done!\n")
@@ -411,9 +410,9 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
           V <- diag(diag(V))
 
         #Recompute precomputed quantities after updating V
-        comps <- precompute_quants(X, V, S0, standardize, version)
+        comps <- precompute_quants(n, V, S0, standardize, version)
         if(!standardize)
-          comps$xtx <- xtx
+          comps$xtx <- diag(XtX)
         if(compute_ELBO || !standardize)
           Vinv <- chol2inv(comps$V_chol)
         if(compute_ELBO)
@@ -467,6 +466,8 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
       ELBO <- ups$ELBO
     if(update_V)
       var_part_ERSS <- ups$var_part_ERSS
+    if(compute_ELBO || update_V)
+      RbartRbar <- ups$RbartRbar
 
     ##End timing
     time2 <- proc.time()
