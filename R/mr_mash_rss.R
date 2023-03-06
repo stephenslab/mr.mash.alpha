@@ -451,10 +451,6 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
     
     # E-STEP
     # ------
-    mr_mash_update_general_rss <- function(n, XtX, XtY, mu1, V, Vinv, ldetV, w0, S0,
-                                           precomp_quants, compute_ELBO, standardize, 
-                                           update_V, version, update_order, eps, 
-                                           nthreads)
     ###Update variational parameters
     ups <- mr_mash_update_general_rss(n=n, XtX=XtX, XtY=XtY, mu1_t=mu1_t, mu=mu, V=V,
                                   Vinv=Vinv, ldetV=ldetV, w0=w0, S0=S0, 
