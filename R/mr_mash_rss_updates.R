@@ -122,7 +122,7 @@ mr_mash_update_general_rss <- function(n, XtX, XtY, mu1_t, V, Vinv, ldetV, w0, S
   XtXmu1 <- XtX%*%mu1_t
   
   ##Update variational parameters, expected residuals, and ELBO components
-  updates <- inner_loop_rss_general(n=n, XtXmu1=XtXmu1, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
+  updates <- inner_loop_general_rss(n=n, XtXmu1=XtXmu1, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
                                 precomp_quants=precomp_quants, standardize=standardize,
                                 compute_ELBO=compute_ELBO, update_V=update_V, version=version,
                                 update_order=update_order, eps=eps, nthreads=nthreads)   
