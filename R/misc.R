@@ -94,9 +94,8 @@ makePD <- function(S0, e){
 }
 
 ###Precompute quantities in any case
-precompute_quants <- function(X, V, S0, standardize, version){
+precompute_quants <- function(n, V, S0, standardize, version){
   if(standardize){
-    n <- nrow(X)
     xtx <- n-1
     
     ###Quantities that don't depend on S0
