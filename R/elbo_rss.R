@@ -1,6 +1,6 @@
 ###Compute ELBO from intermediate components
-compute_ELBO_rss_fun <- function(n, YtY, XtY, XtX, mu1_t, Vinv, ldetV, var_part_tr_wERSS, neg_KL){
-  r <- ncol(YtY)
+compute_ELBO_rss_fun <- function(n, RbartRbar, Vinv, ldetV, var_part_tr_wERSS, neg_KL){
+  r <- ncol(RbartRbar)
   
   tr_wERSS <- sum(Vinv*RbartRbar) + var_part_tr_wERSS
 
