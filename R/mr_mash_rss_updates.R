@@ -3,7 +3,7 @@ inner_loop_general_rss_R <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, ###no
                                precomp_quants, standardize, compute_ELBO, update_V,
                                update_order, eps){
   ###Create variables to store quantities
-  r <- ncol(XtXmu1)
+  r <- ncol(mu1)
   p <- nrow(mu1)
   K <- length(S0)
   S1    <- array(0, c(r, r, p))
@@ -22,14 +22,14 @@ inner_loop_general_rss_R <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, ###no
     }
     
     #Remove j-th effect from expected residuals 
-    xtRbar_j <- matrix(XtY[j, ] - XtXmu1[j, ] + xtx*mu1[j, ], nrow=1)
+    xtRbar_j <- XtY[j, ] - XtXmu1[j, ] + xtx*mu1[j, ]
     
     #Run Bayesian SLR
     if(standardize){
-      bfit <- bayes_mvr_mix_standardized_X(n, xtRbar_j, w0, S0, precomp_quants$S, precomp_quants$S1, 
+      bfit <- bayes_mvr_mix_standardized_X_rss(n, xtRbar_j, w0, S0, precomp_quants$S, precomp_quants$S1, 
                                      precomp_quants$SplusS0_chol, precomp_quants$S_chol, eps)      
     } else {
-      bfit <- bayes_mvr_mix_centered_X(xtRbar_j, V, w0, S0, xtx, Vinv, 
+      bfit <- bayes_mvr_mix_centered_X_rss(xtRbar_j, V, w0, S0, xtx, Vinv, 
                                           precomp_quants$V_chol, precomp_quants$d, 
                                           precomp_quants$QtimesV_chol, eps)
     }
