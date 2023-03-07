@@ -98,7 +98,7 @@ inner_loop_general_rss <- function(n, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quan
                                standardize, compute_ELBO, update_V, version,
                                update_order, eps, nthreads){
   if(version=="R"){
-    out <- inner_loop_general_R(n, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants, 
+    out <- inner_loop_general_rss_R(n, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants, 
                                 standardize, compute_ELBO, update_V, update_order, eps)
   } # else if(version=="Rcpp"){
   #   update_order <- as.integer(update_order-1)
