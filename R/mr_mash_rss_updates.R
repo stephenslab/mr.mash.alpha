@@ -41,7 +41,7 @@ inner_loop_general_rss_R <- function(n, XtXmu1, mu1, V, Vinv, w0, S0, ###note: V
     
     #Compute ELBO params
     if(compute_ELBO){
-      ELBO_parts <- compute_ELBO_terms(var_part_tr_wERSS, neg_KL, X[, j], Rbar_j, bfit, xtx, Vinv)
+      ELBO_parts <- compute_ELBO_rss_terms(var_part_tr_wERSS, neg_KL, xtRbar_j, bfit, xtx, Vinv)
       var_part_tr_wERSS <- ELBO_parts$var_part_tr_wERSS
       neg_KL <- ELBO_parts$neg_KL
     }
@@ -54,13 +54,13 @@ inner_loop_general_rss_R <- function(n, XtXmu1, mu1, V, Vinv, w0, S0, ###note: V
   
   ###Return output
   if(compute_ELBO && update_V){
-    return(list(Rbar=Rbar, mu1=mu1, S1=S1, w1=w1, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL, var_part_ERSS=var_part_ERSS))
+    return(list(mu1=mu1, S1=S1, w1=w1, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL, var_part_ERSS=var_part_ERSS))
   } else if(compute_ELBO && !update_V){
-    return(list(Rbar=Rbar, mu1=mu1, S1=S1, w1=w1, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL))
+    return(list(mu1=mu1, S1=S1, w1=w1, var_part_tr_wERSS=var_part_tr_wERSS, neg_KL=neg_KL))
   } else if(!compute_ELBO && update_V) {
-    return(list(Rbar=Rbar, mu1=mu1, S1=S1, w1=w1, var_part_ERSS=var_part_ERSS))
+    return(list(mu1=mu1, S1=S1, w1=w1, var_part_ERSS=var_part_ERSS))
   } else { 
-    return(list(Rbar=Rbar, mu1=mu1, S1=S1, w1=w1))
+    return(list(mu1=mu1, S1=S1, w1=w1))
   }
 }
 
