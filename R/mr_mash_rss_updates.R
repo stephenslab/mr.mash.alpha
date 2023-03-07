@@ -22,7 +22,7 @@ inner_loop_general_rss_R <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, ###no
     }
     
     #Remove j-th effect from expected residuals 
-    xtRbar_j <- XtY[j, ] - XtXmu1[j, ] + xtx*mu1[j,]
+    xtRbar_j <- matrix(XtY[j, ] - XtXmu1[j, ] + xtx*mu1[j, ], nrow=1)
     
     #Run Bayesian SLR
     if(standardize){
