@@ -111,7 +111,7 @@ inner_loop_general_rss <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, precomp
 
 
 ###Perform one iteration of the outer loop with or without scaling X
-mr_mash_update_general_rss <- function(n, XtX, XtY, mu1_t, V, Vinv, ldetV, w0, S0,
+mr_mash_update_general_rss <- function(n, XtX, XtY, YtY, mu1_t, V, Vinv, ldetV, w0, S0,
                                       precomp_quants, compute_ELBO, standardize, 
                                       update_V, version, update_order, eps, 
                                       nthreads){
