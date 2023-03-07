@@ -332,6 +332,8 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
     XtY <- Z*sqrt(n-1)
     covY <- cov2cor(V)
   }
+  
+  YtY <- covY*(n-1)
 
   ###Precompute quantities
   comps <- precompute_quants(n, V, S0, standardize, version)
