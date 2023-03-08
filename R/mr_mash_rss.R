@@ -267,6 +267,37 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
     Z <- Bhat/Shat
   }
   
+  ##Compute pve-adjusted Z scores, if n is provided
+  if(!missing(n)) {
+    adj <- (n-1)/(Z^2 + n - 2)
+    Z   <- sqrt(adj) * Z
+  }
+  
+  ##If covariance of Y and standard errors are provided,
+  ##the effects are on the *original scale*.
+  if(!missing(covY) & !missing(Shat)){
+    XtXdiag <- rowMeans(matrix(diag(covY), nrow=p, ncol=r, byrow=TRUE) * adj/(Shat^2))
+    XtX <- t(R * sqrt(XtXdiag)) * sqrt(XtXdiag)
+    XtX <- (XtX + t(XtX))/2
+    XtY <- Z * sqrt(adj) * matrix(diag(covY), nrow=p, ncol=r, byrow=TRUE) / Shat
+    
+  } else {
+    ##The effects are on the *standardized* X, y scale.
+    XtX <- R*(n-1)
+    XtY <- Z*sqrt(n-1)
+    covY <- cov2cor(V)
+  }
+  
+  YtY <- covY*(n-1)
+  
+  if(standardize){
+    dXtX <- diag(XtX)
+    sx <- sqrt(dXtX/(n-1))
+    sx[sx == 0] <- 1
+    XtX <- t((1/sx) * XtX) / sx
+    XtY < XtY / sx
+  }
+  
   ###Store dimensions names of the inputs
   Z_colnames <- colnames(Z)
   Z_rownames <- rownames(Z)
@@ -312,29 +343,6 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   ###Set eps
   eps <- .Machine$double.eps
   
-  ##Compute pve-adjusted Z scores, if n is provided
-  if(!missing(n)) {
-    adj <- (n-1)/(Z^2 + n - 2)
-    Z   <- sqrt(adj) * Z
-  }
-  
-  ##If covariance of Y and standard errors are provided,
-  ##the effects are on the *original scale*.
-  if(!missing(covY) & !missing(Shat)){
-    XtXdiag <- rowMeans(matrix(diag(covY), nrow=p, ncol=r, byrow=TRUE) * adj/(Shat^2))
-    XtX <- t(R * sqrt(XtXdiag)) * sqrt(XtXdiag)
-    XtX <- (XtX + t(XtX))/2
-    XtY <- Z * sqrt(adj) * matrix(diag(covY), nrow=p, ncol=r, byrow=TRUE) / Shat
-    
-  } else {
-    ##The effects are on the *standardized* X, y scale.
-    XtX <- R*(n-1)
-    XtY <- Z*sqrt(n-1)
-    covY <- cov2cor(V)
-  }
-  
-  YtY <- covY*(n-1)
-
   ###Precompute quantities
   comps <- precompute_quants(n, V, S0, standardize, version)
   if(!standardize){
