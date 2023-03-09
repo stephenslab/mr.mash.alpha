@@ -295,7 +295,7 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
     sx <- sqrt(dXtX/(n-1))
     sx[sx == 0] <- 1
     XtX <- t((1/sx) * XtX) / sx
-    XtY < XtY / sx
+    XtY <-  XtY / sx
   }
   
   ###Store dimensions names of the inputs
