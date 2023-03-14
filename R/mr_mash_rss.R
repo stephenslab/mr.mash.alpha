@@ -177,7 +177,7 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
                         mu1_init, tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
                         max_iter=5000, update_w0=TRUE, update_w0_method="EM", 
                         w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
-                        update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("R", "Rcpp"), e=1e-8,
+                        update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
                         ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
                         nthreads=as.integer(NA)) {
   

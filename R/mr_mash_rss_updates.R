@@ -71,11 +71,11 @@ inner_loop_general_rss_R <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, ###no
 #' @importFrom RcppParallel RcppParallelLibs
 #' @useDynLib mr.mash.alpha
 #'
-inner_loop_general_rss_Rcpp <- function(n, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants,
+inner_loop_general_rss_Rcpp <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants,
                                         standardize, compute_ELBO, update_V, update_order,
                                         eps, nthreads){
 
-  out <- inner_loop_general_rss_rcpp(n, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants,
+  out <- inner_loop_general_rss_rcpp(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants,
                                      standardize, compute_ELBO, update_V, update_order,
                                      eps, nthreads)
 
