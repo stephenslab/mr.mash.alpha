@@ -15,7 +15,7 @@ mr.mash.rss(
   S0,
   w0 = rep(1/(length(S0)), length(S0)),
   V = NULL,
-  mu1_init = matrix(0, nrow = nrow(Z), ncol = ncol(Z)),
+  mu1_init,
   tol = 1e-04,
   convergence_criterion = c("mu1", "ELBO"),
   max_iter = 5000,
@@ -27,7 +27,7 @@ mr.mash.rss(
   verbose = TRUE,
   update_V = FALSE,
   update_V_method = c("full", "diagonal"),
-  version = c("R", "Rcpp"),
+  version = c("Rcpp", "R"),
   e = 1e-08,
   ca_update_order = c("consecutive", "decreasing_logBF", "increasing_logBF"),
   nthreads = as.integer(NA)
