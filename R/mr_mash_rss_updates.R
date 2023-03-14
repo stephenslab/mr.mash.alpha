@@ -66,32 +66,32 @@ inner_loop_general_rss_R <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, ###no
 
 ### Wrapper for the Rcpp function to update variational parameters,
 ### expected residuals, and ELBO components with or without scaling X.
-#
-# #' @importFrom Rcpp evalCpp
-# #' @importFrom RcppParallel RcppParallelLibs
-# #' @useDynLib mr.mash.alpha
-# #'
-# inner_loop_general_Rcpp <- function(n, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants,
-#                                     standardize, compute_ELBO, update_V, update_order,
-#                                     eps, nthreads){
-# 
-#   out <- inner_loop_general_rcpp(n, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants,
-#                                  standardize, compute_ELBO, update_V, update_order,
-#                                  eps, nthreads)
-# 
-#   ###Return output
-#   if(compute_ELBO && update_V){
-#     return(list(mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS,
-#                 neg_KL=out$neg_KL, var_part_ERSS=out$var_part_ERSS))
-#   } else if(compute_ELBO && !update_V){
-#     return(list(mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS,
-#                 neg_KL=out$neg_KL))
-#   } else if(!compute_ELBO && update_V) {
-#     return(list(mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_ERSS=out$var_part_ERSS))
-#   } else {
-#     return(list(mu1=out$mu1, S1=out$S1, w1=out$w1))
-#   }
-# }
+
+#' @importFrom Rcpp evalCpp
+#' @importFrom RcppParallel RcppParallelLibs
+#' @useDynLib mr.mash.alpha
+#'
+inner_loop_general_rss_Rcpp <- function(n, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants,
+                                        standardize, compute_ELBO, update_V, update_order,
+                                        eps, nthreads){
+
+  out <- inner_loop_general_rss_rcpp(n, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants,
+                                     standardize, compute_ELBO, update_V, update_order,
+                                     eps, nthreads)
+
+  ###Return output
+  if(compute_ELBO && update_V){
+    return(list(mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS,
+                neg_KL=out$neg_KL, var_part_ERSS=out$var_part_ERSS))
+  } else if(compute_ELBO && !update_V){
+    return(list(mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_tr_wERSS=out$var_part_tr_wERSS,
+                neg_KL=out$neg_KL))
+  } else if(!compute_ELBO && update_V) {
+    return(list(mu1=out$mu1, S1=out$S1, w1=out$w1, var_part_ERSS=out$var_part_ERSS))
+  } else {
+    return(list(mu1=out$mu1, S1=out$S1, w1=out$w1))
+  }
+}
 
 ###Wrapper of the inner loop with R or Rcpp
 inner_loop_general_rss <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants, 
@@ -100,12 +100,12 @@ inner_loop_general_rss <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, precomp
   if(version=="R"){
     out <- inner_loop_general_rss_R(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants, 
                                 standardize, compute_ELBO, update_V, update_order, eps)
-  } # else if(version=="Rcpp"){
-  #   update_order <- as.integer(update_order-1)
-  #   out <- inner_loop_general_Rcpp(n, XtXmu1, mu1, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, 
-  #                                  standardize, compute_ELBO, update_V, update_order, eps, nthreads)
-  # }
-  # 
+  } else if(version=="Rcpp"){
+    update_order <- as.integer(update_order-1)
+    out <- inner_loop_general_rss_Rcpp(n, XtY, XtXmu1, mu1, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, 
+                                       standardize, compute_ELBO, update_V, update_order, eps, nthreads)
+  }
+  
   return(out)
 }
 
