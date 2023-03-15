@@ -15,7 +15,9 @@ compute_ELBO_rss_terms <- function(var_part_tr_wERSS, neg_KL, xtRbar_j, bfit, xt
 
   var_part_tr_wERSS <- var_part_tr_wERSS + (sum(Vinv*bfit$S1)*xtx)
   
-  Cm <- -mu1_mat%*%xtRbar_j - tcrossprod(xtRbar_j, mu1_mat) + tcrossprod(mu1_mat)*xtx + bfit$S1*xtx
+  mu1xtRbar_j <- mu1_mat%*%xtRbar_j
+  
+  Cm <- - mu1xtRbar_j - t(mu1xtRbar_j) + tcrossprod(mu1_mat)*xtx + bfit$S1*xtx
   
   neg_KL <- neg_KL + (bfit$logbf + 0.5*(sum(Vinv*Cm)))
   
