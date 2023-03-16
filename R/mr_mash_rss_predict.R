@@ -17,7 +17,7 @@ predict.mr.mash.rss <- function(object, newx, ...){
   if (any(is.na(newx)))
     stop("X must not contain missing values.")
   
-  if(!is.na(object$intercept))
+  if(any(!is.na(object$intercept)))
     return(with(object,addtocols(newx %*% mu1,intercept)))
   else
     return(with(object,newx %*% mu1))
@@ -36,7 +36,7 @@ predict.mr.mash.rss <- function(object, newx, ...){
 #' @export coef.mr.mash.rss
 #' 
 coef.mr.mash.rss <- function(object, ...){
-  if(!is.na(object$intercept)){
+  if(any(!is.na(object$intercept))){
     coeffs <- rbind(object$intercept, object$mu1)
     rownames(coeffs)[1] <- "(Intercept)"
   } else {
