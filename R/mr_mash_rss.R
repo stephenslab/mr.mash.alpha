@@ -74,8 +74,15 @@
 #'   prior matrices to improve numerical stability of the updates.
 #'   
 #' @param ca_update_order The order with which coordinates are
-#'   updated.  So far, "consecutive", "decreasing_logBF",
-#'   "increasing_logBF" are supported.
+#'   updated.  So far, "consecutive" is supported.
+#'   
+#' @param X_colmeans a p-vector of variable means.
+#' 
+#' @param Y_colmeans a r-vector of response means.
+#' 
+#' @param check_R If \code{TRUE}, R is checked to be positive semidefinite.
+#' 
+#' @param R_tol tolerance to declare positive semi-definiteness of R.
 #'   
 #' @param nthreads Number of RcppParallel threads to use for the
 #'   updates. When \code{nthreads} is \code{NA}, the default number of
@@ -83,7 +90,7 @@
 #'   \code{\link[RcppParallel]{defaultNumThreads}}. This setting is
 #'   ignored when \code{version = "R"}.
 #' 
-#' @return A mr.mash fit, stored as a list with some or all of the
+#' @return A mr.mash.rss fit, stored as a list with some or all of the
 #' following elements:
 #' 
 #' \item{mu1}{p x r matrix of posterior means for the regression
@@ -104,13 +111,7 @@
 #'   on the regression coefficients}.
 #' 
 #' \item{intercept}{r-vector containing posterior mean estimate of the
-#'   intercept.}
-#' 
-#' \item{fitted}{n x r matrix of fitted values.}
-#' 
-#' \item{G}{r x r covariance matrix of fitted values.}
-#' 
-#' \item{pve}{r-vector of proportion of variance explained by the covariates.}
+#'   intercept, if \code{X_colmeans} and \code{Y_colmeans} are provided.}
 #' 
 #' \item{ELBO}{Evidence Lower Bound (ELBO) at last iteration.}
 #' 
@@ -154,12 +155,11 @@
 #' S0 <- expand_covs(S0, grid, zeromat=TRUE)
 #'
 #' ###Fit mr.mash
-#' fit <- mr.mash.rss(Xtrain, Ytrain, S0, update_V=TRUE)
-#'
-#' # Compare the "fitted" values of Y against the true Y in the training set.
-#' plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",
-#'      ylab = "fitted")
-#' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
+#' covY <- cov(Ytrain)
+#' corX <- cor(Xtrain)
+#' n_train <- nrow(Ytrain)
+#' fit <- mr.mash.rss(Bhat=univ_sumstats$Bhat, Shat=univ_sumstats$Shat, S0=S0, 
+#'                    covY=covY, R=corX, n=n_train, V=covY, update_V=TRUE)
 #'
 #' # Predict the multivariate outcomes in the test set using the fitted model.
 #' Ytest_est <- predict(fit,Xtest)
@@ -168,17 +168,19 @@
 #' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 #'
 #' @importFrom stats cov
+#' @importFrom Rfast is.symmetric
 #' @importFrom RcppParallel defaultNumThreads
 #' @importFrom RcppParallel setThreadOptions
 #'
 #' @export
 #' 
 mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
-                        mu1_init, tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
+                        mu1_init=NULL, tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
                         max_iter=5000, update_w0=TRUE, update_w0_method="EM", 
                         w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                         update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
                         ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
+                        X_colmeans=NULL, Y_colmeans=NULL, check_R=TRUE, R_tol=1e-08,
                         nthreads=as.integer(NA)) {
   
   if(verbose){
@@ -219,16 +221,35 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   }
   
   ###Check that the inputs are in the correct format
-  # if(!is.matrix(Y))
-  #   stop("Y must be a matrix.")
-  # if(!is.matrix(X))
-  #   stop("X must be a matrix.")
-  # if(any(is.na(X)))
-  #   stop("X must not contain missing values.")
+  if (sum(c(missing(Z), missing(Bhat) || missing(Shat))) != 1)
+    stop("Please provide either Z or (Bhat, Shat), but not both")
+  
+  if(missing(Z)){
+    if(!is.matrix(Bhat))
+      stop("Bhat must be a matrix.")
+    if(!is.matrix(Shat))
+      stop("Shat must be a matrix.")
+    if(any(is.na(Bhat)) || any(is.na(Shat)))
+      stop("Bhat, Shat must not contain missing values.")
+    if(any(Shat <= 0))
+      stop("Shat cannot have zero or negative elements.")
+  } else {
+    if(!is.matrix(Z))
+      stop("Z must be a matrix.")
+    if(any(is.na(Z)))
+      stop("Z must not contain missing values.")
+  }
+  
   if(!is.null(V)){
-    if(!is.matrix(V) || !isSymmetric(V))
+    if(!is.matrix(V) || !is.symmetric(V))
       stop("V must be a symmetric matrix.")
   }
+  if(!missing(covY)){
+    if(!is.matrix(covY) || !is.symmetric(covY))
+      stop("covY must be a symmetric matrix.")
+  }
+  if(!is.matrix(R) || !is.symmetric(R))
+    stop("R must be a symmetric matrix.")
   if(!is.list(S0))
     stop("S0 must be a list.")
   if(!is.vector(w0))
@@ -246,43 +267,38 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   if(ca_update_order!="consecutive")
     stop("ca_update_order=\"consecutive\" is the only option with summary data for now.")
 
-  ###Obtain dimensions needed from inputs
-  if(!missing(Bhat)){
-    p <- nrow(Bhat)
-    r <- ncol(Bhat)
-  } else if(!missing(Z)){
-    p <- nrow(Z)
-    r <- ncol(Z)
-  } else{
-    stop("Z or Bhat should be provided.")
-  }  
-  
-  K <- length(S0)
-
   # PRE-PROCESSING STEPS
   # --------------------
   
-  ##Compute Z scores
+  ###Compute Z scores
   if(missing(Z)){
     Z <- Bhat/Shat
   }
   
-  ##Compute pve-adjusted Z scores, if n is provided
+  Z[is.na(Z)] <- 0
+  
+  ###Compute pve-adjusted Z scores, if n is provided
   if(!missing(n)) {
     adj <- (n-1)/(Z^2 + n - 2)
     Z   <- sqrt(adj) * Z
   }
   
-  ##If covariance of Y and standard errors are provided,
-  ##the effects are on the *original scale*.
-  if(!missing(covY) & !missing(Shat)){
+  ###Obtain dimensions and store dimensions names of the inputs
+  p <- nrow(Z)
+  r <- ncol(Z)
+  K <- length(S0)
+  Z_colnames <- colnames(Z)
+  Z_rownames <- rownames(Z)
+  
+  ###If covariance of Y and standard errors are provided,
+  ###the effects are on the *original scale*.
+  if(!missing(Shat) & !missing(covY)){
     XtXdiag <- rowMeans(matrix(diag(covY), nrow=p, ncol=r, byrow=TRUE) * adj/(Shat^2))
     XtX <- t(R * sqrt(XtXdiag)) * sqrt(XtXdiag)
     XtX <- (XtX + t(XtX))/2
     XtY <- Z * sqrt(adj) * matrix(diag(covY), nrow=p, ncol=r, byrow=TRUE) / Shat
-    
   } else {
-    ##The effects are on the *standardized* X, y scale.
+    ###The effects are on the *standardized* X, y scale.
     XtX <- R*(n-1)
     XtY <- Z*sqrt(n-1)
     covY <- cov2cor(V)
@@ -290,6 +306,14 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   
   YtY <- covY*(n-1)
   
+  ###Check whether XtX is positive semidefinite
+  if(check_R){
+    semi_pd <- check_semi_pd(XtX, R_tol)
+    if (!semi_pd$status)
+      stop("XtX is not a positive semidefinite matrix")
+  }
+  
+  ###Adjust XtX and XtY if X is standardized 
   if(standardize){
     dXtX <- diag(XtX)
     sx <- sqrt(dXtX/(n-1))
@@ -298,16 +322,12 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
     XtY <-  XtY / sx
   }
   
-  ###Store dimensions names of the inputs
-  Z_colnames <- colnames(Z)
-  Z_rownames <- rownames(Z)
-  
   ###Add number to diagonal elements of the prior matrices (improves
   ###numerical stability)
   S0 <- lapply(S0, makePD, e=e)
   
-  ##Initialize regression coefficients to 0 if not provided
-  if(missing(mu1_init)){
+  ###Initialize regression coefficients to 0 if not provided
+  if(is.null(mu1_init)){
     mu1_init <- matrix(0, nrow=p, ncol=r)
   }
   
@@ -521,14 +541,6 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
 
   # POST-PROCESSING STEPS
   # --------------------
-  ###Compute the "fitted" values.
-#  fitted_vals <- addtocols(X %*% mu1_t, muy)
-  
-  ###Compute covariance of fitted values and PVE
-#  cov_fitted <- cov(fitted_vals)
-#  var_fitted <- diag(cov_fitted)
-#  pve <- var_fitted/(var_fitted+diag(V))
-
   if(standardize){
     ###Rescale posterior means and covariance of coefficients. In the
     ###context of predicting Y, this rescaling is equivalent to
@@ -543,7 +555,10 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   ###with respect to the *rescaled* coefficients to recover the
   ###correct fitted values. This is why this is done after rescaling
   ###the coefficients above.
-#  intercept <- drop(muy - mux %*% mu1_t)
+  if(!is.null(X_colmeans) & !is.null(Y_colmeans)){
+    intercept <- drop(Y_colmeans - X_colmeans %*% mu1_t)
+    names(intercept) <- Z_colnames
+  }
   
   ###Assign names to outputs dimensions
   S0_names <- names(S0)
@@ -558,13 +573,7 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   names(w0) <- S0_names
   rownames(V) <- Z_colnames
   colnames(V) <- Z_colnames
-  # rownames(fitted_vals) <- Y_rownames
-  # colnames(fitted_vals) <- Y_colnames
-  # rownames(cov_fitted) <- Y_colnames
-  # colnames(cov_fitted) <- Y_colnames
-  # names(pve) <- Y_colnames
-  # names(intercept) <- Y_colnames
-  
+
   ###Remove unused rows of progress
   progress <- progress[rowSums(is.na(progress)) != ncol(progress), ]
   
@@ -577,18 +586,19 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   ###the Evidence Lower Bound (ELBO; if computed) and imputed responses (Y; if 
   ###missing values were present).
   out <- list(mu1=mu1_t, S1=S1_t, w1=w1_t, V=V, w0=w0, S0=simplify2array_custom(S0), 
-              progress=progress, #intercept=intercept, fitted=fitted_vals, G=cov_fitted, pve=pve,
-              converged=converged)
+              intercept=NA, progress=progress, converged=converged)
   if(compute_ELBO)
     ###Append ELBO to the output
     out$ELBO <- ELBO
+  if(!is.null(X_colmeans) & !is.null(Y_colmeans))
+    out$intercept <- intercept
 
-  class(out) <- c("mr.mash", "list")
+  class(out) <- c("mr.mash.rss", "list")
   
   if(verbose){
     cat("Done!\n")
     toc <- Sys.time()
-    cat("mr.mash successfully executed in", difftime(toc, tic, units="mins"),
+    cat("mr.mash.rss successfully executed in", difftime(toc, tic, units="mins"),
         "minutes!\n")
   }
   
