@@ -111,7 +111,8 @@
 #'   on the regression coefficients}.
 #' 
 #' \item{intercept}{r-vector containing posterior mean estimate of the
-#'   intercept, if \code{X_colmeans} and \code{Y_colmeans} are provided.}
+#'   intercept, if \code{X_colmeans} and \code{Y_colmeans} are provided.
+#'   Otherwise, \code{NA} is output.}
 #' 
 #' \item{ELBO}{Evidence Lower Bound (ELBO) at last iteration.}
 #' 
