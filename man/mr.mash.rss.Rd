@@ -15,7 +15,7 @@ mr.mash.rss(
   S0,
   w0 = rep(1/(length(S0)), length(S0)),
   V = NULL,
-  mu1_init,
+  mu1_init = NULL,
   tol = 1e-04,
   convergence_criterion = c("mu1", "ELBO"),
   max_iter = 5000,
@@ -30,6 +30,10 @@ mr.mash.rss(
   version = c("Rcpp", "R"),
   e = 1e-08,
   ca_update_order = c("consecutive", "decreasing_logBF", "increasing_logBF"),
+  X_colmeans = NULL,
+  Y_colmeans = NULL,
+  check_R = TRUE,
+  R_tol = 1e-08,
   nthreads = as.integer(NA)
 )
 }
@@ -104,8 +108,15 @@ coordinate ascent updates.}
 prior matrices to improve numerical stability of the updates.}
 
 \item{ca_update_order}{The order with which coordinates are
-updated.  So far, "consecutive", "decreasing_logBF",
-"increasing_logBF" are supported.}
+updated.  So far, "consecutive" is supported.}
+
+\item{X_colmeans}{a p-vector of variable means.}
+
+\item{Y_colmeans}{a r-vector of response means.}
+
+\item{check_R}{If \code{TRUE}, R is checked to be positive semidefinite.}
+
+\item{R_tol}{tolerance to declare positive semi-definiteness of R.}
 
 \item{nthreads}{Number of RcppParallel threads to use for the
 updates. When \code{nthreads} is \code{NA}, the default number of
@@ -114,7 +125,7 @@ threads is used; see
 ignored when \code{version = "R"}.}
 }
 \value{
-A mr.mash fit, stored as a list with some or all of the
+A mr.mash.rss fit, stored as a list with some or all of the
 following elements:
 
 \item{mu1}{p x r matrix of posterior means for the regression
@@ -135,13 +146,8 @@ following elements:
   on the regression coefficients}.
 
 \item{intercept}{r-vector containing posterior mean estimate of the
-  intercept.}
-
-\item{fitted}{n x r matrix of fitted values.}
-
-\item{G}{r x r covariance matrix of fitted values.}
-
-\item{pve}{r-vector of proportion of variance explained by the covariates.}
+  intercept, if \code{X_colmeans} and \code{Y_colmeans} are provided.
+  Otherwise, \code{NA} is output.}
 
 \item{ELBO}{Evidence Lower Bound (ELBO) at last iteration.}
 
@@ -189,12 +195,12 @@ S0 <- compute_canonical_covs(ncol(Ytrain), singletons=TRUE,
 S0 <- expand_covs(S0, grid, zeromat=TRUE)
 
 ###Fit mr.mash
-fit <- mr.mash.rss(Xtrain, Ytrain, S0, update_V=TRUE)
-
-# Compare the "fitted" values of Y against the true Y in the training set.
-plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",
-     ylab = "fitted")
-abline(a = 0,b = 1,col = "magenta",lty = "dotted")
+covY <- cov(Ytrain)
+corX <- cor(Xtrain)
+n_train <- nrow(Ytrain)
+fit <- mr.mash.rss(Bhat=univ_sumstats$Bhat, Shat=univ_sumstats$Shat, S0=S0, 
+                   covY=covY, R=corX, n=n_train, V=covY, update_V=TRUE,
+                   X_colmeans=colMeans(Xtrain), Y_colmeans=colMeans(Ytrain))
 
 # Predict the multivariate outcomes in the test set using the fitted model.
 Ytest_est <- predict(fit,Xtest)
