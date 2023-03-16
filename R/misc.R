@@ -338,3 +338,13 @@ extract_missing_Y_pattern <- function(Y){
   return(list(miss=miss, non_miss=non_miss))
 }
 
+###Check whether a matrix is PSD
+check_semi_pd <- function (A, tol) {
+  attr(A,"eigen") <- eigen(A,symmetric = TRUE)
+  v <- attr(A,"eigen")$values
+  v[abs(v) < tol] = 0
+  return(list(matrix      = A,
+              status      = !any(v < 0),
+              eigenvalues = v))
+}
+
