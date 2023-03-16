@@ -11,7 +11,7 @@
 #' @export
 #' @export predict.mr.mash.rss
 #' 
-predict.mr.mash <- function(object, newx, ...){
+predict.mr.mash.rss <- function(object, newx, ...){
   if(!is.matrix(newx))
     stop("X must be a matrix.")
   if (any(is.na(newx)))
@@ -35,7 +35,7 @@ predict.mr.mash <- function(object, newx, ...){
 #' @export
 #' @export coef.mr.mash.rss
 #' 
-coef.mr.mash <- function(object, ...){
+coef.mr.mash.rss <- function(object, ...){
   if(!is.na(object$intercept)){
     coeffs <- rbind(object$intercept, object$mu1)
     rownames(coeffs)[1] <- "(Intercept)"
