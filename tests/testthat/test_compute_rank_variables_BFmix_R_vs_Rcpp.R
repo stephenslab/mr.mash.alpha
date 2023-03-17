@@ -38,18 +38,18 @@ test_that("R and Rcpp version of compute_rank_variables_BFmix return the same re
   eps <- .Machine$double.eps
   
   ###Compute logbf with standardize=TRUE
-  comps_r <- precompute_quants(X, V, S0mix, standardize=TRUE, version="R")
+  comps_r <- precompute_quants(n, V, S0mix, standardize=TRUE, version="R")
   ranks_r <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0mix, comps_r, standardize=TRUE, version="R", decreasing=TRUE, eps)
   
-  comps_rcpp <- precompute_quants(X, V, S0mix, standardize=TRUE, version="Rcpp")
+  comps_rcpp <- precompute_quants(n, V, S0mix, standardize=TRUE, version="Rcpp")
   ranks_rcpp <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0mix, comps_rcpp, standardize=TRUE, version="Rcpp", decreasing=TRUE, eps, nthreads=1)
   
   ###Compute logbf with standardize=FALSE
-  comps1_r <- precompute_quants(X, V, S0mix, standardize=FALSE, version="R")
+  comps1_r <- precompute_quants(n, V, S0mix, standardize=FALSE, version="R")
   comps1_r$xtx <- colSums(X^2)
   ranks1_r <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0mix, comps1_r, standardize=FALSE, version="R", decreasing=TRUE, eps)
   
-  comps1_rcpp <- precompute_quants(X, V, S0mix, standardize=FALSE, version="Rcpp")
+  comps1_rcpp <- precompute_quants(n, V, S0mix, standardize=FALSE, version="Rcpp")
   comps1_rcpp$xtx <- colSums(X^2)
   ranks1_rcpp <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0mix, comps1_rcpp, standardize=FALSE, version="Rcpp", decreasing=TRUE, eps, nthreads=1)
   
