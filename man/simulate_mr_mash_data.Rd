@@ -53,8 +53,8 @@ proportions associated to each mixture component.}
 \item{V_cor}{scalar indicating the positive correlation [0, 1] between residuals}
 
 \item{seed}{seed for random number generation used by \code{Rfast::rmvnorm}.
-However, some computations will also need a general \code{set.seed()} to be
-reproducible.}
+and \code{Rfast::Rnorm}. However, some computations will also need a general 
+\code{set.seed()} to be reproducible.}
 }
 \value{
 A list with some or all of the
