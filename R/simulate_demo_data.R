@@ -58,7 +58,7 @@
 #' \item{causal_vars_to_mixture_comps}{p_causal-vector of indexes indicating from which
 #'   mixture components each causal effect comes.}
 #'   
-#' @importFrom mvtnorm rmvnorm
+#' @importFrom Rfast rmvnorm
 #' @importFrom MBSP matrix_normal
 #' @importFrom matrixStats colVars
 #' 
@@ -119,10 +119,14 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
   B[causal_variables, ] <- B_causal
   
   ##Simulate X from N_r(0, Gamma) where Gamma is a given covariance matrix across variables
-  Gamma_offdiag <- X_scale*X_cor
-  Gamma <- matrix(Gamma_offdiag, nrow=p, ncol=p)
-  diag(Gamma) <- X_scale
-  X <- rmvnorm(n=n, mean=rep(0, p), sigma=Gamma)
+  if(X_cor != 0){
+    Gamma_offdiag <- X_scale*X_cor
+    Gamma <- matrix(Gamma_offdiag, nrow=p, ncol=p)
+    diag(Gamma) <- X_scale
+    X <- rmvnorm(n=n, mean=rep(0, p), sigma=Gamma)
+  } else {
+    X <- replicate(p, rnorm(n=n, mean=0, sd=sqrt(X_scale)))
+  }
   X <- scale_fast2(X, scale=FALSE)$M
   
   ##Compute G and its variance
