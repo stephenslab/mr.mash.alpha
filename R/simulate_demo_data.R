@@ -36,6 +36,9 @@
 #' @param seed seed for random number generation used by \code{Rfast::rmvnorm}.
 #'   and \code{Rfast::Rnorm}. However, some computations will also need a general 
 #'   \code{set.seed()} to be reproducible.
+#'
+#' @param e A small number to add to the diagonal elements of the
+#'   covariance matrices to make them positive definite.
 #' 
 #' @return A list with some or all of the
 #' following elements:
@@ -80,7 +83,7 @@
 #'                              
 simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), intercepts=rep(1, r),
                                   pve=0.2, B_cor=1, B_scale=1, w=1,
-                                  X_cor=0, X_scale=1, V_cor=0, seed=NULL){
+                                  X_cor=0, X_scale=1, V_cor=0, seed=NULL, e=1e-8){
   ##Check that the inputs are correct
   if(length(intercepts)!=r)
     stop("intercepts must be of length equal to r.")
@@ -107,6 +110,8 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     Sigma[[i]] <- matrix(Sigma_offdiag, nrow=r_mix_length, ncol=r_mix_length)
     diag(Sigma[[i]]) <- B_scale[i]
   }
+  Sigma <- lapply(Sigma, makePD, e=e)
+
   #Sample effects from a mixture of MVN distributions or a single MVN distribution
   B_causal <- matrix(0, nrow=p_causal, ncol=r)
   if(K>1){
@@ -130,6 +135,7 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     Gamma_offdiag <- X_scale*X_cor
     Gamma <- matrix(Gamma_offdiag, nrow=p, ncol=p)
     diag(Gamma) <- X_scale
+    Gamma <- makePD(Gamma, e)
     X <- rmvnorm(n=n, mu=rep(0, p), sigma=Gamma, seed)
   } else {
     X <- replicate(p, Rnorm(n=n, m=0, s=sqrt(X_scale), seed=seed))
