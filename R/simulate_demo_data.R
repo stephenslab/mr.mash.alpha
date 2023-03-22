@@ -65,7 +65,7 @@
 #' \item{causal_vars_to_mixture_comps}{p_causal-vector of indexes indicating from which
 #'   mixture components each causal effect comes.}
 #'   
-#' @importFrom Rfast rmvnorm Rnorm
+#' @importFrom Rfast rmvnorm
 #' @importFrom MBSP matrix_normal
 #' @importFrom matrixStats colVars
 #' 
@@ -138,7 +138,7 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     Gamma <- makePD(Gamma, e)
     X <- rmvnorm(n=n, mu=rep(0, p), sigma=Gamma, seed)
   } else {
-    X <- replicate(p, Rnorm(n=n, m=0, s=sqrt(X_scale), seed=seed))
+    X <- sapply(seed:(seed+(p-1)), sample_norm, n=n, m=0, s2=sqrt(X_scale))
   }
   X <- scale_fast2(X, scale=FALSE)$M
   
@@ -182,7 +182,12 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
 }
 
 
-
+#' @importFrom Rfast Rnorm
+sample_norm <- function(i, n, m, s2){
+  x <- Rnorm(n=n, m=m, s=sqrt(s2), seed=i)
+  
+  return(x)
+}
 
 
 
