@@ -114,12 +114,12 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     for(j in 1:p_causal){
       comp_to_use <- mixcomps[j]
       r_causal_mix <- r_causal[[comp_to_use]]
-      B_causal[j, r_causal_mix] <- rmvnorm(n=1, mean=rep(0, length(r_causal_mix)), sigma=Sigma[[comp_to_use]], seed=seed)
+      B_causal[j, r_causal_mix] <- rmvnorm(n=1, mu=rep(0, length(r_causal_mix)), sigma=Sigma[[comp_to_use]], seed=seed)
     }
   } else {
     r_causal_length <- length(r_causal[[1]])
     r_causal_index <- r_causal[[1]]
-    B_causal[, r_causal_index] <- rmvnorm(n=p_causal, mean=rep(0, r_causal_length), sigma=Sigma[[1]], seed=seed)
+    B_causal[, r_causal_index] <- rmvnorm(n=p_causal, mu=rep(0, r_causal_length), sigma=Sigma[[1]], seed=seed)
   }
   B <- matrix(0, ncol=r, nrow=p)
   causal_variables <- sample(x=(1:p), size=p_causal)
@@ -130,7 +130,7 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     Gamma_offdiag <- X_scale*X_cor
     Gamma <- matrix(Gamma_offdiag, nrow=p, ncol=p)
     diag(Gamma) <- X_scale
-    X <- rmvnorm(n=n, mean=rep(0, p), sigma=Gamma, seed)
+    X <- rmvnorm(n=n, mu=rep(0, p), sigma=Gamma, seed)
   } else {
     X <- replicate(p, Rnorm(n=n, m=0, s=sqrt(X_scale), seed=seed))
   }
