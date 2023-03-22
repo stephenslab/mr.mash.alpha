@@ -18,7 +18,8 @@ simulate_mr_mash_data(
   X_cor = 0,
   X_scale = 1,
   V_cor = 0,
-  seed = NULL
+  seed = NULL,
+  e = 1e-08
 )
 }
 \arguments{
@@ -55,6 +56,9 @@ proportions associated to each mixture component.}
 \item{seed}{seed for random number generation used by \code{Rfast::rmvnorm}.
 and \code{Rfast::Rnorm}. However, some computations will also need a general 
 \code{set.seed()} to be reproducible.}
+
+\item{e}{A small number to add to the diagonal elements of the
+covariance matrices to make them positive definite.}
 }
 \value{
 A list with some or all of the
