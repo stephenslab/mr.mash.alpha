@@ -34,8 +34,8 @@
 #' @param V_cor scalar indicating the positive correlation [0, 1] between residuals
 #'
 #' @param seed seed for random number generation used by \code{Rfast::rmvnorm}.
-#'   However, some computations will also need a general \code{set.seed()} to be
-#'   reproducible.
+#'   and \code{Rfast::Rnorm}. However, some computations will also need a general 
+#'   \code{set.seed()} to be reproducible.
 #' 
 #' @return A list with some or all of the
 #' following elements:
@@ -62,7 +62,7 @@
 #' \item{causal_vars_to_mixture_comps}{p_causal-vector of indexes indicating from which
 #'   mixture components each causal effect comes.}
 #'   
-#' @importFrom Rfast rmvnorm
+#' @importFrom Rfast rmvnorm Rnorm
 #' @importFrom MBSP matrix_normal
 #' @importFrom matrixStats colVars
 #' 
@@ -132,7 +132,7 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     diag(Gamma) <- X_scale
     X <- rmvnorm(n=n, mean=rep(0, p), sigma=Gamma, seed)
   } else {
-    X <- replicate(p, rnorm(n=n, mean=0, sd=sqrt(X_scale)))
+    X <- replicate(p, Rnorm(n=n, m=0, s=sqrt(X_scale), seed=seed))
   }
   X <- scale_fast2(X, scale=FALSE)$M
   
