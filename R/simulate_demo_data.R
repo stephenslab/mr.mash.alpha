@@ -155,7 +155,7 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
   V <- D %*% V_cor_mat %*% D
   
   ##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix and V is the residual covariance  
-  Y <- matrix_normal(G + matrix(intercepts, n, r, byrow=TRUE), diag(n), V)
+  Y <- matrix_normal_indep_rows(M=(G + matrix(intercepts, n, r, byrow=TRUE)), V=V, seed=seed)
   
   ##Compile output
   causal_responses <- r_causal
@@ -189,6 +189,20 @@ sample_norm <- function(i, n, m, s2){
   return(x)
 }
 
+#' @importFrom Rfast matrnorm
+matrix_normal_indep_rows = function(M, V, seed){
+  a <- nrow(M)
+  b <- ncol(M)
+  
+  # Draw Z from MN(O, I, I)
+  Z <- matrnorm(n=a, p=b, seed=seed)
+  
+  # Cholesky decomposition of V
+  L2 <- chol(V)
+  
+  # Return draw from MN(M,I,V)
+  return(M + Z %*% L2)
+}
 
 
 
