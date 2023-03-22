@@ -32,6 +32,10 @@
 #' @param X_scale scalar indicating the diagonal value for Gamma.
 #' 
 #' @param V_cor scalar indicating the positive correlation [0, 1] between residuals
+#'
+#' @param seed seed for random number generation used by \code{Rfast::rmvnorm}.
+#'   However, some computations will also need a general \code{set.seed()} to be
+#'   reproducible.
 #' 
 #' @return A list with some or all of the
 #' following elements:
@@ -66,16 +70,17 @@
 #' 
 #' 
 #' @examples
+#' set.seed(1)
 #' dat <- simulate_mr_mash_data(n=50, p=40, p_causal=20, r=5,
 #'                              r_causal=list(1:2, 3:4), intercepts=rep(1, 5),
 #'                              pve=0.2, B_cor=c(0, 1), B_scale=c(0.5, 1),
 #'                              w=c(0.5, 0.5), X_cor=0.5, X_scale=1, 
-#'                              V_cor=0)
+#'                              V_cor=0, seed=1)
 #'                              
 #'                              
 simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), intercepts=rep(1, r),
                                   pve=0.2, B_cor=1, B_scale=1, w=1,
-                                  X_cor=0, X_scale=1, V_cor=0){
+                                  X_cor=0, X_scale=1, V_cor=0, seed=NULL){
   ##Check that the inputs are correct
   if(length(intercepts)!=r)
     stop("intercepts must be of length equal to r.")
@@ -87,6 +92,8 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     stop("Elements of w must sum to 1.")
   if(length(pve)!=1 & length(pve)!=r)
     stop("pve must be of length equal to 1 or r.")
+  if(is.null(seed))
+    stop("seed argument must be provided.")
   
   ##Get number of mixture components
   K <- length(w)
@@ -107,12 +114,12 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     for(j in 1:p_causal){
       comp_to_use <- mixcomps[j]
       r_causal_mix <- r_causal[[comp_to_use]]
-      B_causal[j, r_causal_mix] <- rmvnorm(n=1, mean=rep(0, length(r_causal_mix)), sigma=Sigma[[comp_to_use]])
+      B_causal[j, r_causal_mix] <- rmvnorm(n=1, mean=rep(0, length(r_causal_mix)), sigma=Sigma[[comp_to_use]], seed=seed)
     }
   } else {
     r_causal_length <- length(r_causal[[1]])
     r_causal_index <- r_causal[[1]]
-    B_causal[, r_causal_index] <- rmvnorm(n=p_causal, mean=rep(0, r_causal_length), sigma=Sigma[[1]])
+    B_causal[, r_causal_index] <- rmvnorm(n=p_causal, mean=rep(0, r_causal_length), sigma=Sigma[[1]], seed=seed)
   }
   B <- matrix(0, ncol=r, nrow=p)
   causal_variables <- sample(x=(1:p), size=p_causal)
@@ -123,7 +130,7 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     Gamma_offdiag <- X_scale*X_cor
     Gamma <- matrix(Gamma_offdiag, nrow=p, ncol=p)
     diag(Gamma) <- X_scale
-    X <- rmvnorm(n=n, mean=rep(0, p), sigma=Gamma)
+    X <- rmvnorm(n=n, mean=rep(0, p), sigma=Gamma, seed)
   } else {
     X <- replicate(p, rnorm(n=n, mean=0, sd=sqrt(X_scale)))
   }
