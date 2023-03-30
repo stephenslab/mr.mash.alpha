@@ -63,7 +63,7 @@
 #'   
 #' @param ca_update_order The order with which coordinates are
 #'   updated.  So far, "consecutive", "decreasing_logBF",
-#'   "increasing_logBF" are supported.
+#'   "increasing_logBF", "random" are supported.
 #'   
 #' @param nthreads Number of RcppParallel threads to use for the
 #'   updates. When \code{nthreads} is \code{NA}, the default number of
@@ -166,7 +166,7 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
                     max_iter=5000, update_w0=TRUE, update_w0_method="EM", 
                     w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
-                    ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
+                    ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF", "random"),
                     nthreads=as.integer(NA)) {
   
   if(verbose){
@@ -356,7 +356,8 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
   } else if(ca_update_order=="increasing_logBF"){
     update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, 
                                                  decreasing=FALSE, eps, nthreads)
-  }
+  } else if(ca_update_order=="random")
+    update_order <- sample(x=1:p, size=p)
   
   if(!Y_has_missing){
     Y_cov <- matrix(0, nrow=r, ncol=r)

@@ -75,7 +75,7 @@
 #'   
 #' @param ca_update_order The order with which coordinates are
 #'   updated.  So far, "consecutive", "decreasing_logBF",
-#'   "increasing_logBF" are supported.
+#'   "increasing_logBF", "random" are supported.
 #'   
 #' @param X_colmeans a p-vector of variable means.
 #' 
@@ -182,7 +182,7 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
                         max_iter=5000, update_w0=TRUE, update_w0_method="EM", 
                         w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                         update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
-                        ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF"),
+                        ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF", "random"),
                         X_colmeans=NULL, Y_colmeans=NULL, check_R=TRUE, R_tol=1e-08,
                         nthreads=as.integer(NA)) {
   
@@ -395,7 +395,8 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   } else if(ca_update_order=="increasing_logBF"){
     update_order <- compute_rank_variables_BFmix_rss(n, XtY, V, Vinv, w0, S0, comps, standardize, version,
                                                      decreasing=FALSE, eps, nthreads)
-  }
+  } else if(ca_update_order=="random")
+    update_order <- sample(x=1:p, size=p)
   
   if(verbose)
     cat("Done!\n")
