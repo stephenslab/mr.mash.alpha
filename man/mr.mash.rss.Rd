@@ -108,7 +108,8 @@ coordinate ascent updates.}
 prior matrices to improve numerical stability of the updates.}
 
 \item{ca_update_order}{The order with which coordinates are
-updated.  So far, "consecutive" is supported.}
+updated.  So far, "consecutive", "decreasing_logBF",
+"increasing_logBF" are supported.}
 
 \item{X_colmeans}{a p-vector of variable means.}
 

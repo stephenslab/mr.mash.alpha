@@ -29,3 +29,7 @@ compute_logbf_rcpp <- function(X, Y, V, Vinv, w0, S0, precomp_quants_list, stand
     .Call('_mr_mash_alpha_compute_logbf_rcpp', PACKAGE = 'mr.mash.alpha', X, Y, V, Vinv, w0, S0, precomp_quants_list, standardize, eps, nthreads)
 }
 
+compute_logbf_rss_rcpp <- function(n, XtY, V, Vinv, w0, S0, precomp_quants_list, standardize, eps, nthreads) {
+    .Call('_mr_mash_alpha_compute_logbf_rss_rcpp', PACKAGE = 'mr.mash.alpha', n, XtY, V, Vinv, w0, S0, precomp_quants_list, standardize, eps, nthreads)
+}
+
