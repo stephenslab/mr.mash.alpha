@@ -74,7 +74,8 @@
 #'   prior matrices to improve numerical stability of the updates.
 #'   
 #' @param ca_update_order The order with which coordinates are
-#'   updated.  So far, "consecutive" is supported.
+#'   updated.  So far, "consecutive", "decreasing_logBF",
+#'   "increasing_logBF" are supported.
 #'   
 #' @param X_colmeans a p-vector of variable means.
 #' 
@@ -266,8 +267,6 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
     stop("mu1_init must be a matrix.")
   if(convergence_criterion=="ELBO" && !compute_ELBO)
     stop("ELBO needs to be computed with convergence_criterion=\"ELBO\".")
-  if(ca_update_order!="consecutive")
-    stop("ca_update_order=\"consecutive\" is the only option with summary data for now.")
 
   # PRE-PROCESSING STEPS
   # --------------------
@@ -390,13 +389,13 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   ###Set the ordering of the coordinate ascent updates
   if(ca_update_order=="consecutive"){
     update_order <- 1:p
-  } # else if(ca_update_order=="decreasing_logBF"){
-  #   update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, 
-  #                                                decreasing=TRUE, eps, nthreads)
-  # } else if(ca_update_order=="increasing_logBF"){
-  #   update_order <- compute_rank_variables_BFmix(X, Y, V, Vinv, w0, S0, comps, standardize, version, 
-  #                                                decreasing=FALSE, eps, nthreads)
-  # }
+  } else if(ca_update_order=="decreasing_logBF"){
+    update_order <- compute_rank_variables_BFmix_rss(n, XtY, V, Vinv, w0, S0, comps, standardize, version,
+                                                     decreasing=TRUE, eps, nthreads)
+  } else if(ca_update_order=="increasing_logBF"){
+    update_order <- compute_rank_variables_BFmix_rss(n, XtY, V, Vinv, w0, S0, comps, standardize, version,
+                                                     decreasing=FALSE, eps, nthreads)
+  }
   
   if(verbose)
     cat("Done!\n")
