@@ -49,9 +49,9 @@ void impute_missing_Y (mat& Y, const mat& mu, const mat& Vinv,
                        mat& Y_cov, double& sum_neg_ent_Y_miss);
 
 // Inner loop rss
-void inner_loop_general_rss (unsigned int n, const mat& XtY, const mat& XtXmu1, mat& mu1, const mat& V,
-                             const mat& Vinv, const vec& w0, const cube& S0,
-                             const mr_mash_precomputed_quantities& precomp_quants,
+void inner_loop_general_rss (unsigned int n, const mat& XtX, const mat& XtY, mat& XtRbar, 
+                             mat& mu1, const mat& V, const mat& Vinv, const vec& w0, 
+                             const cube& S0, const mr_mash_precomputed_quantities& precomp_quants,
                              bool standardize, bool compute_ELBO, bool update_V,
                              const vec& update_order, double eps, unsigned int nthreads,
                              cube& S1, mat& w1, double& var_part_tr_wERSS, 
@@ -135,7 +135,7 @@ void inner_loop_general (const mat& X, mat& Rbar, mat& mu1, const mat& V,
     x = X.col(j);
     mu1_j = trans(mu1.row(j));
     
-    // Disregard the ith predictor in the expected residuals.
+    // Disregard the jth predictor in the expected residuals.
     Rbar_j = Rbar + (x * trans(mu1_j));
     
     // Update the posterior quantities for the jth
@@ -250,8 +250,9 @@ void impute_missing_Y (mat& Y, const mat& mu, const mat& Vinv,
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::depends(RcppParallel)]]
 // [[Rcpp::export]]
-List inner_loop_general_rss_rcpp (unsigned int n, const arma::mat& XtY, const arma::mat& XtXmu1, arma::mat& mu1,
-                                  const arma::mat& V, const arma::mat& Vinv, const arma::vec& w0,
+List inner_loop_general_rss_rcpp (unsigned int n, const arma::mat& XtX, const arma::mat& XtY, 
+                                  arma::mat& XtRbar, arma::mat& mu1, const arma::mat& V, 
+                                  const arma::mat& Vinv, const arma::vec& w0,
                                   const arma::cube& S0, const List& precomp_quants_list,
                                   bool standardize, bool compute_ELBO, bool update_V,
                                   const arma::vec& update_order, double eps, unsigned int nthreads) {
@@ -273,7 +274,7 @@ List inner_loop_general_rss_rcpp (unsigned int n, const arma::mat& XtY, const ar
    as<mat>(precomp_quants_list["d"]),
    as<cube>(precomp_quants_list["QtimesV_chol"]),
    as<vec>(precomp_quants_list["xtx"]));
-  inner_loop_general_rss(n, XtY, XtXmu1, mu1_new, V, Vinv, w0, S0, precomp_quants,
+  inner_loop_general_rss(n, XtX, XtY, XtRbar, mu1_new, V, Vinv, w0, S0, precomp_quants,
                          standardize, compute_ELBO, update_V, update_order, eps,
                          nthreads, S1, w1, var_part_tr_wERSS, neg_KL, var_part_ERSS);
   return List::create(Named("mu1")                = mu1_new,
@@ -285,19 +286,19 @@ List inner_loop_general_rss_rcpp (unsigned int n, const arma::mat& XtY, const ar
 }
 
 // Perform the inner loop rss
-void inner_loop_general_rss (unsigned int n, const mat& XtY, const mat& XtXmu1, mat& mu1, const mat& V,
-                             const mat& Vinv, const vec& w0, const cube& S0,
-                             const mr_mash_precomputed_quantities& precomp_quants,
+void inner_loop_general_rss (unsigned int n, const mat& XtX, const mat& XtY, mat& XtRbar, 
+                             mat& mu1, const mat& V, const mat& Vinv, const vec& w0, 
+                             const cube& S0, const mr_mash_precomputed_quantities& precomp_quants,
                              bool standardize, bool compute_ELBO, bool update_V, 
                              const vec& update_order, double eps, unsigned int nthreads,
                              cube& S1, mat& w1, double& var_part_tr_wERSS, 
                              double& neg_KL, mat& var_part_ERSS) {
+  unsigned int p = mu1.n_rows;
   unsigned int r = mu1.n_cols;
   unsigned int k = w0.n_elem;
+  vec Xtx(p);
   vec XtRbar_j(r);
   vec mu1_j(r);
-  vec XtY_j(r);
-  vec XtXmu1_j(r);
   vec mu1_mix(r);
   mat S1_mix(r,r);
   vec w1_mix(k);
@@ -319,12 +320,12 @@ void inner_loop_general_rss (unsigned int n, const mat& XtY, const mat& XtXmu1, 
     else
       xtx_j = precomp_quants.xtx(j);
     
+    Xtx = XtX.col(j);
     mu1_j = trans(mu1.row(j));
-    XtY_j = trans(XtY.row(j));
-    XtXmu1_j = trans(XtXmu1.row(j));
     
-    // Disregard the ith predictor in the expected residuals.
-    XtRbar_j = XtY_j - XtXmu1_j + xtx_j * mu1_j;
+    // Disregard the jth predictor in the expected residuals.
+    XtRbar += (Xtx * trans(mu1_j));
+    XtRbar_j = trans(XtRbar.row(j));
     
     // Update the posterior quantities for the jth
     // predictor.
@@ -351,5 +352,8 @@ void inner_loop_general_rss (unsigned int n, const mat& XtY, const mat& XtXmu1, 
     // Compute V parameters
     if (update_V)
       compute_var_part_ERSS(var_part_ERSS, S1_mix, xtx_j);
+    
+    // Update the expected residuals.
+    XtRbar -= (Xtx * trans(mu1_mix));
   }
 }

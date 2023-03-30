@@ -1,5 +1,5 @@
 ###Update variational parameters, expected residuals, and ELBO components with or without scaling X
-inner_loop_general_rss_R <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, ###note: V is only needed when not scaling X
+inner_loop_general_rss_R <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, ###note: V is only needed when not scaling X
                                precomp_quants, standardize, compute_ELBO, update_V,
                                update_order, eps){
   ###Create variables to store quantities
@@ -21,8 +21,9 @@ inner_loop_general_rss_R <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, ###no
       xtx <- precomp_quants$xtx[j]
     }
     
-    #Remove j-th effect from expected residuals 
-    xtRbar_j <- XtY[j, ] - XtXmu1[j, ] + xtx*mu1[j, ]
+    #Remove j-th effect from expected residuals
+    XtRbar <- XtRbar + outer(XtX[, j], mu1[j, ])
+    xtRbar_j <- XtRbar[j, ]
     
     #Run Bayesian SLR
     if(standardize){
@@ -50,6 +51,9 @@ inner_loop_general_rss_R <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, ###no
     if(update_V){
       var_part_ERSS <- compute_var_part_ERSS(var_part_ERSS, bfit, xtx)
     }
+    
+    #Update expected residuals
+    XtRbar <- XtRbar - outer(XtX[, j], mu1[j, ])
   }
   
   ###Return output
@@ -71,11 +75,11 @@ inner_loop_general_rss_R <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, ###no
 #' @importFrom RcppParallel RcppParallelLibs
 #' @useDynLib mr.mash.alpha
 #'
-inner_loop_general_rss_Rcpp <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants,
+inner_loop_general_rss_Rcpp <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants,
                                         standardize, compute_ELBO, update_V, update_order,
                                         eps, nthreads){
 
-  out <- inner_loop_general_rss_rcpp(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants,
+  out <- inner_loop_general_rss_rcpp(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants,
                                      standardize, compute_ELBO, update_V, update_order,
                                      eps, nthreads)
 
@@ -94,15 +98,15 @@ inner_loop_general_rss_Rcpp <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, pr
 }
 
 ###Wrapper of the inner loop with R or Rcpp
-inner_loop_general_rss <- function(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants, 
+inner_loop_general_rss <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants, 
                                standardize, compute_ELBO, update_V, version,
                                update_order, eps, nthreads){
   if(version=="R"){
-    out <- inner_loop_general_rss_R(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants, 
+    out <- inner_loop_general_rss_R(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants, 
                                 standardize, compute_ELBO, update_V, update_order, eps)
   } else if(version=="Rcpp"){
     update_order <- as.integer(update_order-1)
-    out <- inner_loop_general_rss_Rcpp(n, XtY, XtXmu1, mu1, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, 
+    out <- inner_loop_general_rss_Rcpp(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, 
                                        standardize, compute_ELBO, update_V, update_order, eps, nthreads)
   }
   
@@ -118,11 +122,11 @@ mr_mash_update_general_rss <- function(n, XtX, XtY, YtY, mu1_t, V, Vinv, ldetV, 
   
   
 
-  ##Compute ??
-  XtXmu1 <- XtX%*%mu1_t
+  ##Compute expected residuals
+  XtRbar <- XtY - XtX %*% mu1_t
   
   ##Update variational parameters, expected residuals, and ELBO components
-  updates <- inner_loop_general_rss(n=n, XtY=XtY, XtXmu1=XtXmu1, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
+  updates <- inner_loop_general_rss(n=n, XtX=XtX, XtY=XtY, XtRbar=XtRbar, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
                                 precomp_quants=precomp_quants, standardize=standardize,
                                 compute_ELBO=compute_ELBO, update_V=update_V, version=version,
                                 update_order=update_order, eps=eps, nthreads=nthreads)   
