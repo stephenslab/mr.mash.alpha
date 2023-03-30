@@ -24,7 +24,7 @@ mr.mash(
   update_V_method = c("full", "diagonal"),
   version = c("Rcpp", "R"),
   e = 1e-08,
-  ca_update_order = c("consecutive", "decreasing_logBF", "increasing_logBF"),
+  ca_update_order = c("consecutive", "decreasing_logBF", "increasing_logBF", "random"),
   nthreads = as.integer(NA)
 )
 }
@@ -89,7 +89,7 @@ prior matrices to improve numerical stability of the updates.}
 
 \item{ca_update_order}{The order with which coordinates are
 updated.  So far, "consecutive", "decreasing_logBF",
-"increasing_logBF" are supported.}
+"increasing_logBF", "random" are supported.}
 
 \item{nthreads}{Number of RcppParallel threads to use for the
 updates. When \code{nthreads} is \code{NA}, the default number of
