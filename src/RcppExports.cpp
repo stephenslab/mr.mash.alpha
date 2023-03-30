@@ -51,14 +51,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // inner_loop_general_rss_rcpp
-List inner_loop_general_rss_rcpp(unsigned int n, const arma::mat& XtY, const arma::mat& XtXmu1, arma::mat& mu1, const arma::mat& V, const arma::mat& Vinv, const arma::vec& w0, const arma::cube& S0, const List& precomp_quants_list, bool standardize, bool compute_ELBO, bool update_V, const arma::vec& update_order, double eps, unsigned int nthreads);
-RcppExport SEXP _mr_mash_alpha_inner_loop_general_rss_rcpp(SEXP nSEXP, SEXP XtYSEXP, SEXP XtXmu1SEXP, SEXP mu1SEXP, SEXP VSEXP, SEXP VinvSEXP, SEXP w0SEXP, SEXP S0SEXP, SEXP precomp_quants_listSEXP, SEXP standardizeSEXP, SEXP compute_ELBOSEXP, SEXP update_VSEXP, SEXP update_orderSEXP, SEXP epsSEXP, SEXP nthreadsSEXP) {
+List inner_loop_general_rss_rcpp(unsigned int n, const arma::mat& XtX, const arma::mat& XtY, arma::mat& XtRbar, arma::mat& mu1, const arma::mat& V, const arma::mat& Vinv, const arma::vec& w0, const arma::cube& S0, const List& precomp_quants_list, bool standardize, bool compute_ELBO, bool update_V, const arma::vec& update_order, double eps, unsigned int nthreads);
+RcppExport SEXP _mr_mash_alpha_inner_loop_general_rss_rcpp(SEXP nSEXP, SEXP XtXSEXP, SEXP XtYSEXP, SEXP XtRbarSEXP, SEXP mu1SEXP, SEXP VSEXP, SEXP VinvSEXP, SEXP w0SEXP, SEXP S0SEXP, SEXP precomp_quants_listSEXP, SEXP standardizeSEXP, SEXP compute_ELBOSEXP, SEXP update_VSEXP, SEXP update_orderSEXP, SEXP epsSEXP, SEXP nthreadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< unsigned int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type XtX(XtXSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type XtY(XtYSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type XtXmu1(XtXmu1SEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type XtRbar(XtRbarSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type mu1(mu1SEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type V(VSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type Vinv(VinvSEXP);
@@ -71,7 +72,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type update_order(update_orderSEXP);
     Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nthreads(nthreadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(inner_loop_general_rss_rcpp(n, XtY, XtXmu1, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads));
+    rcpp_result_gen = Rcpp::wrap(inner_loop_general_rss_rcpp(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -138,7 +139,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_mr_mash_alpha_inner_loop_general_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rcpp, 14},
     {"_mr_mash_alpha_impute_missing_Y_rcpp", (DL_FUNC) &_mr_mash_alpha_impute_missing_Y_rcpp, 5},
-    {"_mr_mash_alpha_inner_loop_general_rss_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rss_rcpp, 15},
+    {"_mr_mash_alpha_inner_loop_general_rss_rcpp", (DL_FUNC) &_mr_mash_alpha_inner_loop_general_rss_rcpp, 16},
     {"_mr_mash_alpha_scale_rcpp", (DL_FUNC) &_mr_mash_alpha_scale_rcpp, 3},
     {"_mr_mash_alpha_scale2_rcpp", (DL_FUNC) &_mr_mash_alpha_scale2_rcpp, 3},
     {"_mr_mash_alpha_rescale_post_mean_covar_rcpp", (DL_FUNC) &_mr_mash_alpha_rescale_post_mean_covar_rcpp, 3},
