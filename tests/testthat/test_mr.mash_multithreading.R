@@ -42,6 +42,12 @@ test_that("mr.mash with 1 or 2 thread(s) return the same results", {
   ###Estimate residual covariance
   V_est <- cov(Y)
   
+  ###Compute quantities needed for mr.mash.rss
+  out <- compute_univariate_sumstats(X=X, Y=Y, standardize=FALSE, standardize.response=FALSE, mc.cores=1)
+  R <- cor(X)
+  X_colMeans <- colMeans(X)
+  Y_colMeans <- colMeans(Y)
+  
   ###Fit with current implementation (1 thread)
   capture.output(
     fit_1 <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
@@ -56,6 +62,14 @@ test_that("mr.mash with 1 or 2 thread(s) return the same results", {
   fit_1_miss$progress <- fit_1_miss$progress[, -2] ##This line is needed to remove the timing column -->  
   ##hopefully faster when using multiple threads
   
+  fit_1_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
+                           w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE,
+                           verbose=FALSE, update_V=TRUE, X_colmeans=X_colMeans, Y_colmeans=Y_colMeans, 
+                           nthreads=1)
+  fit_1_rss$progress <- fit_1_rss$progress[, -2] ##This line is needed to remove the timing column -->  
+  ##hopefully faster when using multiple threads
+
+  
   
   ###Fit with current implementation (2 threads)
   capture.output(
@@ -69,6 +83,14 @@ test_that("mr.mash with 1 or 2 thread(s) return the same results", {
                           update_w0_method="EM", compute_ELBO=TRUE, standardize=TRUE,
                           verbose=FALSE, update_V=TRUE, nthreads=2))
   fit_2_miss$progress <- fit_2_miss$progress[, -2]
+  
+  fit_2_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
+                           w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE,
+                           verbose=FALSE, update_V=TRUE, X_colmeans=X_colMeans, Y_colmeans=Y_colMeans, 
+                           nthreads=2)
+  fit_2_rss$progress <- fit_2_rss$progress[, -2] ##This line is needed to remove the timing column -->  
+  ##hopefully faster when using multiple threads
+  
   
   
   ###Test
