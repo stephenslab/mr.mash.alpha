@@ -35,8 +35,8 @@ repository useful for your work, please cite:
 
 ## License
 
-Copyright (c) 2020-2022, Fabio Morgante, Peter Carbonetto and Matthew
-Stephens.
+Copyright (c) 2020-2023, Fabio Morgante, Deborah Kunkel, Peter Carbonetto 
+and Matthew Stephens.
 
 All source code and software in this repository are made available
 under the terms of the [MIT license][mit-license].

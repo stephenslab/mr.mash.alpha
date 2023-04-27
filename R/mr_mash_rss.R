@@ -264,7 +264,7 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
     stop("Elements of w0 must sum to 1.")
   if(length(S0)!=length(w0))
     stop("S0 and w0 must have the same length.")
-  if(!missing(mu1_init) && !is.matrix(mu1_init))
+  if(!is.null(mu1_init) && !is.matrix(mu1_init))
     stop("mu1_init must be a matrix.")
   if(convergence_criterion=="ELBO" && !compute_ELBO)
     stop("ELBO needs to be computed with convergence_criterion=\"ELBO\".")
