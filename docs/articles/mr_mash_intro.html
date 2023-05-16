@@ -65,9 +65,9 @@
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Introduction to mr.mash</h1>
                         <h4 data-toc-skip class="author">Peter
-Carbonetto</h4>
+Carbonetto &amp; Fabio Morgante</h4>
             
-            <h4 data-toc-skip class="date">2023-05-15</h4>
+            <h4 data-toc-skip class="date">2023-05-16</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/stephenslab/mr.mash.alpha/blob/HEAD/vignettes/mr_mash_intro.Rmd" class="external-link"><code>vignettes/mr_mash_intro.Rmd</code></a></small>
       <div class="hidden name"><code>mr_mash_intro.Rmd</code></div>
@@ -81,235 +81,66 @@ analysis, fitting the mr.mash model then using it to make
 predictions.</p>
 <p>First, we set the seed and load the mr.mash R package.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/stephenslab/mr.mash.alpha" class="external-link">mr.mash.alpha</a></span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></code></pre></div>
-<p>Simulate a data set with 100 predictors and 5 regression
-outcomes.</p>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/stephenslab/mr.mash.alpha" class="external-link">mr.mash.alpha</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span></code></pre></div>
+<p>Simulate a data set with 1000 individuals, 100 predictors and 5
+responses. The 20 causal variables (randomly sampled from the total 100)
+have equal effects across responses and explain 50% of the total
+per-response variance.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span>
-<span class="va">p</span> <span class="op">&lt;-</span> <span class="fl">100</span>
-<span class="va">p_causal</span> <span class="op">&lt;-</span> <span class="fl">20</span>
-<span class="va">r</span> <span class="op">&lt;-</span> <span class="fl">5</span>
-<span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_mr_mash_data.html">simulate_mr_mash_data</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">p</span>, <span class="va">p_causal</span>, <span class="va">r</span>, pve<span class="op">=</span><span class="fl">0.5</span>, B_cor<span class="op">=</span><span class="fl">1</span>,
-                             B_scale<span class="op">=</span><span class="fl">1</span>, X_cor<span class="op">=</span><span class="fl">0</span>, X_scale<span class="op">=</span><span class="fl">1</span>, V_cor<span class="op">=</span><span class="fl">0</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<span><span class="va">p_causal</span> <span class="op">&lt;-</span> <span class="fl">20</span></span>
+<span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
+<span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_mr_mash_data.html">simulate_mr_mash_data</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">p</span>, <span class="va">p_causal</span>, <span class="va">r</span>, pve<span class="op">=</span><span class="fl">0.5</span>, B_cor<span class="op">=</span><span class="fl">1</span>,</span>
+<span>                             B_scale<span class="op">=</span><span class="fl">1</span>, X_cor<span class="op">=</span><span class="fl">0</span>, X_scale<span class="op">=</span><span class="fl">1</span>, V_cor<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p>Split the data into a training set and a test set.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">Ytrain</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>,<span class="op">]</span>
-<span class="va">Xtrain</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>,<span class="op">]</span>
-<span class="va">Ytest</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>,<span class="op">]</span>
-<span class="va">Xtest</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>,<span class="op">]</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">Ytrain</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>,<span class="op">]</span></span>
+<span><span class="va">Xtrain</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>,<span class="op">]</span></span>
+<span><span class="va">Ytest</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>,<span class="op">]</span></span>
+<span><span class="va">Xtest</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>,<span class="op">]</span></span></code></pre></div>
 <p>To run mr.mash, we need to first specify the covariances in the
 mixture-of-normals prior. In this example, we use a mixture of
-“canonical” covariances.</p>
+“canonical” covariances. However, “data-driven” covariances can also be
+used – here’s an <a href="https://stephenslab.github.io/mashr/articles/intro_mash_dd.html" class="external-link">example</a>
+of how to compute these matrices.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">univ_sumstats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_univariate_sumstats.html">compute_univariate_sumstats</a></span><span class="op">(</span><span class="va">Xtrain</span>, <span class="va">Ytrain</span>,
-                   standardize<span class="op">=</span><span class="cn">TRUE</span>, standardize.response<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span>
-<span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/autoselect.mixsd.html">autoselect.mixsd</a></span><span class="op">(</span><span class="va">univ_sumstats</span>, mult<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span>
-<span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_canonical_covs.html">compute_canonical_covs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">Ytrain</span><span class="op">)</span>, singletons<span class="op">=</span><span class="cn">TRUE</span>,
-                             hetgrid<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span>
-<span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_covs.html">expand_covs</a></span><span class="op">(</span><span class="va">S0</span>, <span class="va">grid</span>, zeromat<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
-<p>Now we are ready to fit a mr.mash model to the data.</p>
+<code class="sourceCode R"><span><span class="va">univ_sumstats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_univariate_sumstats.html">compute_univariate_sumstats</a></span><span class="op">(</span><span class="va">Xtrain</span>, <span class="va">Ytrain</span>,</span>
+<span>                   standardize<span class="op">=</span><span class="cn">TRUE</span>, standardize.response<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/autoselect.mixsd.html">autoselect.mixsd</a></span><span class="op">(</span><span class="va">univ_sumstats</span>, mult<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span></span>
+<span><span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_canonical_covs.html">compute_canonical_covs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">Ytrain</span><span class="op">)</span>, singletons<span class="op">=</span><span class="cn">TRUE</span>,</span>
+<span>                             hetgrid<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_covs.html">expand_covs</a></span><span class="op">(</span><span class="va">S0</span>, <span class="va">grid</span>, zeromat<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>Now we are ready to fit a mr.mash model to the training data.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mr.mash.html">mr.mash</a></span><span class="op">(</span><span class="va">Xtrain</span>, <span class="va">Ytrain</span>, <span class="va">S0</span>, update_V<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>
-<span class="co"># Processing the inputs... Done!</span>
-<span class="co"># Fitting the optimization algorithm using 4 RcppParallel threads... </span>
-<span class="co">#  iter    mu1_max.diff     ELBO_diff               ELBO</span>
-<span class="co">#    1       1.71e+00            Inf      -1.17642528223557128513e+04</span>
-<span class="co">#    2       3.16e-01       3.86e+02      -1.13785636765839408326e+04</span>
-<span class="co">#    3       7.32e-02       2.38e+01      -1.13547399119721321767e+04</span>
-<span class="co">#    4       2.64e-02       2.75e+00      -1.13519874877460260905e+04</span>
-<span class="co">#    5       1.63e-02       1.28e+00      -1.13507113825963169802e+04</span>
-<span class="co">#    6       1.23e-02       7.76e-01      -1.13499353152282001247e+04</span>
-<span class="co">#    7       9.55e-03       5.23e-01      -1.13494121001227358647e+04</span>
-<span class="co">#    8       7.63e-03       3.77e-01      -1.13490351420485931158e+04</span>
-<span class="co">#    9       6.23e-03       2.85e-01      -1.13487496681383636314e+04</span>
-<span class="co">#   10       5.18e-03       2.25e-01      -1.13485247738195284910e+04</span>
-<span class="co">#   11       4.38e-03       1.83e-01      -1.13483418480146938236e+04</span>
-<span class="co">#   12       3.76e-03       1.53e-01      -1.13481890957351515681e+04</span>
-<span class="co">#   13       3.27e-03       1.30e-01      -1.13480587210420271731e+04</span>
-<span class="co">#   14       2.87e-03       1.13e-01      -1.13479453867003085179e+04</span>
-<span class="co">#   15       2.54e-03       1.00e-01      -1.13478453289594363014e+04</span>
-<span class="co">#   16       2.27e-03       8.95e-02      -1.13477558266169908165e+04</span>
-<span class="co">#   17       2.05e-03       8.10e-02      -1.13476748703167959320e+04</span>
-<span class="co">#   18       1.86e-03       7.39e-02      -1.13476009494878217083e+04</span>
-<span class="co">#   19       1.70e-03       6.80e-02      -1.13475329108548303338e+04</span>
-<span class="co">#   20       1.56e-03       6.30e-02      -1.13474698619047085231e+04</span>
-<span class="co">#   21       1.44e-03       5.88e-02      -1.13474111034328470851e+04</span>
-<span class="co">#   22       1.34e-03       5.50e-02      -1.13473560814173724793e+04</span>
-<span class="co">#   23       1.24e-03       5.17e-02      -1.13473043520638148038e+04</span>
-<span class="co">#   24       1.16e-03       4.88e-02      -1.13472555560299933859e+04</span>
-<span class="co">#   25       1.15e-03       4.62e-02      -1.13472093991811398155e+04</span>
-<span class="co">#   26       1.14e-03       4.38e-02      -1.13471656380736858409e+04</span>
-<span class="co">#   27       1.13e-03       4.16e-02      -1.13471240689160567854e+04</span>
-<span class="co">#   28       1.11e-03       3.95e-02      -1.13470845191190837795e+04</span>
-<span class="co">#   29       1.09e-03       3.77e-02      -1.13470468407955613657e+04</span>
-<span class="co">#   30       1.06e-03       3.59e-02      -1.13470109057390509406e+04</span>
-<span class="co">#   31       1.03e-03       3.43e-02      -1.13469766015326731576e+04</span>
-<span class="co">#   32       9.99e-04       3.28e-02      -1.13469438285251835623e+04</span>
-<span class="co">#   33       9.66e-04       3.13e-02      -1.13469124974749720423e+04</span>
-<span class="co">#   34       9.32e-04       3.00e-02      -1.13468825277096912032e+04</span>
-<span class="co">#   35       8.97e-04       2.87e-02      -1.13468538456845308247e+04</span>
-<span class="co">#   36       8.62e-04       2.75e-02      -1.13468263838488801412e+04</span>
-<span class="co">#   37       8.45e-04       2.63e-02      -1.13468000797517743194e+04</span>
-<span class="co">#   38       8.27e-04       2.52e-02      -1.13467748753322484845e+04</span>
-<span class="co">#   39       8.08e-04       2.42e-02      -1.13467507163528607634e+04</span>
-<span class="co">#   40       7.88e-04       2.32e-02      -1.13467275519443028315e+04</span>
-<span class="co">#   41       7.69e-04       2.22e-02      -1.13467053342361450632e+04</span>
-<span class="co">#   42       7.48e-04       2.13e-02      -1.13466840180546078045e+04</span>
-<span class="co">#   43       7.28e-04       2.05e-02      -1.13466635606725576508e+04</span>
-<span class="co">#   44       7.08e-04       1.96e-02      -1.13466439216004691843e+04</span>
-<span class="co">#   45       6.87e-04       1.89e-02      -1.13466250624095628154e+04</span>
-<span class="co">#   46       6.67e-04       1.81e-02      -1.13466069465804612264e+04</span>
-<span class="co">#   47       6.46e-04       1.74e-02      -1.13465895393722639710e+04</span>
-<span class="co">#   48       6.26e-04       1.67e-02      -1.13465728077080075309e+04</span>
-<span class="co">#   49       6.06e-04       1.61e-02      -1.13465567200735513325e+04</span>
-<span class="co">#   50       5.86e-04       1.55e-02      -1.13465412464274577360e+04</span>
-<span class="co">#   51       5.67e-04       1.49e-02      -1.13465263581200324552e+04</span>
-<span class="co">#   52       5.48e-04       1.43e-02      -1.13465120278200447501e+04</span>
-<span class="co">#   53       5.29e-04       1.38e-02      -1.13464982294480250857e+04</span>
-<span class="co">#   54       5.10e-04       1.33e-02      -1.13464849381151288981e+04</span>
-<span class="co">#   55       4.92e-04       1.28e-02      -1.13464721300668225012e+04</span>
-<span class="co">#   56       4.74e-04       1.23e-02      -1.13464597826307726791e+04</span>
-<span class="co">#   57       4.57e-04       1.19e-02      -1.13464478741683888074e+04</span>
-<span class="co">#   58       4.40e-04       1.15e-02      -1.13464363840295736736e+04</span>
-<span class="co">#   59       4.23e-04       1.11e-02      -1.13464252925102882728e+04</span>
-<span class="co">#   60       4.07e-04       1.07e-02      -1.13464145808125977055e+04</span>
-<span class="co">#   61       3.91e-04       1.03e-02      -1.13464042310069253290e+04</span>
-<span class="co">#   62       3.76e-04       1.00e-02      -1.13463942259962532262e+04</span>
-<span class="co">#   63       3.61e-04       9.68e-03      -1.13463845494820689055e+04</span>
-<span class="co">#   64       3.47e-04       9.36e-03      -1.13463751859318454080e+04</span>
-<span class="co">#   65       3.32e-04       9.07e-03      -1.13463661205479256751e+04</span>
-<span class="co">#   66       3.19e-04       8.78e-03      -1.13463573392376656557e+04</span>
-<span class="co">#   67       3.06e-04       8.51e-03      -1.13463488285846906365e+04</span>
-<span class="co">#   68       2.93e-04       8.25e-03      -1.13463405758212338696e+04</span>
-<span class="co">#   69       2.80e-04       8.01e-03      -1.13463325688014119805e+04</span>
-<span class="co">#   70       2.68e-04       7.77e-03      -1.13463247959753844043e+04</span>
-<span class="co">#   71       2.57e-04       7.55e-03      -1.13463172463643732044e+04</span>
-<span class="co">#   72       2.45e-04       7.34e-03      -1.13463099095364559616e+04</span>
-<span class="co">#   73       2.34e-04       7.13e-03      -1.13463027755831371906e+04</span>
-<span class="co">#   74       2.24e-04       6.94e-03      -1.13462958350966218859e+04</span>
-<span class="co">#   75       2.14e-04       6.76e-03      -1.13462890791478112078e+04</span>
-<span class="co">#   76       2.04e-04       6.58e-03      -1.13462824992649857450e+04</span>
-<span class="co">#   77       1.95e-04       6.41e-03      -1.13462760874131654418e+04</span>
-<span class="co">#   78       1.86e-04       6.25e-03      -1.13462698359741007152e+04</span>
-<span class="co">#   79       1.80e-04       6.10e-03      -1.13462637377270057186e+04</span>
-<span class="co">#   80       1.74e-04       5.95e-03      -1.13462577858298045612e+04</span>
-<span class="co">#   81       1.69e-04       5.81e-03      -1.13462519738011633308e+04</span>
-<span class="co">#   82       1.65e-04       5.68e-03      -1.13462462955030459852e+04</span>
-<span class="co">#   83       1.60e-04       5.55e-03      -1.13462407451239741931e+04</span>
-<span class="co">#   84       1.55e-04       5.43e-03      -1.13462353171628565178e+04</span>
-<span class="co">#   85       1.51e-04       5.31e-03      -1.13462300064134833519e+04</span>
-<span class="co">#   86       1.47e-04       5.20e-03      -1.13462248079495748243e+04</span>
-<span class="co">#   87       1.43e-04       5.09e-03      -1.13462197171104999143e+04</span>
-<span class="co">#   88       1.38e-04       4.99e-03      -1.13462147294875048829e+04</span>
-<span class="co">#   89       1.35e-04       4.89e-03      -1.13462098409105910832e+04</span>
-<span class="co">#   90       1.31e-04       4.79e-03      -1.13462050474359202781e+04</span>
-<span class="co">#   91       1.27e-04       4.70e-03      -1.13462003453337983956e+04</span>
-<span class="co">#   92       1.23e-04       4.61e-03      -1.13461957310771977063e+04</span>
-<span class="co">#   93       1.20e-04       4.53e-03      -1.13461912013307737652e+04</span>
-<span class="co">#   94       1.17e-04       4.45e-03      -1.13461867529404589732e+04</span>
-<span class="co">#   95       1.13e-04       4.37e-03      -1.13461823829235254379e+04</span>
-<span class="co">#   96       1.10e-04       4.29e-03      -1.13461780884591044014e+04</span>
-<span class="co">#   97       1.13e-04       4.22e-03      -1.13461738668792222597e+04</span>
-<span class="co">#   98       1.17e-04       4.15e-03      -1.13461697156602585892e+04</span>
-<span class="co">#   99       1.20e-04       4.08e-03      -1.13461656324148334534e+04</span>
-<span class="co">#  100       1.23e-04       4.02e-03      -1.13461616148841512768e+04</span>
-<span class="co">#  101       1.25e-04       3.95e-03      -1.13461576609306885075e+04</span>
-<span class="co">#  102       1.28e-04       3.89e-03      -1.13461537685313251131e+04</span>
-<span class="co">#  103       1.30e-04       3.83e-03      -1.13461499357708016760e+04</span>
-<span class="co">#  104       1.32e-04       3.77e-03      -1.13461461608355439239e+04</span>
-<span class="co">#  105       1.34e-04       3.72e-03      -1.13461424420078419644e+04</span>
-<span class="co">#  106       1.36e-04       3.66e-03      -1.13461387776602987287e+04</span>
-<span class="co">#  107       1.38e-04       3.61e-03      -1.13461351662506567664e+04</span>
-<span class="co">#  108       1.40e-04       3.56e-03      -1.13461316063168433175e+04</span>
-<span class="co">#  109       1.41e-04       3.51e-03      -1.13461280964723464422e+04</span>
-<span class="co">#  110       1.43e-04       3.46e-03      -1.13461246354018130660e+04</span>
-<span class="co">#  111       1.44e-04       3.41e-03      -1.13461212218569362449e+04</span>
-<span class="co">#  112       1.45e-04       3.37e-03      -1.13461178546525352431e+04</span>
-<span class="co">#  113       1.46e-04       3.32e-03      -1.13461145326628738985e+04</span>
-<span class="co">#  114       1.47e-04       3.28e-03      -1.13461112548182318278e+04</span>
-<span class="co">#  115       1.48e-04       3.23e-03      -1.13461080201015920466e+04</span>
-<span class="co">#  116       1.48e-04       3.19e-03      -1.13461048275455887051e+04</span>
-<span class="co">#  117       1.49e-04       3.15e-03      -1.13461016762296039815e+04</span>
-<span class="co">#  118       1.50e-04       3.11e-03      -1.13460985652770395973e+04</span>
-<span class="co">#  119       1.50e-04       3.07e-03      -1.13460954938527265767e+04</span>
-<span class="co">#  120       1.50e-04       3.03e-03      -1.13460924611605169048e+04</span>
-<span class="co">#  121       1.51e-04       2.99e-03      -1.13460894664409934194e+04</span>
-<span class="co">#  122       1.51e-04       2.96e-03      -1.13460865089693288610e+04</span>
-<span class="co">#  123       1.51e-04       2.92e-03      -1.13460835880532322335e+04</span>
-<span class="co">#  124       1.51e-04       2.89e-03      -1.13460807030310825212e+04</span>
-<span class="co">#  125       1.51e-04       2.85e-03      -1.13460778532701024233e+04</span>
-<span class="co">#  126       1.51e-04       2.82e-03      -1.13460750381646594178e+04</span>
-<span class="co">#  127       1.50e-04       2.78e-03      -1.13460722571346977929e+04</span>
-<span class="co">#  128       1.50e-04       2.75e-03      -1.13460695096242143336e+04</span>
-<span class="co">#  129       1.50e-04       2.71e-03      -1.13460667950998522429e+04</span>
-<span class="co">#  130       1.49e-04       2.68e-03      -1.13460641130495550897e+04</span>
-<span class="co">#  131       1.49e-04       2.65e-03      -1.13460614629813371721e+04</span>
-<span class="co">#  132       1.49e-04       2.62e-03      -1.13460588444220684323e+04</span>
-<span class="co">#  133       1.48e-04       2.59e-03      -1.13460562569163776061e+04</span>
-<span class="co">#  134       1.47e-04       2.56e-03      -1.13460537000255790190e+04</span>
-<span class="co">#  135       1.47e-04       2.53e-03      -1.13460511733267139789e+04</span>
-<span class="co">#  136       1.46e-04       2.50e-03      -1.13460486764115958067e+04</span>
-<span class="co">#  137       1.45e-04       2.47e-03      -1.13460462088859185315e+04</span>
-<span class="co">#  138       1.45e-04       2.44e-03      -1.13460437703684474400e+04</span>
-<span class="co">#  139       1.44e-04       2.41e-03      -1.13460413604902314546e+04</span>
-<span class="co">#  140       1.43e-04       2.38e-03      -1.13460389788938500715e+04</span>
-<span class="co">#  141       1.42e-04       2.35e-03      -1.13460366252327366965e+04</span>
-<span class="co">#  142       1.41e-04       2.33e-03      -1.13460342991705147142e+04</span>
-<span class="co">#  143       1.40e-04       2.30e-03      -1.13460320003803735744e+04</span>
-<span class="co">#  144       1.39e-04       2.27e-03      -1.13460297285444976296e+04</span>
-<span class="co">#  145       1.38e-04       2.25e-03      -1.13460274833535077050e+04</span>
-<span class="co">#  146       1.37e-04       2.22e-03      -1.13460252645059463248e+04</span>
-<span class="co">#  147       1.36e-04       2.19e-03      -1.13460230717077956797e+04</span>
-<span class="co">#  148       1.35e-04       2.17e-03      -1.13460209046720010519e+04</span>
-<span class="co">#  149       1.34e-04       2.14e-03      -1.13460187631180651806e+04</span>
-<span class="co">#  150       1.33e-04       2.12e-03      -1.13460166467716080660e+04</span>
-<span class="co">#  151       1.32e-04       2.09e-03      -1.13460145553640195430e+04</span>
-<span class="co">#  152       1.31e-04       2.07e-03      -1.13460124886320700170e+04</span>
-<span class="co">#  153       1.30e-04       2.04e-03      -1.13460104463175703131e+04</span>
-<span class="co">#  154       1.29e-04       2.02e-03      -1.13460084281670824566e+04</span>
-<span class="co">#  155       1.28e-04       1.99e-03      -1.13460064339315795223e+04</span>
-<span class="co">#  156       1.27e-04       1.97e-03      -1.13460044633662037086e+04</span>
-<span class="co">#  157       1.25e-04       1.95e-03      -1.13460025162299662043e+04</span>
-<span class="co">#  158       1.24e-04       1.92e-03      -1.13460005922855161771e+04</span>
-<span class="co">#  159       1.23e-04       1.90e-03      -1.13459986912989097618e+04</span>
-<span class="co">#  160       1.22e-04       1.88e-03      -1.13459968130393863248e+04</span>
-<span class="co">#  161       1.21e-04       1.86e-03      -1.13459949572791610990e+04</span>
-<span class="co">#  162       1.19e-04       1.83e-03      -1.13459931237932414660e+04</span>
-<span class="co">#  163       1.18e-04       1.81e-03      -1.13459913123592559714e+04</span>
-<span class="co">#  164       1.17e-04       1.79e-03      -1.13459895227572578733e+04</span>
-<span class="co">#  165       1.16e-04       1.77e-03      -1.13459877547695959947e+04</span>
-<span class="co">#  166       1.14e-04       1.75e-03      -1.13459860081807728420e+04</span>
-<span class="co">#  167       1.13e-04       1.73e-03      -1.13459842827772827150e+04</span>
-<span class="co">#  168       1.12e-04       1.70e-03      -1.13459825783475334902e+04</span>
-<span class="co">#  169       1.11e-04       1.68e-03      -1.13459808946816647222e+04</span>
-<span class="co">#  170       1.09e-04       1.66e-03      -1.13459792315715039877e+04</span>
-<span class="co">#  171       1.08e-04       1.64e-03      -1.13459775888104340993e+04</span>
-<span class="co">#  172       1.07e-04       1.62e-03      -1.13459759661933094321e+04</span>
-<span class="co">#  173       1.06e-04       1.60e-03      -1.13459743635163868021e+04</span>
-<span class="co">#  174       1.05e-04       1.58e-03      -1.13459727805772072315e+04</span>
-<span class="co">#  175       1.03e-04       1.56e-03      -1.13459712171745886735e+04</span>
-<span class="co">#  176       1.02e-04       1.54e-03      -1.13459696731085023202e+04</span>
-<span class="co">#  177       1.01e-04       1.52e-03      -1.13459681481800507754e+04</span>
-<span class="co">#  178       9.98e-05       1.51e-03      -1.13459666421914134844e+04</span>
-<span class="co"># Done!</span>
-<span class="co"># Processing the outputs... Done!</span>
-<span class="co"># mr.mash successfully executed in 0.1935222 minutes!</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mr.mash.html">mr.mash</a></span><span class="op">(</span><span class="va">Xtrain</span>, <span class="va">Ytrain</span>, <span class="va">S0</span>, update_V<span class="op">=</span><span class="cn">TRUE</span>, verbose<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <p>Compare the “fitted” values of Y against the true Y in the training
 set.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">fitted</span>,<span class="va">Ytrain</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,
-     ylab <span class="op">=</span> <span class="st">"fitted"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">fitted</span>,<span class="va">Ytrain</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,</span>
+<span>     ylab <span class="op">=</span> <span class="st">"fitted"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mr_mash_intro_files/figure-html/plot-pred-train-1.png" width="360" style="display: block; margin: auto;"></p>
 <p>Now predict Y in test examples using the fitted model. Compare the
 predicted Ys to the true values:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">Ytest_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit</span>,<span class="va">Xtest</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">Ytest_est</span>,<span class="va">Ytest</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,
-     ylab <span class="op">=</span> <span class="st">"predicted"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">Ytest_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit</span>,<span class="va">Xtest</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">Ytest_est</span>,<span class="va">Ytest</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,</span>
+<span>     ylab <span class="op">=</span> <span class="st">"predicted"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mr_mash_intro_files/figure-html/plot-pred-test-1.png" width="360" style="display: block; margin: auto;"></p>
+<p>Compute prediction accuracy more formally, in terms of <span class="math inline">\(R^2\)</span> (the maximum value would be 0.5 in
+this case).</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">r2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">vector</a></span><span class="op">(</span><span class="st">"numeric"</span>, <span class="va">r</span><span class="op">)</span></span>
+<span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="va">r</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="va">fit_acc</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Ytest</span><span class="op">[</span>, <span class="va">i</span><span class="op">]</span> <span class="op">~</span> <span class="va">Ytest_est</span><span class="op">[</span>, <span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="va">r2</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_acc</span><span class="op">)</span><span class="op">$</span><span class="va">r.squared</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">r2</span></span>
+<span><span class="co"># [1] 0.4977056 0.4558241 0.4950439 0.5203570 0.4699979</span></span></code></pre></div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

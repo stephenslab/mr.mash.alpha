@@ -18,7 +18,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mr.mash.alpha</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2-21</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2-26</span>
       </span>
     </div>
 
@@ -52,93 +52,139 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">simulate_mr_mash_data</span><span class="op">(</span>
-  <span class="va">n</span>,
-  <span class="va">p</span>,
-  <span class="va">p_causal</span>,
-  <span class="va">r</span>,
-  r_causal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">r</span><span class="op">)</span>,
-  intercepts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">r</span><span class="op">)</span>,
-  pve <span class="op">=</span> <span class="fl">0.2</span>,
-  B_cor <span class="op">=</span> <span class="fl">1</span>,
-  B_scale <span class="op">=</span> <span class="fl">1</span>,
-  w <span class="op">=</span> <span class="fl">1</span>,
-  X_cor <span class="op">=</span> <span class="fl">0</span>,
-  X_scale <span class="op">=</span> <span class="fl">1</span>,
-  V_cor <span class="op">=</span> <span class="fl">0</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">simulate_mr_mash_data</span><span class="op">(</span></span>
+<span>  <span class="va">n</span>,</span>
+<span>  <span class="va">p</span>,</span>
+<span>  <span class="va">p_causal</span>,</span>
+<span>  <span class="va">r</span>,</span>
+<span>  r_causal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">r</span><span class="op">)</span>,</span>
+<span>  intercepts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">r</span><span class="op">)</span>,</span>
+<span>  pve <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>  B_cor <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  B_scale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  w <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  X_cor <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  X_scale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  V_cor <span class="op">=</span> <span class="fl">0</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>n</dt>
 <dd><p>scalar indicating the number of samples.</p></dd>
+
+
 <dt>p</dt>
 <dd><p>scalar indicating the number of variables.</p></dd>
+
+
 <dt>p_causal</dt>
 <dd><p>scalar indicating the number of causal variables.</p></dd>
+
+
 <dt>r</dt>
 <dd><p>scalar indicating the number of responses.</p></dd>
+
+
 <dt>r_causal</dt>
 <dd><p>a list of numeric vectors (one element for each mixture component) 
 indicating in which responses the causal variables have an effect.</p></dd>
+
+
 <dt>intercepts</dt>
 <dd><p>numeric vector of intercept for each response.</p></dd>
+
+
 <dt>pve</dt>
 <dd><p>per-response proportion of variance explained by the causal variables.</p></dd>
+
+
 <dt>B_cor</dt>
 <dd><p>scalar or numeric vector (one element for each mixture component)
 with positive correlation [0, 1] between causal effects.</p></dd>
+
+
 <dt>B_scale</dt>
 <dd><p>scalar or numeric vector (one element for each mixture component) with the 
 diagonal value for Sigma_k;</p></dd>
+
+
 <dt>w</dt>
 <dd><p>scalar or numeric vector (one element for each mixture component) with mixture 
 proportions associated to each mixture component.</p></dd>
+
+
 <dt>X_cor</dt>
 <dd><p>scalar indicating the positive correlation [0, 1] between variables.</p></dd>
+
+
 <dt>X_scale</dt>
 <dd><p>scalar indicating the diagonal value for Gamma.</p></dd>
+
+
 <dt>V_cor</dt>
 <dd><p>scalar indicating the positive correlation [0, 1] between residuals</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A list with some or all of the
+    
+
+<p>A list with some or all of the
 following elements:</p>
 <dl><dt>X</dt>
 <dd><p>n x p matrix of variables.</p></dd>
+
+
 <dt>Y</dt>
 <dd><p>n x r matrix of responses.</p></dd>
+
+
 <dt>B</dt>
 <dd><p>p x r matrix of effects.</p></dd>
+
+
 <dt>V</dt>
 <dd><p>r x r residual covariance matrix among responses.</p></dd>
+
+  
 <dt>Sigma</dt>
 <dd><p>list of r x r covariance matrices among the effects.</p></dd>
+ 
+
 <dt>Gamma</dt>
 <dd><p>p x p covariance matrix among the variables.</p></dd>
+
+
 <dt>intercepts</dt>
 <dd><p>r-vector of intercept for each response.</p></dd>
+
+
 <dt>causal_responses</dt>
 <dd><p>a list of numeric vectors of indexes indicating which responses have
   causal effects for each mixture component.</p></dd>
+
+  
 <dt>causal_variables</dt>
 <dd><p>p_causal-vector of indexes indicating which variables are causal.</p></dd>
+  
+
 <dt>causal_vars_to_mixture_comps</dt>
 <dd><p>p_causal-vector of indexes indicating from which
   mixture components each causal effect comes.</p></dd>
+
 </dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">simulate_mr_mash_data</span><span class="op">(</span>n<span class="op">=</span><span class="fl">50</span>, p<span class="op">=</span><span class="fl">40</span>, p_causal<span class="op">=</span><span class="fl">20</span>, r<span class="op">=</span><span class="fl">5</span>,</span>
-<span class="r-in">                             r_causal<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>, intercepts<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">5</span><span class="op">)</span>,</span>
-<span class="r-in">                             pve<span class="op">=</span><span class="fl">0.2</span>, B_cor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, B_scale<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span class="r-in">                             w<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span>, X_cor<span class="op">=</span><span class="fl">0.5</span>, X_scale<span class="op">=</span><span class="fl">1</span>, </span>
-<span class="r-in">                             V_cor<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span>
-<span class="r-in">                             </span>
-<span class="r-in">                             </span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">simulate_mr_mash_data</span><span class="op">(</span>n<span class="op">=</span><span class="fl">50</span>, p<span class="op">=</span><span class="fl">40</span>, p_causal<span class="op">=</span><span class="fl">20</span>, r<span class="op">=</span><span class="fl">5</span>,</span></span>
+<span class="r-in"><span>                             r_causal<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>, intercepts<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">5</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                             pve<span class="op">=</span><span class="fl">0.2</span>, B_cor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, B_scale<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                             w<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span>, X_cor<span class="op">=</span><span class="fl">0.5</span>, X_scale<span class="op">=</span><span class="fl">1</span>, </span></span>
+<span class="r-in"><span>                             V_cor<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                             </span></span>
+<span class="r-in"><span>                             </span></span>
 </code></pre></div>
     </div>
   </div>
@@ -153,7 +199,7 @@ following elements:</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>

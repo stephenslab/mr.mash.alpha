@@ -18,7 +18,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mr.mash.alpha</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2-21</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2-26</span>
       </span>
     </div>
 
@@ -52,14 +52,14 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">compute_data_driven_covs</span><span class="op">(</span>
-  <span class="va">sumstats</span>,
-  subset_thresh <span class="op">=</span> <span class="cn">NULL</span>,
-  n_pcs <span class="op">=</span> <span class="fl">3</span>,
-  flash_factors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"default"</span>, <span class="st">"nonneg"</span><span class="op">)</span>,
-  flash_remove_singleton <span class="op">=</span> <span class="cn">FALSE</span>,
-  Gamma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">sumstats</span><span class="op">$</span><span class="va">Bhat</span><span class="op">)</span><span class="op">)</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_data_driven_covs</span><span class="op">(</span></span>
+<span>  <span class="va">sumstats</span>,</span>
+<span>  subset_thresh <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_pcs <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  flash_factors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"default"</span>, <span class="st">"nonneg"</span><span class="op">)</span>,</span>
+<span>  flash_remove_singleton <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  Gamma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">sumstats</span><span class="op">$</span><span class="va">Bhat</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -67,23 +67,36 @@
     <dl><dt>sumstats</dt>
 <dd><p>a list with two elements. 1 - Bhat, a numeric vector of regression coefficients.
 2 - Shat, a numeric vector of of standard erros for the regression coefficients.</p></dd>
+
+
 <dt>subset_thresh</dt>
 <dd><p>scalar indicating the threshold for selecting the effects to be used for computing 
 the covariance matrices based on false local sign rate (lfsr) for a response-by-response ash analysis.</p></dd>
+
+
 <dt>n_pcs</dt>
 <dd><p>indicating the number of principal components to be selected.</p></dd>
+
+
 <dt>flash_factors</dt>
 <dd><p>factors "default" to use <code>flashr</code> default function to initialize factors, currently <code>udv_si</code>. 
 "nonneg" to implement a non-negative constraint on the factors</p></dd>
+
+
 <dt>flash_remove_singleton</dt>
 <dd><p>whether or not factors corresponding to singleton matrices should be removed from output.</p></dd>
+
+
 <dt>Gamma</dt>
 <dd><p>an r x r correlation matrix for the residuals; must be positive
 definite.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A list containing the (de-noised) data-driven covariance matrices.</p>
+    
+
+<p>A list containing the (de-noised) data-driven covariance matrices.</p>
     </div>
 
   </div>
@@ -98,7 +111,7 @@ definite.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>
