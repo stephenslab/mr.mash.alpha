@@ -76,35 +76,62 @@ Carbonetto &amp; Fabio Morgante</h4>
 
     
     
-<p>The aim of this vignette is to introduce the basic steps of a mr.mash
-analysis, fitting the mr.mash model then using it to make
-predictions.</p>
-<p>First, we set the seed and load the mr.mash R package.</p>
+<p>The aim of this vignette is to introduce the basic steps of a
+<em>mr.mash</em> analysis, fitting the <em>mr.mash</em> model then using
+it to make predictions.</p>
+<p>First, we set the seed and load the <code>mr.mash.alpha</code> R
+package.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/stephenslab/mr.mash.alpha" class="external-link">mr.mash.alpha</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span></code></pre></div>
-<p>Simulate a data set with 1000 individuals, 100 predictors and 5
-responses. The 20 causal variables (randomly sampled from the total 100)
-have equal effects across responses and explain 50% of the total
-per-response variance.</p>
+<div class="section level2">
+<h2 id="step-1-simulate-example-data">Step 1 – Simulate example data<a class="anchor" aria-label="anchor" href="#step-1-simulate-example-data"></a>
+</h2>
+<p>We start by simulating a data set with 800 individuals, 1000
+predictors and 5 responses. We then 5 causal variables (randomly sampled
+from the total 1000) are assigned equal effects across responses and
+explain 20% of the total per-response variance. This would be roughly
+equivalent to one gene in the “equal effects” scenario in the
+<em>mr.mash</em> (with the difference being that genotypes are simulated
+here).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
-<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
-<span><span class="va">p_causal</span> <span class="op">&lt;-</span> <span class="fl">20</span></span>
+<code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">800</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
+<span><span class="va">p_causal</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
 <span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
-<span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_mr_mash_data.html">simulate_mr_mash_data</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">p</span>, <span class="va">p_causal</span>, <span class="va">r</span>, pve<span class="op">=</span><span class="fl">0.5</span>, B_cor<span class="op">=</span><span class="fl">1</span>,</span>
+<span><span class="va">pve</span> <span class="op">&lt;-</span> <span class="fl">0.2</span></span>
+<span><span class="va">B_cor</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
+<span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_mr_mash_data.html">simulate_mr_mash_data</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">p</span>, <span class="va">p_causal</span>, <span class="va">r</span>, pve<span class="op">=</span><span class="va">pve</span>, B_cor<span class="op">=</span><span class="va">B_cor</span>,</span>
 <span>                             B_scale<span class="op">=</span><span class="fl">1</span>, X_cor<span class="op">=</span><span class="fl">0</span>, X_scale<span class="op">=</span><span class="fl">1</span>, V_cor<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></code></pre></div>
-<p>Split the data into a training set and a test set.</p>
+</div>
+<div class="section level2">
+<h2 id="step-2-split-the-data-into-training-and-test-sets">Step 2 – Split the data into training and test sets<a class="anchor" aria-label="anchor" href="#step-2-split-the-data-into-training-and-test-sets"></a>
+</h2>
+<p>We then split the data into a training set and a test set.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Ytrain</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>,<span class="op">]</span></span>
 <span><span class="va">Xtrain</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>,<span class="op">]</span></span>
 <span><span class="va">Ytest</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>,<span class="op">]</span></span>
 <span><span class="va">Xtest</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>,<span class="op">]</span></span></code></pre></div>
-<p>To run mr.mash, we need to first specify the covariances in the
-mixture-of-normals prior. In this example, we use a mixture of
-“canonical” covariances. However, “data-driven” covariances can also be
-used – here’s an <a href="https://stephenslab.github.io/mashr/articles/intro_mash_dd.html" class="external-link">example</a>
-of how to compute these matrices.</p>
+</div>
+<div class="section level2">
+<h2 id="step-3-define-the-mixture-prior">Step 3 – Define the mixture prior<a class="anchor" aria-label="anchor" href="#step-3-define-the-mixture-prior"></a>
+</h2>
+<p>To run <em>mr.mash</em>, we need to first specify the covariances in
+the mixture-of-normals prior, which are supposed to capture the effect
+sharing patterns across responses. In this example, we use a mixture of
+“canonical” covariances computed using
+<code><a href="../reference/compute_canonical_covs.html">compute_canonical_covs()</a></code>. However, “data-driven”
+covariances can also be used – here’s an <a href="https://stephenslab.github.io/mashr/articles/intro_mash_dd.html" class="external-link">example</a>
+of how to compute these matrices. Regardless of the type of covariance
+matrices, these are each multiplied by a grid of scaling factors
+computed using <code><a href="../reference/autoselect.mixsd.html">autoselect.mixsd()</a></code>, which are supposed to
+capture the magnitude of the effects. The expansion is done using
+<code><a href="../reference/expand_covs.html">expand_covs()</a></code>, which also adds a matrix of all zeros (our
+spike) when requested. The grid is derived from the regression
+coefficients and their standard errors from univariate simple linear
+regression which can be computed using
+<code><a href="../reference/compute_univariate_sumstats.html">compute_univariate_sumstats()</a></code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">univ_sumstats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_univariate_sumstats.html">compute_univariate_sumstats</a></span><span class="op">(</span><span class="va">Xtrain</span>, <span class="va">Ytrain</span>,</span>
 <span>                   standardize<span class="op">=</span><span class="cn">TRUE</span>, standardize.response<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
@@ -112,27 +139,33 @@ of how to compute these matrices.</p>
 <span><span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_canonical_covs.html">compute_canonical_covs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">Ytrain</span><span class="op">)</span>, singletons<span class="op">=</span><span class="cn">TRUE</span>,</span>
 <span>                             hetgrid<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_covs.html">expand_covs</a></span><span class="op">(</span><span class="va">S0</span>, <span class="va">grid</span>, zeromat<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p>Now we are ready to fit a mr.mash model to the training data.</p>
+</div>
+<div class="section level2">
+<h2 id="step-4-fit-mr-mash-to-the-training-data">Step 4 – Fit <em>mr.mash</em> to the training data<a class="anchor" aria-label="anchor" href="#step-4-fit-mr-mash-to-the-training-data"></a>
+</h2>
+<p>Now we are ready to fit a mr.mash model to the training data using
+<code><a href="../reference/mr.mash.html">mr.mash()</a></code>, to estimate the posterior mean of the regression
+coefficients.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mr.mash.html">mr.mash</a></span><span class="op">(</span><span class="va">Xtrain</span>, <span class="va">Ytrain</span>, <span class="va">S0</span>, update_V<span class="op">=</span><span class="cn">TRUE</span>, verbose<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p>Compare the “fitted” values of Y against the true Y in the training
-set.</p>
+</div>
+<div class="section level2">
+<h2 id="step-5-predict-responses-in-the-test">Step 5 – Predict responses in the test<a class="anchor" aria-label="anchor" href="#step-5-predict-responses-in-the-test"></a>
+</h2>
+<p>We then use the fitted model from step 4 to predict the response
+values in the test set. In this plot, we compare the true and predicted
+values</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">fitted</span>,<span class="va">Ytrain</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,</span>
-<span>     ylab <span class="op">=</span> <span class="st">"fitted"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mr_mash_intro_files/figure-html/plot-pred-train-1.png" width="360" style="display: block; margin: auto;"></p>
-<p>Now predict Y in test examples using the fitted model. Compare the
-predicted Ys to the true values:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Ytest_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit</span>,<span class="va">Xtest</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">Ytest_est</span>,<span class="va">Ytest</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,</span>
 <span>     ylab <span class="op">=</span> <span class="st">"predicted"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mr_mash_intro_files/figure-html/plot-pred-test-1.png" width="360" style="display: block; margin: auto;"></p>
-<p>Compute prediction accuracy more formally, in terms of <span class="math inline">\(R^2\)</span> (the maximum value would be 0.5 in
-this case).</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<p><img src="mr_mash_intro_files/figure-html/plot-pred-test-1.png" width="600" style="display: block; margin: auto;"></p>
+<p>However, we also want to assess prediction accuracy more formally.
+Here, we do that in terms of <span class="math inline">\(R^2\)</span>
+which is easy to interpret – its maximum value would be the proportion
+of variance explained, 0.2 in this case).</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">r2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">vector</a></span><span class="op">(</span><span class="st">"numeric"</span>, <span class="va">r</span><span class="op">)</span></span>
 <span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="va">r</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="va">fit_acc</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Ytest</span><span class="op">[</span>, <span class="va">i</span><span class="op">]</span> <span class="op">~</span> <span class="va">Ytest_est</span><span class="op">[</span>, <span class="va">i</span><span class="op">]</span><span class="op">)</span></span>
@@ -140,12 +173,16 @@ this case).</p>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="va">r2</span></span>
-<span><span class="co"># [1] 0.4977056 0.4558241 0.4950439 0.5203570 0.4699979</span></span></code></pre></div>
+<span><span class="co"># [1] 0.1426443 0.1937896 0.1248826 0.1756781 0.2181555</span></span></code></pre></div>
+<p>We can see that the predictions are pretty accurate.</p>
+</div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
-      </div>
+        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
+    </nav>
+</div>
 
 </div>
 
