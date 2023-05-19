@@ -15,97 +15,158 @@ vignette: >
 ---
 
 The aim of this vignette is to introduce the basic steps of a
-*mr.mash* analysis through a toy example. 
+mr.mash analysis through a toy example. To learn more about
+mr.mash, please see the [paper][mr-mash-biorxiv].
 
 ```{r knitr-opts, include=FALSE}
 knitr::opts_chunk$set(comment = "#",collapse = TRUE,results = "hold",
                       fig.align = "center",dpi = 120)
 ```
 
-First, we set the seed and load the `mr.mash.alpha` R package.
+First, we set the seed to make the results more easily reproducible,
+and we load the "mr.mash.alpha" package.
 
-```{r set-seed}
+```{r load-pkgs}
 library(mr.mash.alpha)
 set.seed(123)
 ```
 
-## Step 1 -- Simulate example data
+We illustrate the application of mr.mash to a data set simulated from
+a multivariate, multiple linear regression with 5 responses in which
+the coefficients are the same for all responses. In the target
+application considered in the paper---prediction of multi-tissue gene
+expression from genotypes---this would correspond to the situation in
+which we would like to predict expression of a single gene in 5
+different tissues from genotype data at multiple SNPs, and the SNPs
+have the same effects on gene expression in all 5 tissues. (In
+multi-tissue gene expression we would normally like to predict
+expression of many genes, but to simplify this vignette here we
+illustrate the key ideas with a single gene.)
 
-We start by simulating a data set with 800 individuals, 1000
-predictors and 5 responses.  We then 5 causal variables (randomly
-sampled from the total 1000) are assigned equal effects across
-responses and explain 20\% of the total per-response variance. This
-would be roughly equivalent to one gene in the "equal effects"
-scenario in the *mr.mash* (with the difference being that genotypes
-are simulated here).
+Although this simulation is not a particularly realistic, this is
+meant to illustrate the benefits of mr.mash: by modeling the sharing
+of effects across tissues, mr.mash is able to more accurately estimate
+the effects in multiple tissues, and therefore is able to obtain
+better predictions.
+
+We start by simulating 150 samples from a multivariate, multiple
+linear regression model in which 5 out of the 800 variables (SNPs)
+affect the 5 responses (expression levels).
 
 ```{r sim-data-1, results="hide"}
-n <- 300
-p <- 1000
-p_causal <- 5
-r <- 5
-pve <- 0.2
-B_cor <- 1
-out <- simulate_mr_mash_data(n, p, p_causal, r, pve=pve, B_cor=B_cor,
-                             B_scale=1, X_cor=0, X_scale=1, V_cor=0)
+dat <- simulate_mr_mash_data(n = 150,p = 800,p_causal = 5,r = 5,pve = 0.5,
+							 V_cor = 0.25)
 ```
 
-## Step 2 -- Split the data into training and test sets
-
-We then split the data into a training set and a test set.
+Next we split the samples into a training set (with 100 samples) and
+test set (with 50 samples).
 
 ```{r sim-data-2}
-ntest <- 200
-Ytrain <- out$Y[-(1:ntest),]
-Xtrain <- out$X[-(1:ntest),]
-Ytest <- out$Y[1:ntest,]
-Xtest <- out$X[1:ntest,]
+ntest  <- 50 
+Ytrain <- dat$Y[-(1:ntest),]
+Xtrain <- dat$X[-(1:ntest),]
+Ytest  <- dat$Y[1:ntest,]
+Xtest  <- dat$X[1:ntest,]
 ```
 
-## Step 3 -- Define the mixture prior
+Define the mr.mash prior
+------------------------
 
-To run *mr.mash*, we need to first specify the covariances in the
-mixture-of-normals prior, which are supposed to capture the effect 
-sharing patterns across responses. In this example, we use a mixture of
-"canonical" covariances computed using `compute_canonical_covs()`. 
-However, "data-driven" covariances can also be used -- here's an
-[example](https://stephenslab.github.io/mashr/articles/intro_mash_dd.html)
-of how to compute these matrices. 
-Regardless of the type of covariance matrices, these are each multiplied 
-by a grid of scaling factors computed using `autoselect.mixsd()`, which 
-are supposed to capture the magnitude of the effects. The expansion is done
-using `expand_covs()`, which also adds a matrix of all zeros (our spike) 
-when requested. The grid is derived from the regression coefficients and 
-their standard errors from univariate simple linear regression which can be
-computed using `compute_univariate_sumstats()`.
+To run mr.mash, we need to first specify the covariances in the
+mixture of normals prior. The idea is that the chosen collection of
+covariance matrices should include a variety of potential effect
+sharing patterns, and in the model fitting stage the prior should then
+assign most weight to the sharing patterns that are present in the
+data, and little or no weight on patterns that are inconsistent with
+the data. In general, we recommend learning
+["data-driven" covariance matrices][mashr-dd-vignette].  But here, for
+simplicity, we instead use "canonical" covariances which are not
+adaptive, but nonetheless well suited for this toy example since the
+true effects are the same across responses/tissues.
 
-```{r specify-prior}
-univ_sumstats <- compute_univariate_sumstats(Xtrain, Ytrain,
-                   standardize=TRUE, standardize.response=FALSE)
-grid <- autoselect.mixsd(univ_sumstats, mult=sqrt(2))^2
-S0 <- compute_canonical_covs(ncol(Ytrain), singletons=TRUE,
-                             hetgrid=c(0, 0.25, 0.5, 0.75, 1))
-S0 <- expand_covs(S0, grid, zeromat=TRUE)
+```{r choose-prior-1}
+S0 <- compute_canonical_covs(r = 5,singletons = TRUE,
+                             hetgrid = seq(0,1,0.25))
 ```
 
-## Step 4 -- Fit *mr.mash* to the training data
+This gives a mixture of 10 covariance matrices capturing a variety of
+"canonical" effect-sharing patterns:
 
-Now we are ready to fit a mr.mash model to the training data using `mr.mash()`,
-to estimate the posterior mean of the regression coefficients.
+```{r choose-prior-2}
+names(S0)
+```
 
-```{r fit-mr-mash, results="hide"}
-S0_ind <- compute_canonical_covs(ncol(Ytrain),singletons = FALSE,
+To illustrate the benefits of modeling a variety of effect-sharing
+patterns, we also try out mr.mash with a simpler mixture of covariance
+matrices in which the effects are effectively independent across
+tissues. Although this may seem to be a very poor choice of prior,
+particularly for this example, it turns out that several multivariate
+regression methods assume, implicitly or explicitly, this prior.
+
+```{r choose-prior-3}
+S0_ind <- compute_canonical_covs(r = 5,singletons = FALSE,
                                  hetgrid = c(0,0.001,0.01))
-S0_ind <- expand_covs(S0_ind,grid,zeromat = TRUE)
-fit_ind <- mr.mash(Xtrain,Ytrain,S0_ind,update_V = TRUE)
+names(S0_ind)
+```
+
+Regardless of the covariance matrices are chosen, it is recommended to
+also consider a variety of effect scales in the prior. This is
+normally achieved in mr.mash by expanding the mixture across a
+specifed grid of scaling factors. Here we choose this grid in an
+adaptive fashion based on the data:
+
+```{r choose-prior-4}
+univ_sumstats <- compute_univariate_sumstats(Xtrain,Ytrain,standardize = TRUE)
+scaling_grid <- autoselect.mixsd(univ_sumstats,mult = sqrt(2))^2
+S0 <- expand_covs(S0,scaling_grid)
+S0_ind <- expand_covs(S0_ind,scaling_grid)
+```
+
+Fit a mr.mash model to the data
+-------------------------------
+
+Having specified the mr.mash prior, we are now ready to fit a mr.mash
+model to the training data (this may take a few minutes to run):
+
+```{r fit-mr-mash-1}
 fit <- mr.mash(Xtrain,Ytrain,S0,update_V = TRUE)
+```
+
+And for comparison we fit a second mr.mash model using the simpler and
+less flexible prior:
+
+```{r fit-mr-mash-2}
+fit_ind <- mr.mash(Xtrain,Ytrain,S0_ind,update_V = TRUE)
+```
+
+(Notice that the less complex model also takes less time to fit.)
+
+For prediction, the key output is the posterior mean estimtes of the
+regression coefficients, stored in the "mu1" output. Let's compare the
+estimates to the ground truth:
+
+```{r plot-coefs, fig.height=3.5, fig.width=6}
 par(mfrow = c(1,2))
-plot(out$B,fit_ind$mu1,pch = 20,xlim = c(-1.75,0.75),ylim = c(-1.75,0.75),
-     main = cor(as.vector(out$B),as.vector(fit_ind$mu1)))
+plot(dat$B,fit_ind$mu1,pch = 20,xlab = "true",ylab = "estimated",
+     main = sprintf("cor = %0.3f",
+	                cor(as.vector(dat$B),as.vector(fit_ind$mu1))))
 abline(a = 0,b = 1,col = "royalblue",lty = "dotted")
-plot(out$B,fit$mu1,pch = 20,xlim = c(-1.75,0.75),ylim = c(-1.75,0.75),
-     main = cor(as.vector(out$B),as.vector(fit$mu1)))
+plot(dat$B,fit$mu1,pch = 20,xlab = "true",ylab = "estimated",
+     main = sprintf("cor = %0.3f",
+	                cor(as.vector(dat$B),as.vector(fit$mu1))))
 abline(a = 0,b = 1,col = "royalblue",lty = "dotted")
+```
+
+As expected, the coefficients on the left-hand side obtained using an
+"independent effects" prior are not as accurate as the the
+coefficients estimated using the more flexible prior (right-hand side).
+
+While perhaps not of primary interest, for diagnostic purposes it is
+often helpfl to examine the estimated mixture weights in the prior as
+well as the estimated residual covariance matrix.
+
+```{r prior-mixture-weights}
+
 ```
 
 ## Step 5 -- Predict responses in the test
@@ -113,26 +174,16 @@ We then use the fitted model from step 4 to predict the response values in the
 test set. In this plot, we compare the true and predicted values
 
 ```{r plot-pred-test, fig.height=5, fig.width=5}
+par(mfrow = c(1,2))
+Ytest_est <- predict(fit_ind,Xtest)
+plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",
+     ylab = "predicted",main = cor(as.vector(Ytest_est),as.vector(Ytest)))
+abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 Ytest_est <- predict(fit,Xtest)
 plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",
-     ylab = "predicted")
+     ylab = "predicted",main = cor(as.vector(Ytest_est),as.vector(Ytest)))
 abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 ```
 
-However, we also want to assess prediction accuracy more
-formally. Here, we do that in terms of $R^2$ which is easy to
-interpret -- its maximum value would be the proportion of variance
-explained, 0.2 in this case).
-
-```{r pred-acc-test}
-r2 <- vector("numeric", r)
-for(i in 1:r){
-  fit_acc  <- lm(Ytest[, i] ~ Ytest_est[, i])
-  r2[i] <- summary(fit_acc)$r.squared
-}
-
-r2
-```
-
-We can see that the predictions are pretty accurate.
-
+[mr-mash-biorxiv]: https://doi.org/10.1101/2022.11.22.517471 
+[mashr-dd-vignette]: https://stephenslab.github.io/mashr/articles/intro_mash_dd.html
