@@ -14,8 +14,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-The aim of this vignette is to introduce the basic steps of a *mr.mash*
-analysis, fitting the *mr.mash* model then using it to make predictions.
+The aim of this vignette is to introduce the basic steps of a
+*mr.mash* analysis through a toy example. 
 
 ```{r knitr-opts, include=FALSE}
 knitr::opts_chunk$set(comment = "#",collapse = TRUE,results = "hold",
@@ -31,14 +31,16 @@ set.seed(123)
 
 ## Step 1 -- Simulate example data
 
-We start by simulating a data set with 800 individuals, 1000 predictors and 5 responses.
-We then 5 causal variables (randomly sampled from the total 1000) are assigned equal effects
-across responses and explain 20\% of the total per-response variance. This would be roughly
-equivalent to one gene in the "equal effects" scenario in the *mr.mash* (with the difference
-being that genotypes are simulated here).
+We start by simulating a data set with 800 individuals, 1000
+predictors and 5 responses.  We then 5 causal variables (randomly
+sampled from the total 1000) are assigned equal effects across
+responses and explain 20\% of the total per-response variance. This
+would be roughly equivalent to one gene in the "equal effects"
+scenario in the *mr.mash* (with the difference being that genotypes
+are simulated here).
 
 ```{r sim-data-1, results="hide"}
-n <- 800
+n <- 300
 p <- 1000
 p_causal <- 5
 r <- 5
@@ -53,10 +55,11 @@ out <- simulate_mr_mash_data(n, p, p_causal, r, pve=pve, B_cor=B_cor,
 We then split the data into a training set and a test set.
 
 ```{r sim-data-2}
-Ytrain <- out$Y[-c(1:200),]
-Xtrain <- out$X[-c(1:200),]
-Ytest <- out$Y[c(1:200),]
-Xtest <- out$X[c(1:200),]
+ntest <- 200
+Ytrain <- out$Y[-(1:ntest),]
+Xtrain <- out$X[-(1:ntest),]
+Ytest <- out$Y[1:ntest,]
+Xtest <- out$X[1:ntest,]
 ```
 
 ## Step 3 -- Define the mixture prior
@@ -90,8 +93,19 @@ S0 <- expand_covs(S0, grid, zeromat=TRUE)
 Now we are ready to fit a mr.mash model to the training data using `mr.mash()`,
 to estimate the posterior mean of the regression coefficients.
 
-```{r fit-mr-mash}
-fit <- mr.mash(Xtrain, Ytrain, S0, update_V=TRUE, verbose=FALSE)
+```{r fit-mr-mash, results="hide"}
+S0_ind <- compute_canonical_covs(ncol(Ytrain),singletons = FALSE,
+                                 hetgrid = c(0,0.001,0.01))
+S0_ind <- expand_covs(S0_ind,grid,zeromat = TRUE)
+fit_ind <- mr.mash(Xtrain,Ytrain,S0_ind,update_V = TRUE)
+fit <- mr.mash(Xtrain,Ytrain,S0,update_V = TRUE)
+par(mfrow = c(1,2))
+plot(out$B,fit_ind$mu1,pch = 20,xlim = c(-1.75,0.75),ylim = c(-1.75,0.75),
+     main = cor(as.vector(out$B),as.vector(fit_ind$mu1)))
+abline(a = 0,b = 1,col = "royalblue",lty = "dotted")
+plot(out$B,fit$mu1,pch = 20,xlim = c(-1.75,0.75),ylim = c(-1.75,0.75),
+     main = cor(as.vector(out$B),as.vector(fit$mu1)))
+abline(a = 0,b = 1,col = "royalblue",lty = "dotted")
 ```
 
 ## Step 5 -- Predict responses in the test
@@ -105,9 +119,10 @@ plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",
 abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 ```
 
-However, we also want to assess prediction accuracy more formally. Here, we do that
-in terms of $R^2$ which is easy to interpret -- its maximum value would be the 
-proportion of variance explained, 0.2 in this case).
+However, we also want to assess prediction accuracy more
+formally. Here, we do that in terms of $R^2$ which is easy to
+interpret -- its maximum value would be the proportion of variance
+explained, 0.2 in this case).
 
 ```{r pred-acc-test}
 r2 <- vector("numeric", r)
