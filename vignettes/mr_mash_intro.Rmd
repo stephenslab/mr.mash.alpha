@@ -19,7 +19,7 @@ mr.mash analysis through a toy example. To learn more about
 mr.mash, please see the [paper][mr-mash-biorxiv].
 
 ```{r knitr-opts, include=FALSE}
-knitr::opts_chunk$set(comment = "#",collapse = TRUE,results = "hold",
+knitr::opts_chunk$set(comment = "#",collapse = TRUE,
                       fig.align = "center",dpi = 120)
 ```
 
@@ -128,14 +128,14 @@ Fit a mr.mash model to the data
 Having specified the mr.mash prior, we are now ready to fit a mr.mash
 model to the training data (this may take a few minutes to run):
 
-```{r fit-mr-mash-1}
+```{r fit-mr-mash-1, results="hide"}
 fit <- mr.mash(Xtrain,Ytrain,S0,update_V = TRUE)
 ```
 
 And for comparison we fit a second mr.mash model using the simpler and
 less flexible prior:
 
-```{r fit-mr-mash-2}
+```{r fit-mr-mash-2, results="hide"}
 fit_ind <- mr.mash(Xtrain,Ytrain,S0_ind,update_V = TRUE)
 ```
 
@@ -165,25 +165,48 @@ While perhaps not of primary interest, for diagnostic purposes it is
 often helpfl to examine the estimated mixture weights in the prior as
 well as the estimated residual covariance matrix.
 
+Inspecting the top prior mixture weights from the better model, it is
+helpful to see that the "null" and "shared1" components are among the
+top components by weight. (The top component is the null component
+because most of the SNPs have no effect on gene expression.)
+
 ```{r prior-mixture-weights}
-
+head(sort(fit$w0,decreasing = TRUE),n = 10)
 ```
 
-## Step 5 -- Predict responses in the test
-We then use the fitted model from step 4 to predict the response values in the 
-test set. In this plot, we compare the true and predicted values
+Also, reassuringly, the estimated residual variance-covariance matrix
+is close to the matrix used to simulate the data:
 
-```{r plot-pred-test, fig.height=5, fig.width=5}
+```{r resid-var}
+dat$V
+fit$V
+```
+
+Use the fitted mr.mash model to make predictions
+------------------------------------------------
+
+We can use the fitted mr.mash model to predict gene expression from
+a genotype sample, including a sample not included in the training
+set. This is implemented by the "predict" method. Let's compare the
+predictions from the two mr.mash models:
+
+```{r plot-pred-test, fig.height=3.5, fig.width=6}
 par(mfrow = c(1,2))
-Ytest_est <- predict(fit_ind,Xtest)
-plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",
-     ylab = "predicted",main = cor(as.vector(Ytest_est),as.vector(Ytest)))
+Ypred <- predict(fit,Xtest)
+Ypred_ind <- predict(fit_ind,Xtest)
+plot(Ytest,Ypred_ind,pch = 20,col = "darkblue",xlab = "true",
+     ylab = "predicted",
+     main = sprintf("cor = %0.3f",cor(as.vector(Ytest),as.vector(Ypred_ind))))
 abline(a = 0,b = 1,col = "magenta",lty = "dotted")
-Ytest_est <- predict(fit,Xtest)
-plot(Ytest_est,Ytest,pch = 20,col = "darkblue",xlab = "true",
-     ylab = "predicted",main = cor(as.vector(Ytest_est),as.vector(Ytest)))
+plot(Ytest,Ypred,pch = 20,col = "darkblue",xlab = "true",
+     ylab = "predicted",
+     main = sprintf("cor = %0.3f",cor(as.vector(Ytest),as.vector(Ypred))))
 abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 ```
+
+Indeed, mr.mash with the more flexible prior (right-hand plot)
+produces more accurate predictions than mr.mash with the "independent
+effects" prior.
 
 [mr-mash-biorxiv]: https://doi.org/10.1101/2022.11.22.517471 
 [mashr-dd-vignette]: https://stephenslab.github.io/mashr/articles/intro_mash_dd.html
