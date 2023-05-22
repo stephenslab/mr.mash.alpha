@@ -70,7 +70,7 @@
                         <h4 data-toc-skip class="author">Peter
 Carbonetto &amp; Fabio Morgante</h4>
             
-            <h4 data-toc-skip class="date">2023-05-19</h4>
+            <h4 data-toc-skip class="date">2023-05-22</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/stephenslab/mr.mash.alpha/blob/HEAD/vignettes/mr_mash_intro.Rmd" class="external-link"><code>vignettes/mr_mash_intro.Rmd</code></a></small>
       <div class="hidden name"><code>mr_mash_intro.Rmd</code></div>
@@ -85,8 +85,8 @@ the <a href="https://doi.org/10.1101/2022.11.22.517471" class="external-link">pa
 <p>First, we set the seed to make the results more easily reproducible,
 and we load the “mr.mash.alpha” package.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/stephenslab/mr.mash.alpha" class="external-link">mr.mash.alpha</a></span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/stephenslab/mr.mash.alpha" class="external-link">mr.mash.alpha</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span></code></pre></div>
 <p>We illustrate the application of mr.mash to a data set simulated from
 a multivariate, multiple linear regression with 5 responses in which the
 coefficients are the same for all responses. In the target application
@@ -97,8 +97,8 @@ genotype data at multiple SNPs, and the SNPs have the same effects on
 gene expression in all 5 tissues. (In multi-tissue gene expression we
 would normally like to predict expression of many genes, but to simplify
 this vignette here we illustrate the key ideas with a single gene.)</p>
-<p>Although this simulation is not a particularly realistic, this is
-meant to illustrate the benefits of mr.mash: by modeling the sharing of
+<p>Although this simulation is not particularly realistic, this is meant
+to illustrate the benefits of mr.mash: by modeling the sharing of
 effects across tissues, mr.mash is able to more accurately estimate the
 effects in multiple tissues, and therefore is able to obtain better
 predictions.</p>
@@ -106,16 +106,16 @@ predictions.</p>
 linear regression model in which 5 out of the 800 variables (SNPs)
 affect the 5 responses (expression levels).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_mr_mash_data.html">simulate_mr_mash_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">150</span>,p <span class="op">=</span> <span class="fl">800</span>,p_causal <span class="op">=</span> <span class="fl">5</span>,r <span class="op">=</span> <span class="fl">5</span>,pve <span class="op">=</span> <span class="fl">0.5</span>,
-                             V_cor <span class="op">=</span> <span class="fl">0.25</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_mr_mash_data.html">simulate_mr_mash_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">150</span>,p <span class="op">=</span> <span class="fl">800</span>,p_causal <span class="op">=</span> <span class="fl">5</span>,r <span class="op">=</span> <span class="fl">5</span>,pve <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>                             V_cor <span class="op">=</span> <span class="fl">0.25</span><span class="op">)</span></span></code></pre></div>
 <p>Next we split the samples into a training set (with 100 samples) and
 test set (with 50 samples).</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">ntest</span>  <span class="op">&lt;-</span> <span class="fl">50</span> 
-<span class="va">Ytrain</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="op">-</span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">ntest</span><span class="op">)</span>,<span class="op">]</span>
-<span class="va">Xtrain</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="op">-</span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">ntest</span><span class="op">)</span>,<span class="op">]</span>
-<span class="va">Ytest</span>  <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="va">ntest</span>,<span class="op">]</span>
-<span class="va">Xtest</span>  <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="va">ntest</span>,<span class="op">]</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">ntest</span>  <span class="op">&lt;-</span> <span class="fl">50</span> </span>
+<span><span class="va">Ytrain</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="op">-</span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">ntest</span><span class="op">)</span>,<span class="op">]</span></span>
+<span><span class="va">Xtrain</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="op">-</span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">ntest</span><span class="op">)</span>,<span class="op">]</span></span>
+<span><span class="va">Ytest</span>  <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="va">ntest</span>,<span class="op">]</span></span>
+<span><span class="va">Xtest</span>  <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="va">ntest</span>,<span class="op">]</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="define-the-mr-mash-prior">Define the mr.mash prior<a class="anchor" aria-label="anchor" href="#define-the-mr-mash-prior"></a>
 </h2>
@@ -131,14 +131,14 @@ covariance matrices</a>. But here, for simplicity, we instead use
 suited for this toy example since the true effects are the same across
 responses/tissues.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_canonical_covs.html">compute_canonical_covs</a></span><span class="op">(</span>r <span class="op">=</span> <span class="fl">5</span>,singletons <span class="op">=</span> <span class="cn">TRUE</span>,
-                             hetgrid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">1</span>,<span class="fl">0.25</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_canonical_covs.html">compute_canonical_covs</a></span><span class="op">(</span>r <span class="op">=</span> <span class="fl">5</span>,singletons <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                             hetgrid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">1</span>,<span class="fl">0.25</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>This gives a mixture of 10 covariance matrices capturing a variety of
 “canonical” effect-sharing patterns:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">S0</span><span class="op">)</span>
-<span class="co">#  [1] "singleton1"  "singleton2"  "singleton3"  "singleton4"  "singleton5" </span>
-<span class="co">#  [6] "independent" "shared0.25"  "shared0.5"   "shared0.75"  "shared1"</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">S0</span><span class="op">)</span></span>
+<span><span class="co">#  [1] "singleton1"  "singleton2"  "singleton3"  "singleton4"  "singleton5" </span></span>
+<span><span class="co">#  [6] "independent" "shared0.25"  "shared0.5"   "shared0.75"  "shared1"</span></span></code></pre></div>
 <p>To illustrate the benefits of modeling a variety of effect-sharing
 patterns, we also try out mr.mash with a simpler mixture of covariance
 matrices in which the effects are effectively independent across
@@ -146,82 +146,89 @@ tissues. Although this may seem to be a very poor choice of prior,
 particularly for this example, it turns out that several multivariate
 regression methods assume, implicitly or explicitly, this prior.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">S0_ind</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_canonical_covs.html">compute_canonical_covs</a></span><span class="op">(</span>r <span class="op">=</span> <span class="fl">5</span>,singletons <span class="op">=</span> <span class="cn">FALSE</span>,
-                                 hetgrid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0.001</span>,<span class="fl">0.01</span><span class="op">)</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">S0_ind</span><span class="op">)</span>
-<span class="co"># [1] "independent" "shared0.001" "shared0.01"</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">S0_ind</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_canonical_covs.html">compute_canonical_covs</a></span><span class="op">(</span>r <span class="op">=</span> <span class="fl">5</span>,singletons <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>                                 hetgrid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0.001</span>,<span class="fl">0.01</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">S0_ind</span><span class="op">)</span></span>
+<span><span class="co"># [1] "independent" "shared0.001" "shared0.01"</span></span></code></pre></div>
 <p>Regardless of the covariance matrices are chosen, it is recommended
 to also consider a variety of effect scales in the prior. This is
 normally achieved in mr.mash by expanding the mixture across a specifed
 grid of scaling factors. Here we choose this grid in an adaptive fashion
 based on the data:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">univ_sumstats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_univariate_sumstats.html">compute_univariate_sumstats</a></span><span class="op">(</span><span class="va">Xtrain</span>,<span class="va">Ytrain</span>,standardize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-<span class="va">scaling_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/autoselect.mixsd.html">autoselect.mixsd</a></span><span class="op">(</span><span class="va">univ_sumstats</span>,mult <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span>
-<span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_covs.html">expand_covs</a></span><span class="op">(</span><span class="va">S0</span>,<span class="va">scaling_grid</span><span class="op">)</span>
-<span class="va">S0_ind</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_covs.html">expand_covs</a></span><span class="op">(</span><span class="va">S0_ind</span>,<span class="va">scaling_grid</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">univ_sumstats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_univariate_sumstats.html">compute_univariate_sumstats</a></span><span class="op">(</span><span class="va">Xtrain</span>,<span class="va">Ytrain</span>,standardize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">scaling_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/autoselect.mixsd.html">autoselect.mixsd</a></span><span class="op">(</span><span class="va">univ_sumstats</span>,mult <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span></span>
+<span><span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_covs.html">expand_covs</a></span><span class="op">(</span><span class="va">S0</span>,<span class="va">scaling_grid</span><span class="op">)</span></span>
+<span><span class="va">S0_ind</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_covs.html">expand_covs</a></span><span class="op">(</span><span class="va">S0_ind</span>,<span class="va">scaling_grid</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="fit-a-mr-mash-model-to-the-data">Fit a mr.mash model to the data<a class="anchor" aria-label="anchor" href="#fit-a-mr-mash-model-to-the-data"></a>
 </h2>
 <p>Having specified the mr.mash prior, we are now ready to fit a mr.mash
-model to the training data (this may take a few minutes to run):</p>
+model to the training data (this may take a few minutes to run). Given
+that the majority of the SNPs have no effect, we initialize the mixture
+weights with 99% of the weight on the null component and the rest of the
+weight split equally across the remaining components.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mr.mash.html">mr.mash</a></span><span class="op">(</span><span class="va">Xtrain</span>,<span class="va">Ytrain</span>,<span class="va">S0</span>,update_V <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">null_weight</span> <span class="op">&lt;-</span> <span class="fl">0.99</span></span>
+<span><span class="va">non_null_weight</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">-</span><span class="va">null_weight</span></span>
+<span><span class="va">w0_init</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">null_weight</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">non_null_weight</span><span class="op">/</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">S0</span><span class="op">)</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span>, <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">S0</span><span class="op">)</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mr.mash.html">mr.mash</a></span><span class="op">(</span>X<span class="op">=</span><span class="va">Xtrain</span>,Y<span class="op">=</span><span class="va">Ytrain</span>,S0<span class="op">=</span><span class="va">S0</span>, w0<span class="op">=</span><span class="va">w0_init</span>, update_V <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>And for comparison we fit a second mr.mash model using the simpler
 and less flexible prior:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">fit_ind</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mr.mash.html">mr.mash</a></span><span class="op">(</span><span class="va">Xtrain</span>,<span class="va">Ytrain</span>,<span class="va">S0_ind</span>,update_V <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">w0_init</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">null_weight</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">non_null_weight</span><span class="op">/</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">S0_ind</span><span class="op">)</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span>, <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">S0_ind</span><span class="op">)</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">fit_ind</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mr.mash.html">mr.mash</a></span><span class="op">(</span>X<span class="op">=</span><span class="va">Xtrain</span>,Y<span class="op">=</span><span class="va">Ytrain</span>,S0<span class="op">=</span><span class="va">S0_ind</span>,w0<span class="op">=</span><span class="va">w0_init</span>,update_V <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>(Notice that the less complex model also takes less time to fit.)</p>
-<p>For prediction, the key output is the posterior mean estimtes of the
+<p>For prediction, the key output is the posterior mean estimates of the
 regression coefficients, stored in the “mu1” output. Let’s compare the
 estimates to the ground truth:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">B</span>,<span class="va">fit_ind</span><span class="op">$</span><span class="va">mu1</span>,pch <span class="op">=</span> <span class="fl">20</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,ylab <span class="op">=</span> <span class="st">"estimated"</span>,
-     main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"cor = %0.3f"</span>,
-                    <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">B</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">fit_ind</span><span class="op">$</span><span class="va">mu1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"royalblue"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">B</span>,<span class="va">fit</span><span class="op">$</span><span class="va">mu1</span>,pch <span class="op">=</span> <span class="fl">20</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,ylab <span class="op">=</span> <span class="st">"estimated"</span>,
-     main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"cor = %0.3f"</span>,
-                    <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">B</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">mu1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"royalblue"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">B</span>,<span class="va">fit_ind</span><span class="op">$</span><span class="va">mu1</span>,pch <span class="op">=</span> <span class="fl">20</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,ylab <span class="op">=</span> <span class="st">"estimated"</span>,</span>
+<span>     main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"cor = %0.3f"</span>,</span>
+<span>                    <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">B</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">fit_ind</span><span class="op">$</span><span class="va">mu1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"royalblue"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">B</span>,<span class="va">fit</span><span class="op">$</span><span class="va">mu1</span>,pch <span class="op">=</span> <span class="fl">20</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,ylab <span class="op">=</span> <span class="st">"estimated"</span>,</span>
+<span>     main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"cor = %0.3f"</span>,</span>
+<span>                    <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">B</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">mu1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"royalblue"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mr_mash_intro_files/figure-html/plot-coefs-1.png" width="720" style="display: block; margin: auto;"></p>
 <p>As expected, the coefficients on the left-hand side obtained using an
 “independent effects” prior are not as accurate as the the coefficients
 estimated using the more flexible prior (right-hand side).</p>
 <p>While perhaps not of primary interest, for diagnostic purposes it is
-often helpfl to examine the estimated mixture weights in the prior as
+often helpful to examine the estimated mixture weights in the prior as
 well as the estimated residual covariance matrix.</p>
 <p>Inspecting the top prior mixture weights from the better model, it is
 helpful to see that the “null” and “shared1” components are among the
 top components by weight. (The top component is the null component
 because most of the SNPs have no effect on gene expression.)</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">w0</span>,decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span>
-<span class="co">#             null singleton2_grid1 singleton1_grid1 singleton5_grid1 </span>
-<span class="co">#       0.04741471       0.04243749       0.04202594       0.04141742 </span>
-<span class="co"># singleton4_grid1 singleton3_grid1 singleton2_grid2    shared1_grid1 </span>
-<span class="co">#       0.04038929       0.04022118       0.03798986       0.03788223 </span>
-<span class="co"># singleton1_grid2 singleton5_grid2 </span>
-<span class="co">#       0.03724834       0.03618774</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">w0</span>,decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="co">#             null   shared1_grid13   shared1_grid12   shared1_grid11 </span></span>
+<span><span class="co">#     9.925505e-01     2.156501e-03     1.279544e-03     2.432624e-04 </span></span>
+<span><span class="co">#   shared1_grid14   shared1_grid10 singleton1_grid1 singleton3_grid1 </span></span>
+<span><span class="co">#     1.673357e-04     1.171963e-04     6.237657e-05     6.236753e-05 </span></span>
+<span><span class="co"># singleton2_grid1 singleton1_grid2 </span></span>
+<span><span class="co">#     6.211754e-05     6.208252e-05</span></span></code></pre></div>
 <p>Also, reassuringly, the estimated residual variance-covariance matrix
 is close to the matrix used to simulate the data:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">dat</span><span class="op">$</span><span class="va">V</span>
-<span class="co">#           [,1]      [,2]      [,3]      [,4]      [,5]</span>
-<span class="co"># [1,] 3.5145375 0.8786344 0.8786344 0.8786344 0.8786344</span>
-<span class="co"># [2,] 0.8786344 3.5145373 0.8786343 0.8786343 0.8786343</span>
-<span class="co"># [3,] 0.8786344 0.8786343 3.5145373 0.8786343 0.8786343</span>
-<span class="co"># [4,] 0.8786344 0.8786343 0.8786343 3.5145373 0.8786343</span>
-<span class="co"># [5,] 0.8786344 0.8786343 0.8786343 0.8786343 3.5145373</span>
-<span class="va">fit</span><span class="op">$</span><span class="va">V</span>
-<span class="co">#           [,1]      [,2]      [,3]      [,4]      [,5]</span>
-<span class="co"># [1,] 3.2407233 0.8502217 0.8841572 1.3563118 1.0189386</span>
-<span class="co"># [2,] 0.8502217 3.5174997 1.2133736 0.6212035 0.1021557</span>
-<span class="co"># [3,] 0.8841572 1.2133736 2.5068761 0.6631672 1.0174394</span>
-<span class="co"># [4,] 1.3563118 0.6212035 0.6631672 2.7869990 0.7854292</span>
-<span class="co"># [5,] 1.0189386 0.1021557 1.0174394 0.7854292 2.9687632</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">dat</span><span class="op">$</span><span class="va">V</span></span>
+<span><span class="co">#           [,1]      [,2]      [,3]      [,4]      [,5]</span></span>
+<span><span class="co"># [1,] 3.5145374 0.8786343 0.8786343 0.8786343 0.8786343</span></span>
+<span><span class="co"># [2,] 0.8786343 3.5145373 0.8786343 0.8786343 0.8786343</span></span>
+<span><span class="co"># [3,] 0.8786343 0.8786343 3.5145373 0.8786343 0.8786343</span></span>
+<span><span class="co"># [4,] 0.8786343 0.8786343 0.8786343 3.5145373 0.8786343</span></span>
+<span><span class="co"># [5,] 0.8786343 0.8786343 0.8786343 0.8786343 3.5145373</span></span>
+<span><span class="va">fit</span><span class="op">$</span><span class="va">V</span></span>
+<span><span class="co">#          [,1]      [,2]      [,3]      [,4]      [,5]</span></span>
+<span><span class="co"># [1,] 3.461066 0.9454000 0.9492950 1.4169111 1.0618637</span></span>
+<span><span class="co"># [2,] 0.945400 3.7718288 1.3080240 0.7038973 0.1283624</span></span>
+<span><span class="co"># [3,] 0.949295 1.3080240 2.7266827 0.7350486 1.0846300</span></span>
+<span><span class="co"># [4,] 1.416911 0.7038973 0.7350486 2.9549883 0.8032564</span></span>
+<span><span class="co"># [5,] 1.061864 0.1283624 1.0846300 0.8032564 3.1519688</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="use-the-fitted-mr-mash-model-to-make-predictions">Use the fitted mr.mash model to make predictions<a class="anchor" aria-label="anchor" href="#use-the-fitted-mr-mash-model-to-make-predictions"></a>
@@ -231,17 +238,17 @@ genotype sample, including a sample not included in the training set.
 This is implemented by the “predict” method. Let’s compare the
 predictions from the two mr.mash models:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span>
-<span class="va">Ypred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit</span>,<span class="va">Xtest</span><span class="op">)</span>
-<span class="va">Ypred_ind</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_ind</span>,<span class="va">Xtest</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">Ytest</span>,<span class="va">Ypred_ind</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,
-     ylab <span class="op">=</span> <span class="st">"predicted"</span>,
-     main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"cor = %0.3f"</span>,<span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">Ytest</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">Ypred_ind</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">Ytest</span>,<span class="va">Ypred</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,
-     ylab <span class="op">=</span> <span class="st">"predicted"</span>,
-     main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"cor = %0.3f"</span>,<span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">Ytest</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">Ypred</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">Ypred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit</span>,<span class="va">Xtest</span><span class="op">)</span></span>
+<span><span class="va">Ypred_ind</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_ind</span>,<span class="va">Xtest</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">Ytest</span>,<span class="va">Ypred_ind</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,</span>
+<span>     ylab <span class="op">=</span> <span class="st">"predicted"</span>,</span>
+<span>     main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"cor = %0.3f"</span>,<span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">Ytest</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">Ypred_ind</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">Ytest</span>,<span class="va">Ypred</span>,pch <span class="op">=</span> <span class="fl">20</span>,col <span class="op">=</span> <span class="st">"darkblue"</span>,xlab <span class="op">=</span> <span class="st">"true"</span>,</span>
+<span>     ylab <span class="op">=</span> <span class="st">"predicted"</span>,</span>
+<span>     main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"cor = %0.3f"</span>,<span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">Ytest</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">Ypred</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>,b <span class="op">=</span> <span class="fl">1</span>,col <span class="op">=</span> <span class="st">"magenta"</span>,lty <span class="op">=</span> <span class="st">"dotted"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="mr_mash_intro_files/figure-html/plot-pred-test-1.png" width="720" style="display: block; margin: auto;"></p>
 <p>Indeed, mr.mash with the more flexible prior (right-hand plot)
 produces more accurate predictions than mr.mash with the “independent
@@ -266,7 +273,7 @@ effects” prior.</p>
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer>
