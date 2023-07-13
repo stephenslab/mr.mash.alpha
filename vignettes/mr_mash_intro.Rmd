@@ -43,7 +43,7 @@ multi-tissue gene expression we would normally like to predict
 expression of many genes, but to simplify this vignette here we
 illustrate the key ideas with a single gene.)
 
-Although this simulation is not a particularly realistic, this is
+Although this simulation is not particularly realistic, this is
 meant to illustrate the benefits of mr.mash: by modeling the sharing
 of effects across tissues, mr.mash is able to more accurately estimate
 the effects in multiple tissues, and therefore is able to obtain
@@ -126,22 +126,29 @@ Fit a mr.mash model to the data
 -------------------------------
 
 Having specified the mr.mash prior, we are now ready to fit a mr.mash
-model to the training data (this may take a few minutes to run):
+model to the training data (this may take a few minutes to run). Given
+that the majority of the SNPs have no effect, we initialize the mixture
+weights with 99\% of the weight on the null component and the rest of the
+weight split equally across the remaining components.
 
 ```{r fit-mr-mash-1, results="hide"}
-fit <- mr.mash(Xtrain,Ytrain,S0,update_V = TRUE)
+null_weight <- 0.99
+non_null_weight <- 1-null_weight
+w0_init <- c(null_weight, rep(non_null_weight/(length(S0)-1), (length(S0)-1)))
+fit <- mr.mash(X=Xtrain,Y=Ytrain,S0=S0, w0=w0_init, update_V = TRUE)
 ```
 
 And for comparison we fit a second mr.mash model using the simpler and
 less flexible prior:
 
 ```{r fit-mr-mash-2, results="hide"}
-fit_ind <- mr.mash(Xtrain,Ytrain,S0_ind,update_V = TRUE)
+w0_init <- c(null_weight, rep(non_null_weight/(length(S0_ind)-1), (length(S0_ind)-1)))
+fit_ind <- mr.mash(X=Xtrain,Y=Ytrain,S0=S0_ind,w0=w0_init,update_V = TRUE)
 ```
 
 (Notice that the less complex model also takes less time to fit.)
 
-For prediction, the key output is the posterior mean estimtes of the
+For prediction, the key output is the posterior mean estimates of the
 regression coefficients, stored in the "mu1" output. Let's compare the
 estimates to the ground truth:
 
@@ -162,7 +169,7 @@ As expected, the coefficients on the left-hand side obtained using an
 coefficients estimated using the more flexible prior (right-hand side).
 
 While perhaps not of primary interest, for diagnostic purposes it is
-often helpfl to examine the estimated mixture weights in the prior as
+often helpful to examine the estimated mixture weights in the prior as
 well as the estimated residual covariance matrix.
 
 Inspecting the top prior mixture weights from the better model, it is
