@@ -8,6 +8,9 @@
 #' 
 #' @return Matrix of predicted values.
 #'
+#' @importFrom stats predict
+#'
+#' @method predict mr.mash
 #' @export
 #' @export predict.mr.mash
 #' 
@@ -27,8 +30,11 @@ predict.mr.mash <- function(object, newx, ...){
 #' 
 #' @return (p+1) x r matrix of coefficients.
 #' 
-#' @export
+#' @importFrom stats coef
+#' 
+#' @method coef mr.mash
 #' @export coef.mr.mash
+#' @export
 #' 
 coef.mr.mash <- function(object, ...){
   coeffs <- rbind(object$intercept, object$mu1)

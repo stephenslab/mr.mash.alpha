@@ -1,2 +1,6 @@
 ^docs$
 ^_pkgdown\.yml$
+^\.github$
+^\.circleci$
+^\.travis\.yml$
+^appveyor\.yml$

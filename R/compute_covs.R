@@ -327,6 +327,8 @@ compute_cov_canonical <- function(ntraits, singletons, hetgrid, grid, zeromat=TR
   return(U)
 }
 ###Compute univariate summary statistics
+#
+#' @importFrom stats coef
 get_univariate_sumstats <- function(X, Y, standardize=FALSE, standardize.response=FALSE){
   r <- ncol(Y)
   p <- ncol(X)
