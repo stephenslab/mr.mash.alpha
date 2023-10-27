@@ -23,7 +23,7 @@ Imports:
     matrixStats,
     mashr (>= 0.2.41),
     ebnm,
-    flashier,
+    flashier (>= 1.0.7),
     parallel,
     Rfast
 Suggests:

@@ -276,18 +276,18 @@ scale_fast2 <- function(M, scale=TRUE, na.rm=TRUE){
 compute_cov_flash <- function(Y, error_cache = NULL){
   covar <- diag(ncol(Y))
   tryCatch({
-    fl <- flash(Y, var.type = 2,
-                ebnm.fn = c(ebnm_normal,ebnm_normal_scale_mixture),
+    fl <- flash(Y, var_type = 2,
+                ebnm_fn = c(ebnm_normal,ebnm_normal_scale_mixture),
                 backfit = TRUE,verbose = 0)
-    if (fl$n.factors == 0) {
-      covar <- diag(fl$residuals.sd^2)
+    if (fl$n_factors == 0) {
+      covar <- diag(fl$residuals_sd^2)
     } else {
-      fsd <- sapply(fl$L.ghat,"[[","sd")
-      covar <- diag(fl$residuals.sd^2) + crossprod(t(fl$F.pm) * fsd)
+      fsd <- sapply(fl$L_ghat,"[[","sd")
+      covar <- diag(fl$residuals_sd^2) + crossprod(t(fl$F_pm) * fsd)
     }
     if (nrow(covar) == 0) {
-    covar <- diag(ncol(Y))
-    stop("Computed covariance matrix has zero rows")
+      covar <- diag(ncol(Y))
+      stop("Computed covariance matrix has zero rows")
     }
   }, error = function(e) {
     if (!is.null(error_cache)) {
