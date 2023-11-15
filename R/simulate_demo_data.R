@@ -138,7 +138,7 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     Gamma <- makePD(Gamma, e)
     X <- rmvnorm(n=n, mu=rep(0, p), sigma=Gamma, seed)
   } else {
-    X <- sapply(seed:(seed+(p-1)), sample_norm, n=n, m=0, s2=sqrt(X_scale))
+    X <- sapply(seed:(seed+(p-1)), sample_norm, n=n, m=0, s2=X_scale)
   }
   X <- scale_fast2(X, scale=FALSE)$M
   
