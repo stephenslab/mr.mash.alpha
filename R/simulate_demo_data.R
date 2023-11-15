@@ -33,10 +33,6 @@
 #' 
 #' @param V_cor scalar indicating the positive correlation [0, 1] between residuals
 #'
-#' @param seed seed for random number generation used by \code{Rfast::rmvnorm}.
-#'   and \code{Rfast::Rnorm}. However, some computations will also need a general 
-#'   \code{set.seed()} to be reproducible.
-#'
 #' @param e A small number to add to the diagonal elements of the
 #'   covariance matrices to make them positive definite.
 #' 
@@ -78,12 +74,12 @@
 #'                              r_causal=list(1:2, 3:4), intercepts=rep(1, 5),
 #'                              pve=0.2, B_cor=c(0, 1), B_scale=c(0.5, 1),
 #'                              w=c(0.5, 0.5), X_cor=0.5, X_scale=1, 
-#'                              V_cor=0, seed=1)
+#'                              V_cor=0)
 #'                              
 #'                              
 simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), intercepts=rep(1, r),
                                   pve=0.2, B_cor=1, B_scale=1, w=1,
-                                  X_cor=0, X_scale=1, V_cor=0, seed=NULL, e=1e-8){
+                                  X_cor=0, X_scale=1, V_cor=0, e=1e-8){
   ##Check that the inputs are correct
   if(length(intercepts)!=r)
     stop("intercepts must be of length equal to r.")
@@ -100,6 +96,9 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
   
   ##Get number of mixture components
   K <- length(w)
+  
+  ##Sample seed
+  seed <- sample.int(.Machine$integer.max, 1)
   
   ##Simulate true effects from N_r(0, Sigma) or \sum_K w_k N_r(0, Sigma_k) where Sigma and Sigma_k are given 
   ##covariance matrices across traits and w_k is the mixture proportion associated to Sigma_k

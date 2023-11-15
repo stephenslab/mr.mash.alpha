@@ -18,7 +18,6 @@ simulate_mr_mash_data(
   X_cor = 0,
   X_scale = 1,
   V_cor = 0,
-  seed = NULL,
   e = 1e-08
 )
 }
@@ -52,10 +51,6 @@ proportions associated to each mixture component.}
 \item{X_scale}{scalar indicating the diagonal value for Gamma.}
 
 \item{V_cor}{scalar indicating the positive correlation [0, 1] between residuals}
-
-\item{seed}{seed for random number generation used by \code{Rfast::rmvnorm}.
-and \code{Rfast::Rnorm}. However, some computations will also need a general 
-\code{set.seed()} to be reproducible.}
 
 \item{e}{A small number to add to the diagonal elements of the
 covariance matrices to make them positive definite.}
@@ -96,7 +91,7 @@ dat <- simulate_mr_mash_data(n=50, p=40, p_causal=20, r=5,
                              r_causal=list(1:2, 3:4), intercepts=rep(1, 5),
                              pve=0.2, B_cor=c(0, 1), B_scale=c(0.5, 1),
                              w=c(0.5, 0.5), X_cor=0.5, X_scale=1, 
-                             V_cor=0, seed=1)
+                             V_cor=0)
                              
                              
 }
