@@ -53,6 +53,12 @@ test_that("mr.mash and mr.mash.rss return the same results", {
                      standardize=FALSE, verbose=FALSE, update_V=TRUE)
   fit_V$progress <- fit_V$fitted <- fit_V$pve <- fit_V$G <- NULL
   
+  fit_V_diag <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
+                   update_w0_method="EM", compute_ELBO=TRUE, 
+                   standardize=FALSE, verbose=FALSE, update_V=TRUE,
+                   update_V_method="diagonal")
+  fit_V_diag$progress <- fit_V_diag$fitted <- fit_V_diag$pve <- fit_V_diag$G <- NULL
+  
   fit_scaled_V <- mr.mash(X, Y, S0mix, w0, V_est, update_w0=TRUE,
                             update_w0_method="EM", compute_ELBO=TRUE, 
                             standardize=TRUE, verbose=FALSE, update_V=TRUE)
@@ -88,6 +94,12 @@ test_that("mr.mash and mr.mash.rss return the same results", {
                           X_colmeans=X_colMeans, Y_colmeans=Y_colMeans)
   fit_V_rss$progress <- NULL
   
+  fit_V_diag_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
+                           w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, 
+                           standardize=FALSE, verbose=FALSE, update_V=TRUE,
+                           X_colmeans=X_colMeans, Y_colmeans=Y_colMeans,
+                           update_V_method="diagonal")
+  fit_V_diag_rss$progress <- NULL
   
   fit_scaled_V_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
                                   w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, 
@@ -110,6 +122,7 @@ test_that("mr.mash and mr.mash.rss return the same results", {
   expect_equal(unclass(fit), unclass(fit_rss), tolerance=1e-10, scale=1)
   expect_equal(unclass(fit_scaled), unclass(fit_scaled_rss), tolerance=1e-10, scale=1)
   expect_equal(unclass(fit_V), unclass(fit_V_rss), tolerance=1e-10, scale=1)
+  expect_equal(unclass(fit_V_diag), unclass(fit_V_diag_rss), tolerance=1e-10, scale=1)
   expect_equal(unclass(fit_scaled_V), unclass(fit_scaled_V_rss), tolerance=1e-10, scale=1)
   expect_equal(unclass(fit_scaled_V_declogBF), unclass(fit_scaled_V_declogBF_rss), tolerance=1e-10, scale=1)
 })
