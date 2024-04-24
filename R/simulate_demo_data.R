@@ -32,6 +32,9 @@
 #' @param X_scale scalar indicating the diagonal value for Gamma.
 #' 
 #' @param V_cor scalar indicating the positive correlation [0, 1] between residuals
+#'
+#' @param e A small number to add to the diagonal elements of the
+#'   covariance matrices to make them positive definite.
 #' 
 #' @return A list with some or all of the
 #' following elements:
@@ -58,7 +61,7 @@
 #' \item{causal_vars_to_mixture_comps}{p_causal-vector of indexes indicating from which
 #'   mixture components each causal effect comes.}
 #'   
-#' @importFrom mvtnorm rmvnorm
+#' @importFrom Rfast rmvnorm
 #' @importFrom MBSP matrix_normal
 #' @importFrom matrixStats colVars
 #' 
@@ -66,6 +69,7 @@
 #' 
 #' 
 #' @examples
+#' set.seed(1)
 #' dat <- simulate_mr_mash_data(n=50, p=40, p_causal=20, r=5,
 #'                              r_causal=list(1:2, 3:4), intercepts=rep(1, 5),
 #'                              pve=0.2, B_cor=c(0, 1), B_scale=c(0.5, 1),
@@ -75,7 +79,7 @@
 #'                              
 simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), intercepts=rep(1, r),
                                   pve=0.2, B_cor=1, B_scale=1, w=1,
-                                  X_cor=0, X_scale=1, V_cor=0){
+                                  X_cor=0, X_scale=1, V_cor=0, e=1e-8){
   ##Check that the inputs are correct
   if(length(intercepts)!=r)
     stop("intercepts must be of length equal to r.")
@@ -87,9 +91,14 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     stop("Elements of w must sum to 1.")
   if(length(pve)!=1 & length(pve)!=r)
     stop("pve must be of length equal to 1 or r.")
+  if(is.null(seed))
+    stop("seed argument must be provided.")
   
   ##Get number of mixture components
   K <- length(w)
+  
+  ##Sample seed
+  seed <- sample.int(.Machine$integer.max, 1)
   
   ##Simulate true effects from N_r(0, Sigma) or \sum_K w_k N_r(0, Sigma_k) where Sigma and Sigma_k are given 
   ##covariance matrices across traits and w_k is the mixture proportion associated to Sigma_k
@@ -100,6 +109,8 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     Sigma[[i]] <- matrix(Sigma_offdiag, nrow=r_mix_length, ncol=r_mix_length)
     diag(Sigma[[i]]) <- B_scale[i]
   }
+  Sigma <- lapply(Sigma, makePD, e=e)
+
   #Sample effects from a mixture of MVN distributions or a single MVN distribution
   B_causal <- matrix(0, nrow=p_causal, ncol=r)
   if(K>1){
@@ -107,22 +118,27 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     for(j in 1:p_causal){
       comp_to_use <- mixcomps[j]
       r_causal_mix <- r_causal[[comp_to_use]]
-      B_causal[j, r_causal_mix] <- rmvnorm(n=1, mean=rep(0, length(r_causal_mix)), sigma=Sigma[[comp_to_use]])
+      B_causal[j, r_causal_mix] <- rmvnorm(n=1, mu=rep(0, length(r_causal_mix)), sigma=Sigma[[comp_to_use]], seed=seed)
     }
   } else {
     r_causal_length <- length(r_causal[[1]])
     r_causal_index <- r_causal[[1]]
-    B_causal[, r_causal_index] <- rmvnorm(n=p_causal, mean=rep(0, r_causal_length), sigma=Sigma[[1]])
+    B_causal[, r_causal_index] <- rmvnorm(n=p_causal, mu=rep(0, r_causal_length), sigma=Sigma[[1]], seed=seed)
   }
   B <- matrix(0, ncol=r, nrow=p)
   causal_variables <- sample(x=(1:p), size=p_causal)
   B[causal_variables, ] <- B_causal
   
   ##Simulate X from N_r(0, Gamma) where Gamma is a given covariance matrix across variables
-  Gamma_offdiag <- X_scale*X_cor
-  Gamma <- matrix(Gamma_offdiag, nrow=p, ncol=p)
-  diag(Gamma) <- X_scale
-  X <- rmvnorm(n=n, mean=rep(0, p), sigma=Gamma)
+  if(X_cor != 0){
+    Gamma_offdiag <- X_scale*X_cor
+    Gamma <- matrix(Gamma_offdiag, nrow=p, ncol=p)
+    diag(Gamma) <- X_scale
+    Gamma <- makePD(Gamma, e)
+    X <- rmvnorm(n=n, mu=rep(0, p), sigma=Gamma, seed)
+  } else {
+    X <- sapply(seed:(seed+(p-1)), sample_norm, n=n, m=0, s2=X_scale)
+  }
   X <- scale_fast2(X, scale=FALSE)$M
   
   ##Compute G and its variance
@@ -138,7 +154,7 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
   V <- D %*% V_cor_mat %*% D
   
   ##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix and V is the residual covariance  
-  Y <- matrix_normal(G + matrix(intercepts, n, r, byrow=TRUE), diag(n), V)
+  Y <- matrix_normal_indep_rows(M=(G + matrix(intercepts, n, r, byrow=TRUE)), V=V, seed=seed)
   
   ##Compile output
   causal_responses <- r_causal
@@ -165,8 +181,27 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
 }
 
 
+#' @importFrom Rfast Rnorm
+sample_norm <- function(i, n, m, s2){
+  x <- Rnorm(n=n, m=m, s=sqrt(s2), seed=i)
+  
+  return(x)
+}
 
-
+#' @importFrom Rfast matrnorm
+matrix_normal_indep_rows = function(M, V, seed){
+  a <- nrow(M)
+  b <- ncol(M)
+  
+  # Draw Z from MN(O, I, I)
+  Z <- matrnorm(n=a, p=b, seed=seed)
+  
+  # Cholesky decomposition of V
+  L2 <- chol(V)
+  
+  # Return draw from MN(M,I,V)
+  return(M + Z %*% L2)
+}
 
 
 

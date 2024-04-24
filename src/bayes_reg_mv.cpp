@@ -319,3 +319,122 @@ double bayes_mvr_mix_centered_X (const vec& x, const mat& Y, const mat& V,
   double u = max(logbfmix);
   return u + log(sum(exp(logbfmix - u)));
 }
+
+
+// Perform Bayesian multivariate simple regression with summary data
+// and mixture-of-normals prior with standardized x.
+double bayes_mvr_mix_standardized_X_rss (unsigned int n, const vec& xtY, const vec& w0,
+                                         const cube& S0, const mat& S,
+                                         const cube& S1, const cube& SplusS0_chol,
+                                         const mat& S_chol, double eps,
+                                         unsigned int nthreads, vec& mu1_mix,
+                                         mat& S1_mix, vec& w1) {
+  unsigned int k = w0.n_elem;
+  unsigned int r = xtY.n_elem;
+  
+  mat mu1mix(r,k);
+  vec logbfmix(k);
+  vec mu1(r);
+  
+  // Compute the least-squares estimate.
+  vec b = xtY/(n-1);
+  
+  // Compute the quantities separately for each mixture component.
+  if (nthreads > 1) {
+    bayes_mvr_mix_standardized_X_worker worker(b,S,S_chol,S0,S1,SplusS0_chol,
+                                                   logbfmix,mu1mix);
+    parallelFor(0,k,worker);
+  } else {
+    for (unsigned int i = 0; i < k; i++) {
+      logbfmix(i) = bayes_mvr_ridge_standardized_X(b,S0.slice(i),S,S1.slice(i),
+               SplusS0_chol.slice(i),
+               S_chol,mu1);
+      mu1mix.col(i) = mu1;
+    }
+  }
+  
+  // Compute the posterior assignment probabilities for the latent
+  // indicator variable.
+  logbfmix += log(w0 + eps);
+  w1 = logbfmix;
+  softmax(w1);
+  
+  // Compute the posterior mean (mu1) and covariance (S1_mix) of the
+  // regression coefficients.
+  S1_mix.fill(0);
+  mu1_mix.fill(0);
+  for (unsigned int i = 0; i < k; i++) {
+    b    = mu1mix.col(i);
+    mu1_mix += w1(i) * b;
+    S1_mix  += w1(i) * (S1.slice(i) + b * trans(b));
+  }
+  S1_mix -= mu1_mix * trans(mu1_mix);
+  
+  // Compute the log-Bayes factor as a linear combination of the
+  // individual Bayes factors for each mixture component.
+  double u = max(logbfmix);
+  return u + log(sum(exp(logbfmix - u)));
+}
+
+// Perform Bayesian multivariate simple regression with summary data
+// and mixture-of-normals prior with centered x.
+double bayes_mvr_mix_centered_X_rss (const vec& xtY, const mat& V,
+                                     const vec& w0, const cube& S0, double xtx, 
+                                     const mat& Vinv, const mat& V_chol,
+                                     const mat& d, const cube& QtimesV_chol,
+                                     double eps, unsigned int nthreads,
+                                     vec& mu1_mix, mat& S1_mix, vec& w1) {
+  unsigned int k = w0.n_elem;
+  unsigned int r = xtY.n_elem;
+  
+  mat  mu1mix(r,k);
+  cube S1mix(r,r,k);
+  vec  logbfmix(k);
+  vec  mu1(r);
+  mat  S1(r,r);
+  
+  // Compute the least-squares estimate.
+  vec b = xtY/xtx;
+  mat S = V/xtx;
+  
+  // Compute quantities needed for bayes_mvr_ridge_centered_X()
+  mat S_chol = V_chol/sqrt(xtx);
+  
+  // Compute the quantities separately for each mixture component.
+  if (nthreads > 1) {
+    bayes_mvr_mix_centered_X_worker worker(b,xtx,V,Vinv,V_chol,S,S_chol,d,
+                                               S0,QtimesV_chol,logbfmix,mu1mix,
+                                               S1mix);
+    parallelFor(0,k,worker);
+  } else {
+    for (unsigned int i = 0; i < k; i++) {
+      logbfmix(i) = bayes_mvr_ridge_centered_X(V,b,S,S0.slice(i),xtx,Vinv,  
+               V_chol,S_chol,d.col(i),
+               QtimesV_chol.slice(i),mu1,S1);
+      mu1mix.col(i)  = mu1;
+      S1mix.slice(i) = S1;
+    }
+  }
+  
+  // Compute the posterior assignment probabilities for the latent
+  // indicator variable.
+  logbfmix += log(w0 + eps);
+  w1 = logbfmix;
+  softmax(w1);
+  
+  // Compute the posterior mean (mu1) and covariance (S1_mix) of the
+  // regression coefficients.
+  S1_mix.fill(0);
+  mu1_mix.fill(0);
+  for (unsigned int i = 0; i < k; i++) {
+    b    = mu1mix.col(i);
+    mu1_mix += w1(i) * b;
+    S1_mix  += w1(i) * (S1mix.slice(i) + b * trans(b));
+  }
+  S1_mix -= mu1_mix * trans(mu1_mix);
+  
+  // Compute the log-Bayes factor as a linear combination of the
+  // individual Bayes factors for each mixture component.
+  double u = max(logbfmix);
+  return u + log(sum(exp(logbfmix - u)));
+}

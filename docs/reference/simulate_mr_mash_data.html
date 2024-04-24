@@ -18,7 +18,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mr.mash.alpha</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2-27</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.32</span>
       </span>
     </div>
 
@@ -68,7 +68,8 @@
 <span>  w <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  X_cor <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  X_scale <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  V_cor <span class="op">=</span> <span class="fl">0</span></span>
+<span>  V_cor <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  e <span class="op">=</span> <span class="fl">1e-08</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -129,6 +130,11 @@ proportions associated to each mixture component.</p></dd>
 <dt>V_cor</dt>
 <dd><p>scalar indicating the positive correlation [0, 1] between residuals</p></dd>
 
+
+<dt>e</dt>
+<dd><p>A small number to add to the diagonal elements of the
+covariance matrices to make them positive definite.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
@@ -181,7 +187,8 @@ following elements:</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">simulate_mr_mash_data</span><span class="op">(</span>n<span class="op">=</span><span class="fl">50</span>, p<span class="op">=</span><span class="fl">40</span>, p_causal<span class="op">=</span><span class="fl">20</span>, r<span class="op">=</span><span class="fl">5</span>,</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">simulate_mr_mash_data</span><span class="op">(</span>n<span class="op">=</span><span class="fl">50</span>, p<span class="op">=</span><span class="fl">40</span>, p_causal<span class="op">=</span><span class="fl">20</span>, r<span class="op">=</span><span class="fl">5</span>,</span></span>
 <span class="r-in"><span>                             r_causal<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>, intercepts<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">5</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                             pve<span class="op">=</span><span class="fl">0.2</span>, B_cor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, B_scale<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                             w<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span>, X_cor<span class="op">=</span><span class="fl">0.5</span>, X_scale<span class="op">=</span><span class="fl">1</span>, </span></span>
@@ -198,7 +205,7 @@ following elements:</p>
 
 
       <footer><div class="copyright">
-  <p></p><p>Developed by Fabio Morgante, Peter Carbonetto, Matthew Stephens.</p>
+  <p></p><p>Developed by Fabio Morgante, Deborah Kunkel, Peter Carbonetto, Matthew Stephens.</p>
 </div>
 
 <div class="pkgdown">

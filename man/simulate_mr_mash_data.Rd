@@ -17,7 +17,8 @@ simulate_mr_mash_data(
   w = 1,
   X_cor = 0,
   X_scale = 1,
-  V_cor = 0
+  V_cor = 0,
+  e = 1e-08
 )
 }
 \arguments{
@@ -50,6 +51,9 @@ proportions associated to each mixture component.}
 \item{X_scale}{scalar indicating the diagonal value for Gamma.}
 
 \item{V_cor}{scalar indicating the positive correlation [0, 1] between residuals}
+
+\item{e}{A small number to add to the diagonal elements of the
+covariance matrices to make them positive definite.}
 }
 \value{
 A list with some or all of the
@@ -82,6 +86,7 @@ Function to simulate data from \eqn{MN_{nxr}(XB, I, V)}, where \eqn{X \sim N_p(0
   \eqn{B \sim \sum_k w_k N_r(0, Sigma_k)}, with \eqn{Gamma}, \eqn{w_k}, \eqn{Sigma_k}, and \eqn{V} defined by the user.
 }
 \examples{
+set.seed(1)
 dat <- simulate_mr_mash_data(n=50, p=40, p_causal=20, r=5,
                              r_causal=list(1:2, 3:4), intercepts=rep(1, 5),
                              pve=0.2, B_cor=c(0, 1), B_scale=c(0.5, 1),

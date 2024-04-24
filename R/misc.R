@@ -94,9 +94,8 @@ makePD <- function(S0, e){
 }
 
 ###Precompute quantities in any case
-precompute_quants <- function(X, V, S0, standardize, version){
+precompute_quants <- function(n, V, S0, standardize, version){
   if(standardize){
-    n <- nrow(X)
     xtx <- n-1
 
     ###Quantities that don't depend on S0
@@ -287,8 +286,8 @@ compute_cov_flash <- function(Y, error_cache = NULL){
       covar <- diag(fl$residuals_sd^2) + crossprod(t(fl$F_pm) * fsd)
     }
     if (nrow(covar) == 0) {
-    covar <- diag(ncol(Y))
-    stop("Computed covariance matrix has zero rows")
+      covar <- diag(ncol(Y))
+      stop("Computed covariance matrix has zero rows")
     }
   }, error = function(e) {
     if (!is.null(error_cache)) {
@@ -337,5 +336,15 @@ extract_missing_Y_pattern <- function(Y){
   }
 
   return(list(miss=miss, non_miss=non_miss))
+}
+
+###Check whether a matrix is PSD
+check_semi_pd <- function (A, tol) {
+  attr(A,"eigen") <- eigen(A,symmetric = TRUE)
+  v <- attr(A,"eigen")$values
+  v[abs(v) < tol] = 0
+  return(list(matrix      = A,
+              status      = !any(v < 0),
+              eigenvalues = v))
 }
 

@@ -31,6 +31,10 @@ void compute_ELBO_terms (double& var_part_tr_wERSS, double& neg_KL, const arma::
                          const arma::mat& rbar_j, double logbf, const arma::mat& mu1, const arma::mat& S1, 
                          double xtx, const arma::mat& Vinv);
 
+void compute_ELBO_rss_terms (double& var_part_tr_wERSS, double& neg_KL,
+                             const arma::mat& XtRbar_j, double logbf, const arma::mat& mu1, const arma::mat& S1, 
+                             double xtx, const arma::mat& Vinv);
+
 void compute_var_part_ERSS (arma::mat& var_part_ERSS, const arma::mat& S1, double xtx);
 
 

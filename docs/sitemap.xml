@@ -25,6 +25,9 @@
     <loc>/reference/coef.mr.mash.html</loc>
   </url>
   <url>
+    <loc>/reference/coef.mr.mash.rss.html</loc>
+  </url>
+  <url>
     <loc>/reference/compute_canonical_covs.html</loc>
   </url>
   <url>
@@ -43,7 +46,13 @@
     <loc>/reference/mr.mash.html</loc>
   </url>
   <url>
+    <loc>/reference/mr.mash.rss.html</loc>
+  </url>
+  <url>
     <loc>/reference/predict.mr.mash.html</loc>
+  </url>
+  <url>
+    <loc>/reference/predict.mr.mash.rss.html</loc>
   </url>
   <url>
     <loc>/reference/simulate_mr_mash_data.html</loc>
