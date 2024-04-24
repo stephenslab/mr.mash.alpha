@@ -91,8 +91,6 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     stop("Elements of w must sum to 1.")
   if(length(pve)!=1 & length(pve)!=r)
     stop("pve must be of length equal to 1 or r.")
-  if(is.null(seed))
-    stop("seed argument must be provided.")
   
   ##Get number of mixture components
   K <- length(w)
