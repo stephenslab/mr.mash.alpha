@@ -37,3 +37,4 @@ LinkingTo:
     Rcpp,
     RcppArmadillo (>= 0.10.4.0.0),
     RcppParallel
+RoxygenNote: 7.2.3

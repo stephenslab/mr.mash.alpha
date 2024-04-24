@@ -20,13 +20,16 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mr.mash.alpha</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3-12</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.32</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav"><li>
   <a href="../index.html">Home</a>
+</li>
+<li>
+  <a href="../articles/index.html">Vignettes</a>
 </li>
 <li>
   <a href="../reference/index.html">Functions</a>
@@ -310,42 +313,46 @@ following elements:</p>
 <span class="r-in"><span><span class="co">###Simulate data</span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="simulate_mr_mash_data.html">simulate_mr_mash_data</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">p</span>, <span class="va">p_causal</span>, <span class="va">r</span>, pve<span class="op">=</span><span class="fl">0.5</span>, B_cor<span class="op">=</span><span class="fl">1</span>,</span></span>
 <span class="r-in"><span>                             B_scale<span class="op">=</span><span class="fl">1</span>, X_cor<span class="op">=</span><span class="fl">0</span>, X_scale<span class="op">=</span><span class="fl">1</span>, V_cor<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in simulate_mr_mash_data(n, p, p_causal, r, pve = 0.5, B_cor = 1,     B_scale = 1, X_cor = 0, X_scale = 1, V_cor = 0):</span> seed argument must be provided.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">###Split the data in training and test sets</span></span></span>
 <span class="r-in"><span><span class="va">Ytrain</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>, <span class="op">]</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in eval(expr, envir, enclos):</span> object 'out' not found</span>
 <span class="r-in"><span><span class="va">Xtrain</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>, <span class="op">]</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in eval(expr, envir, enclos):</span> object 'out' not found</span>
 <span class="r-in"><span><span class="va">Ytest</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">Y</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>, <span class="op">]</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in eval(expr, envir, enclos):</span> object 'out' not found</span>
 <span class="r-in"><span><span class="va">Xtest</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">X</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span><span class="op">)</span>, <span class="op">]</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in eval(expr, envir, enclos):</span> object 'out' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">###Specify the covariance matrices for the mixture-of-normals prior.</span></span></span>
 <span class="r-in"><span><span class="va">univ_sumstats</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute_univariate_sumstats.html">compute_univariate_sumstats</a></span><span class="op">(</span><span class="va">Xtrain</span>, <span class="va">Ytrain</span>,</span></span>
 <span class="r-in"><span>                   standardize<span class="op">=</span><span class="cn">TRUE</span>, standardize.response<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in ncol(Y):</span> object 'Ytrain' not found</span>
 <span class="r-in"><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="autoselect.mixsd.html">autoselect.mixsd</a></span><span class="op">(</span><span class="va">univ_sumstats</span>, mult<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in autoselect.mixsd(univ_sumstats, mult = sqrt(2)):</span> object 'univ_sumstats' not found</span>
 <span class="r-in"><span><span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute_canonical_covs.html">compute_canonical_covs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">Ytrain</span><span class="op">)</span>, singletons<span class="op">=</span><span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>                             hetgrid<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in ncol(Ytrain):</span> object 'Ytrain' not found</span>
 <span class="r-in"><span><span class="va">S0</span> <span class="op">&lt;-</span> <span class="fu"><a href="expand_covs.html">expand_covs</a></span><span class="op">(</span><span class="va">S0</span>, <span class="va">grid</span>, zeromat<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in ncol(mats[[1]]):</span> object 'S0' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">###Fit mr.mash</span></span></span>
 <span class="r-in"><span><span class="va">covY</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cov</a></span><span class="op">(</span><span class="va">Ytrain</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in is.data.frame(x):</span> object 'Ytrain' not found</span>
 <span class="r-in"><span><span class="va">corX</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">Xtrain</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in is.data.frame(x):</span> object 'Xtrain' not found</span>
 <span class="r-in"><span><span class="va">n_train</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">Ytrain</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in nrow(Ytrain):</span> object 'Ytrain' not found</span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">mr.mash.rss</span><span class="op">(</span>Bhat<span class="op">=</span><span class="va">univ_sumstats</span><span class="op">$</span><span class="va">Bhat</span>, Shat<span class="op">=</span><span class="va">univ_sumstats</span><span class="op">$</span><span class="va">Shat</span>, S0<span class="op">=</span><span class="va">S0</span>, </span></span>
 <span class="r-in"><span>                   covY<span class="op">=</span><span class="va">covY</span>, R<span class="op">=</span><span class="va">corX</span>, n<span class="op">=</span><span class="va">n_train</span>, V<span class="op">=</span><span class="va">covY</span>, update_V<span class="op">=</span><span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>                   X_colmeans<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">Xtrain</span><span class="op">)</span>, Y_colmeans<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">Ytrain</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Processing the inputs... </span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mr.mash.rss(Bhat = univ_sumstats$Bhat, Shat = univ_sumstats$Shat,     S0 = S0, covY = covY, R = corX, n = n_train, V = covY, update_V = TRUE,     X_colmeans = colMeans(Xtrain), Y_colmeans = colMeans(Ytrain)):</span> object 'univ_sumstats' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Processing the inputs... Done!</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fitting the optimization algorithm using 20 RcppParallel threads... </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  iter    mu1_max.diff     ELBO_diff               ELBO</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    1       4.96e+00            Inf      -1.23072454605131497374e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    2       4.24e-01       1.45e+03      -1.08540932472088079521e+04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    3       9.82e-02       1.14e+03      -9.71386906144417116593e+03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    4       4.12e-02       1.20e+03      -8.51153232664939241658e+03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    5       1.32e-02       1.38e+03      -7.13559787443806453666e+03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    6       1.24e-02       1.31e+03      -5.82241478133000873640e+03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    7       9.68e-03       8.64e+02      -4.95797722008995606302e+03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    8       7.74e-03       7.44e+02      -4.21421789420205095666e+03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    9       6.35e-03       7.30e+02      -3.48418889030627769898e+03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   10       5.33e-03       7.28e+02      -2.75590639500069391943e+03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   11       4.54e-03       7.28e+02      -2.02776918945822853857e+03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   12       3.93e-03       7.28e+02      -1.29934658441157944253e+03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   13       3.44e-03       7.36e+02      -5.63647592470737890835e+02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   14       3.04e-03       8.37e+02      2.73377447637981049411e+02</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in chol.default(V):</span> the leading minor of order 1 is not positive definite</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Predict the multivariate outcomes in the test set using the fitted model.</span></span></span>
 <span class="r-in"><span><span class="va">Ytest_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit</span>,<span class="va">Xtest</span><span class="op">)</span></span></span>
@@ -370,7 +377,7 @@ following elements:</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>
