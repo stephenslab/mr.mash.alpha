@@ -51,9 +51,6 @@ proportions associated to each mixture component.}
 \item{X_scale}{scalar indicating the diagonal value for Gamma.}
 
 \item{V_cor}{scalar indicating the positive correlation [0, 1] between residuals}
-
-\item{e}{A small number to add to the diagonal elements of the
-covariance matrices to make them positive definite.}
 }
 \value{
 A list with some or all of the
