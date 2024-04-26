@@ -76,7 +76,7 @@
 #'                              
 simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), intercepts=rep(1, r),
                                   pve=0.2, B_cor=1, B_scale=1, w=1,
-                                  X_cor=0, X_scale=1, V_cor=0, e=1e-8){
+                                  X_cor=0, X_scale=1, V_cor=0){
   ##Check that the inputs are correct
   if(length(intercepts)!=r)
     stop("intercepts must be of length equal to r.")
