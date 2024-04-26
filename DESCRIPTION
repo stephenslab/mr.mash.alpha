@@ -32,8 +32,4 @@ LinkingTo:
     Rcpp,
     RcppArmadillo (>= 0.10.4.0.0),
     RcppParallel
-Remotes: 
-    stephenslab/ebnm,
-    stephenslab/mashr,
-    willwerscheid/flashier
 RoxygenNote: 7.2.3
