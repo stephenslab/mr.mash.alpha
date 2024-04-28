@@ -37,9 +37,6 @@ removefromcols <- function (A, b)
   t(t(A) - b)
 
 ###Function to simulate from MN distribution
-#
-#' @importFrom MBSP matrix_normal
-#'
 sim_mvr <- function (X, B, V) {
 
   # Get the number of samples (n) and conditions (m).
@@ -48,8 +45,7 @@ sim_mvr <- function (X, B, V) {
 
   # Simulate the responses, Y.
   M <- X%*%B
-  U <- diag(n)
-  Y <- matrix_normal(M, U, V)
+  Y <- matrix_normal_indep_rows(M, V)
 
   # Output the simulated responses.
   return(Y)

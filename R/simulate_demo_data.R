@@ -180,7 +180,7 @@ sample_norm <- function(i, n, m, s2){
 }
 
 #' @importFrom stats rnorm
-matrix_normal_indep_rows = function(M, V, seed){
+matrix_normal_indep_rows = function(M, V){
   a <- nrow(M)
   b <- ncol(M)
   
