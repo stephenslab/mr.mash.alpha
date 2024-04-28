@@ -17,8 +17,7 @@ simulate_mr_mash_data(
   w = 1,
   X_cor = 0,
   X_scale = 1,
-  V_cor = 0,
-  e = 1e-08
+  V_cor = 0
 )
 }
 \arguments{
