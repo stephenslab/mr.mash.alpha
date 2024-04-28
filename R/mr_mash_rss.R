@@ -177,10 +177,10 @@
 #'
 #' @export
 #' 
-mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
+mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), length(S0)), V, 
                         mu1_init=NULL, tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
                         max_iter=5000, update_w0=TRUE, update_w0_method="EM", 
-                        w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
+                        w0_threshold=0, compute_ELBO=TRUE, standardize=FALSE, verbose=TRUE,
                         update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
                         ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF", "random"),
                         X_colmeans=NULL, Y_colmeans=NULL, check_R=TRUE, R_tol=1e-08,
@@ -225,7 +225,7 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   
   ###Check that the inputs are in the correct format
   if (sum(c(missing(Z), missing(Bhat) || missing(Shat))) != 1)
-    stop("Please provide either Z or (Bhat, Shat), but not both")
+    stop("Please provide either Z or (Bhat, Shat), but not both.")
   
   if(missing(Z)){
     if(!is.matrix(Bhat))
@@ -242,11 +242,8 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
     if(any(is.na(Z)))
       stop("Z must not contain missing values.")
   }
-  
-  if(!is.null(V)){
-    if(!is.matrix(V) || !is.symmetric(V))
-      stop("V must be a symmetric matrix.")
-  }
+  if(!is.matrix(V) || !is.symmetric(V))
+    stop("V must be a symmetric matrix.")
   if(!missing(covY)){
     if(!is.matrix(covY) || !is.symmetric(covY))
       stop("covY must be a symmetric matrix.")
@@ -267,6 +264,9 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
     stop("mu1_init must be a matrix.")
   if(convergence_criterion=="ELBO" && !compute_ELBO)
     stop("ELBO needs to be computed with convergence_criterion=\"ELBO\".")
+  if(isTRUE(standardize))
+    stop("standardize=TRUE has not been implemented yet. Please use standardize=FALSE.")
+  
 
   # PRE-PROCESSING STEPS
   # --------------------
@@ -278,11 +278,9 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   
   Z[is.na(Z)] <- 0
   
-  ###Compute pve-adjusted Z scores, if n is provided
-  if(!missing(n)) {
-    adj <- (n-1)/(Z^2 + n - 2)
-    Z   <- sqrt(adj) * Z
-  }
+  ###Compute pve-adjusted Z scores
+  adj <- (n-1)/(Z^2 + n - 2)
+  Z <- sqrt(adj) * Z
   
   ###Obtain dimensions and store dimensions names of the inputs
   p <- nrow(Z)
@@ -336,7 +334,7 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   if(standardize)
     mu1_init <- mu1_init*sx 
   
-  ###Initilize mu1, S1, w1, delta_mu1, delta_ELBO, delta_conv, ELBO, iterator, progress
+  ###Initialize mu1, S1, w1, delta_mu1, delta_ELBO, delta_conv, ELBO, iterator, progress
   mu1_t <- mu1_init 
   delta_mu1 <- matrix(Inf, nrow=p, ncol=r)
   delta_ELBO <- Inf
@@ -354,12 +352,12 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   }
 
   ###Compute V, if not provided by the user
-  if(is.null(V)){
-    # How to do so with sumstats??
-    
-    if(update_V_method=="diagonal")
-      V <- diag(diag(V))
-  }
+  # if(is.null(V)){
+  #   # How to do so with sumstats??
+  #   
+  #   if(update_V_method=="diagonal")
+  #     V <- diag(diag(V))
+  # }
 
   ###Set eps
   eps <- .Machine$double.eps
