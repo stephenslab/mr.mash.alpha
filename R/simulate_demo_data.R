@@ -32,6 +32,7 @@
 #' @param X_scale scalar indicating the diagonal value for Gamma.
 #' 
 #' @param V_cor scalar indicating the positive correlation [0, 1] between residuals
+#'
 #' 
 #' @return A list with some or all of the
 #' following elements:
@@ -59,13 +60,13 @@
 #'   mixture components each causal effect comes.}
 #'   
 #' @importFrom mvtnorm rmvnorm
-#' @importFrom MBSP matrix_normal
 #' @importFrom matrixStats colVars
 #' 
 #' @export
 #' 
 #' 
 #' @examples
+#' set.seed(1)
 #' dat <- simulate_mr_mash_data(n=50, p=40, p_causal=20, r=5,
 #'                              r_causal=list(1:2, 3:4), intercepts=rep(1, 5),
 #'                              pve=0.2, B_cor=c(0, 1), B_scale=c(0.5, 1),
@@ -100,6 +101,7 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
     Sigma[[i]] <- matrix(Sigma_offdiag, nrow=r_mix_length, ncol=r_mix_length)
     diag(Sigma[[i]]) <- B_scale[i]
   }
+
   #Sample effects from a mixture of MVN distributions or a single MVN distribution
   B_causal <- matrix(0, nrow=p_causal, ncol=r)
   if(K>1){
@@ -119,10 +121,15 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
   B[causal_variables, ] <- B_causal
   
   ##Simulate X from N_r(0, Gamma) where Gamma is a given covariance matrix across variables
-  Gamma_offdiag <- X_scale*X_cor
-  Gamma <- matrix(Gamma_offdiag, nrow=p, ncol=p)
-  diag(Gamma) <- X_scale
-  X <- rmvnorm(n=n, mean=rep(0, p), sigma=Gamma)
+  if(X_cor != 0){
+    Gamma_offdiag <- X_scale*X_cor
+    Gamma <- matrix(Gamma_offdiag, nrow=p, ncol=p)
+    diag(Gamma) <- X_scale
+    X <- rmvnorm(n=n, mean=rep(0, p), sigma=Gamma)
+  } else {
+    X <- sapply(1:p, sample_norm, n=n, m=0, s2=X_scale)
+    Gamma <- paste0("I_", p)
+  }
   X <- scale_fast2(X, scale=FALSE)$M
   
   ##Compute G and its variance
@@ -138,7 +145,7 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
   V <- D %*% V_cor_mat %*% D
   
   ##Simulate Y from MN(XB, I_n, V) where I_n is an nxn identity matrix and V is the residual covariance  
-  Y <- matrix_normal(G + matrix(intercepts, n, r, byrow=TRUE), diag(n), V)
+  Y <- matrix_normal_indep_rows(M=(G + matrix(intercepts, n, r, byrow=TRUE)), V=V)
   
   ##Compile output
   causal_responses <- r_causal
@@ -165,8 +172,27 @@ simulate_mr_mash_data <- function(n, p, p_causal, r, r_causal=list(1:r), interce
 }
 
 
+#' @importFrom stats rnorm
+sample_norm <- function(i, n, m, s2){
+  x <- rnorm(n=n, mean=m, sd=sqrt(s2))
+  
+  return(x)
+}
 
-
+#' @importFrom stats rnorm
+matrix_normal_indep_rows = function(M, V){
+  a <- nrow(M)
+  b <- ncol(M)
+  
+  # Draw Z from MN(O, I, I)
+  Z <- matrix(rnorm(a*b,0,1), a, b)
+  
+  # Cholesky decomposition of V
+  L2 <- chol(V)
+  
+  # Return draw from MN(M,I,V)
+  return(M + Z %*% L2)
+}
 
 
 

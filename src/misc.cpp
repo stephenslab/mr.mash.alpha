@@ -87,3 +87,31 @@ void compute_var_part_ERSS (mat& var_part_ERSS, const mat& S1, double xtx){
 //   
 //   return var_part_ERSS;
 // }
+
+// Function to compute some terms of the ELBO with summary data
+void compute_ELBO_rss_terms (double& var_part_tr_wERSS, double& neg_KL, const mat& XtRbar_j,
+                             double logbf, const mat& mu1, const mat& S1, 
+                             double xtx, const mat& Vinv){
+  
+  var_part_tr_wERSS += (as_scalar(accu(Vinv % S1))*xtx);
+  
+  mat mu1XtRbar_j = mu1 * trans(XtRbar_j);
+  
+  neg_KL += (logbf + as_scalar(0.5*accu(Vinv % (- mu1XtRbar_j - trans(mu1XtRbar_j) + mu1 * trans(mu1) * xtx + S1*xtx))));
+}
+
+// // [[Rcpp::plugins("cpp11")]]
+// // [[Rcpp::depends(RcppArmadillo)]]
+// // [[Rcpp::export]]
+// Rcpp::List compute_ELBO_rss_terms_rcpp (double var_part_tr_wERSS_init, double neg_KL_init,
+//                               const arma::mat& xtRbar_j, double logbf, const arma::mat& mu1, const arma::mat& S1,
+//                               double xtx, const arma::mat& Vinv) {
+// 
+//   double var_part_tr_wERSS = var_part_tr_wERSS_init;
+//   double neg_KL = neg_KL_init;
+// 
+//   compute_ELBO_rss_terms(var_part_tr_wERSS, neg_KL, xtRbar_j, logbf, mu1, S1, xtx, Vinv);
+// 
+//   return Rcpp::List::create(Rcpp::Named("var_part_tr_wERSS") = var_part_tr_wERSS,
+//                             Rcpp::Named("neg_KL")            = neg_KL);
+// }

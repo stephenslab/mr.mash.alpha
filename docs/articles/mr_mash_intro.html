@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">mr.mash.alpha</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2-27</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.21</span>
       </span>
     </div>
 
@@ -70,7 +70,7 @@
                         <h4 data-toc-skip class="author">Peter
 Carbonetto &amp; Fabio Morgante</h4>
             
-            <h4 data-toc-skip class="date">2023-05-22</h4>
+            <h4 data-toc-skip class="date">2024-04-28</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/stephenslab/mr.mash.alpha/blob/HEAD/vignettes/mr_mash_intro.Rmd" class="external-link"><code>vignettes/mr_mash_intro.Rmd</code></a></small>
       <div class="hidden name"><code>mr_mash_intro.Rmd</code></div>
@@ -86,7 +86,7 @@ the <a href="https://doi.org/10.1101/2022.11.22.517471" class="external-link">pa
 and we load the “mr.mash.alpha” package.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/stephenslab/mr.mash.alpha" class="external-link">mr.mash.alpha</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">12</span><span class="op">)</span></span></code></pre></div>
 <p>We illustrate the application of mr.mash to a data set simulated from
 a multivariate, multiple linear regression with 5 responses in which the
 coefficients are the same for all responses. In the target application
@@ -206,29 +206,29 @@ top components by weight. (The top component is the null component
 because most of the SNPs have no effect on gene expression.)</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">w0</span>,decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="co">#             null   shared1_grid13   shared1_grid12   shared1_grid11 </span></span>
-<span><span class="co">#     9.925505e-01     2.156501e-03     1.279544e-03     2.432624e-04 </span></span>
-<span><span class="co">#   shared1_grid14   shared1_grid10 singleton1_grid1 singleton3_grid1 </span></span>
-<span><span class="co">#     1.673357e-04     1.171963e-04     6.237657e-05     6.236753e-05 </span></span>
-<span><span class="co"># singleton2_grid1 singleton1_grid2 </span></span>
-<span><span class="co">#     6.211754e-05     6.208252e-05</span></span></code></pre></div>
+<span><span class="co">#              null    shared1_grid12 singleton1_grid10  singleton5_grid8 </span></span>
+<span><span class="co">#      9.822578e-01      5.431954e-03      4.477378e-03      3.180946e-03 </span></span>
+<span><span class="co">#  singleton5_grid7  singleton5_grid6 singleton1_grid11  singleton5_grid5 </span></span>
+<span><span class="co">#      1.531493e-03      3.655315e-04      1.818372e-04      1.496145e-04 </span></span>
+<span><span class="co">#  singleton5_grid4  singleton5_grid3 </span></span>
+<span><span class="co">#      9.529390e-05      7.656325e-05</span></span></code></pre></div>
 <p>Also, reassuringly, the estimated residual variance-covariance matrix
 is close to the matrix used to simulate the data:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat</span><span class="op">$</span><span class="va">V</span></span>
-<span><span class="co">#           [,1]      [,2]      [,3]      [,4]      [,5]</span></span>
-<span><span class="co"># [1,] 3.5145374 0.8786343 0.8786343 0.8786343 0.8786343</span></span>
-<span><span class="co"># [2,] 0.8786343 3.5145373 0.8786343 0.8786343 0.8786343</span></span>
-<span><span class="co"># [3,] 0.8786343 0.8786343 3.5145373 0.8786343 0.8786343</span></span>
-<span><span class="co"># [4,] 0.8786343 0.8786343 0.8786343 3.5145373 0.8786343</span></span>
-<span><span class="co"># [5,] 0.8786343 0.8786343 0.8786343 0.8786343 3.5145373</span></span>
+<span><span class="co">#          [,1]     [,2]     [,3]     [,4]     [,5]</span></span>
+<span><span class="co"># [1,] 6.622079 1.655520 1.655520 1.655520 1.655520</span></span>
+<span><span class="co"># [2,] 1.655520 6.622079 1.655520 1.655520 1.655520</span></span>
+<span><span class="co"># [3,] 1.655520 1.655520 6.622079 1.655520 1.655520</span></span>
+<span><span class="co"># [4,] 1.655520 1.655520 1.655520 6.622079 1.655520</span></span>
+<span><span class="co"># [5,] 1.655520 1.655520 1.655520 1.655520 6.622079</span></span>
 <span><span class="va">fit</span><span class="op">$</span><span class="va">V</span></span>
-<span><span class="co">#          [,1]      [,2]      [,3]      [,4]      [,5]</span></span>
-<span><span class="co"># [1,] 3.461066 0.9454000 0.9492950 1.4169111 1.0618637</span></span>
-<span><span class="co"># [2,] 0.945400 3.7718288 1.3080240 0.7038973 0.1283624</span></span>
-<span><span class="co"># [3,] 0.949295 1.3080240 2.7266827 0.7350486 1.0846300</span></span>
-<span><span class="co"># [4,] 1.416911 0.7038973 0.7350486 2.9549883 0.8032564</span></span>
-<span><span class="co"># [5,] 1.061864 0.1283624 1.0846300 0.8032564 3.1519688</span></span></code></pre></div>
+<span><span class="co">#           [,1]     [,2]      [,3]      [,4]      [,5]</span></span>
+<span><span class="co"># [1,] 5.7356423 1.585484 1.3494127 0.8463714 0.9642602</span></span>
+<span><span class="co"># [2,] 1.5854844 6.578508 2.4138518 1.5273860 1.6646585</span></span>
+<span><span class="co"># [3,] 1.3494127 2.413852 6.0258742 0.4755238 1.5601590</span></span>
+<span><span class="co"># [4,] 0.8463714 1.527386 0.4755238 4.7464139 1.3982834</span></span>
+<span><span class="co"># [5,] 0.9642602 1.664659 1.5601590 1.3982834 5.0244255</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="use-the-fitted-mr-mash-model-to-make-predictions">Use the fitted mr.mash model to make predictions<a class="anchor" aria-label="anchor" href="#use-the-fitted-mr-mash-model-to-make-predictions"></a>
@@ -268,12 +268,12 @@ effects” prior.</p>
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Fabio Morgante, Peter Carbonetto, Matthew Stephens.</p>
+<p>Developed by Fabio Morgante, Deborah Kunkel, Peter Carbonetto, Matthew Stephens.</p>
 </div>
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer>
