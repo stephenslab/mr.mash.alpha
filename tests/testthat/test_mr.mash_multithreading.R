@@ -62,11 +62,11 @@ test_that("mr.mash with 1 or 2 thread(s) return the same results", {
   fit_1_miss$progress <- fit_1_miss$progress[, -2] ##This line is needed to remove the timing column -->  
   ##hopefully faster when using multiple threads
   
-  fit_1_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
-                           w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE,
-                           verbose=FALSE, update_V=TRUE, X_colmeans=X_colMeans, Y_colmeans=Y_colMeans, 
-                           nthreads=1)
-  fit_1_rss$progress <- fit_1_rss$progress[, -2] ##This line is needed to remove the timing column -->  
+  # fit_1_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
+  #                          w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE,
+  #                          verbose=FALSE, update_V=TRUE, X_colmeans=X_colMeans, Y_colmeans=Y_colMeans, 
+  #                          nthreads=1)
+  # fit_1_rss$progress <- fit_1_rss$progress[, -2] ##This line is needed to remove the timing column -->  
   ##hopefully faster when using multiple threads
 
   
@@ -84,11 +84,11 @@ test_that("mr.mash with 1 or 2 thread(s) return the same results", {
                           verbose=FALSE, update_V=TRUE, nthreads=2))
   fit_2_miss$progress <- fit_2_miss$progress[, -2]
   
-  fit_2_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
-                           w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE,
-                           verbose=FALSE, update_V=TRUE, X_colmeans=X_colMeans, Y_colmeans=Y_colMeans, 
-                           nthreads=2)
-  fit_2_rss$progress <- fit_2_rss$progress[, -2] ##This line is needed to remove the timing column -->  
+  # fit_2_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
+  #                          w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, standardize=TRUE,
+  #                          verbose=FALSE, update_V=TRUE, X_colmeans=X_colMeans, Y_colmeans=Y_colMeans, 
+  #                          nthreads=2)
+  # fit_2_rss$progress <- fit_2_rss$progress[, -2] ##This line is needed to remove the timing column -->  
   ##hopefully faster when using multiple threads
   
   

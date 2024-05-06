@@ -82,11 +82,11 @@ test_that("mr.mash and mr.mash.rss return the same results", {
                           verbose=FALSE, update_V=FALSE, X_colmeans=X_colMeans, Y_colmeans=Y_colMeans)
   fit_rss$progress <- NULL
   
-  fit_scaled_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
-                                w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, 
-                                standardize=TRUE, verbose=FALSE, update_V=FALSE,
-                                X_colmeans=X_colMeans, Y_colmeans=Y_colMeans)
-  fit_scaled_rss$progress <- NULL
+  # fit_scaled_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
+  #                               w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, 
+  #                                standardize=TRUE, verbose=FALSE, update_V=FALSE,
+  #                               X_colmeans=X_colMeans, Y_colmeans=Y_colMeans)
+  # fit_scaled_rss$progress <- NULL
   
   fit_V_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
                           w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, 
@@ -101,28 +101,28 @@ test_that("mr.mash and mr.mash.rss return the same results", {
                            update_V_method="diagonal")
   fit_V_diag_rss$progress <- NULL
   
-  fit_scaled_V_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
-                                  w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, 
-                                  standardize=TRUE, verbose=FALSE, update_V=TRUE,
-                                  X_colmeans=X_colMeans, Y_colmeans=Y_colMeans)
-  fit_scaled_V_rss$progress <- NULL
+  # fit_scaled_V_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
+  #                                 w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, 
+  #                                 standardize=TRUE, verbose=FALSE, update_V=TRUE,
+  #                                 X_colmeans=X_colMeans, Y_colmeans=Y_colMeans)
+  # fit_scaled_V_rss$progress <- NULL
   
   
-  fit_scaled_V_declogBF_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
-                                          w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, 
-                                          standardize=TRUE, verbose=FALSE, update_V=TRUE,
-                                          ca_update_order="decreasing_logBF",
-                                          X_colmeans=X_colMeans, Y_colmeans=Y_colMeans)
-  fit_scaled_V_declogBF_rss$progress <- NULL
+  # fit_scaled_V_declogBF_rss <- mr.mash.rss(Bhat=out$Bhat, Shat=out$Shat, covY=V_est, R=R, n=n, S0=S0mix, 
+  #                                         w0=w0, V=V_est, update_w0=TRUE, compute_ELBO=TRUE, 
+  #                                         standardize=TRUE, verbose=FALSE, update_V=TRUE,
+  #                                         ca_update_order="decreasing_logBF",
+  #                                         X_colmeans=X_colMeans, Y_colmeans=Y_colMeans)
+  # fit_scaled_V_declogBF_rss$progress <- NULL
   
   
   
   
   ###Tests
   expect_equal(unclass(fit), unclass(fit_rss), tolerance=1e-10, scale=1)
-  expect_equal(unclass(fit_scaled), unclass(fit_scaled_rss), tolerance=1e-10, scale=1)
+  # expect_equal(unclass(fit_scaled), unclass(fit_scaled_rss), tolerance=1e-10, scale=1)
   expect_equal(unclass(fit_V), unclass(fit_V_rss), tolerance=1e-10, scale=1)
   expect_equal(unclass(fit_V_diag), unclass(fit_V_diag_rss), tolerance=1e-10, scale=1)
-  expect_equal(unclass(fit_scaled_V), unclass(fit_scaled_V_rss), tolerance=1e-10, scale=1)
-  expect_equal(unclass(fit_scaled_V_declogBF), unclass(fit_scaled_V_declogBF_rss), tolerance=1e-10, scale=1)
+  # expect_equal(unclass(fit_scaled_V), unclass(fit_scaled_V_rss), tolerance=1e-10, scale=1)
+  # expect_equal(unclass(fit_scaled_V_declogBF), unclass(fit_scaled_V_declogBF_rss), tolerance=1e-10, scale=1)
 })

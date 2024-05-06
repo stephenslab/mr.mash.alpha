@@ -30,7 +30,7 @@ jobs:
           install.packages(c("remotes","rcmdcheck"))
           install.packages(c("devtools","Rcpp","RcppArmadillo"))
           install.packages(c("RcppParallel","MBSP","mvtnorm","matrixStats"))
-          install.packages(c("testthat","varbvs"))
+          install.packages(c("Rfast","testthat","varbvs"))
           remotes::install_github("stephenslab/ebnm",upgrade="never",force=TRUE)
           remotes::install_github("stephenslab/mashr",upgrade="never",force=TRUE)
           remotes::install_github("willwerscheid/flashier",upgrade="never",force=TRUE)
