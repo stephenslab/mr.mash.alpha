@@ -33,6 +33,12 @@ repository useful for your work, please cite:
 > in predicting multi-tissue gene expression from genotypes.
 > *PLoS Genetics* 19(7): e1010539. https://doi.org/10.1371/journal.pgen.1010539
 
+If you use any of the summary data methods such as `mr.mash.rss`, please also cite:
+> Kunkel, D., Sørensen, P., Shankar, V. & Morgante, F. (2024).
+> Improving polygenic prediction from summary data by learning patterns of effect
+> sharing across multiple phenotypes. *bioRxiv* 2024.05.06.592745.
+> https://doi.org/10.1101/2024.05.06.592745
+
 ## License
 
 Copyright (c) 2020-2024, Fabio Morgante, Jason Willwerscheid, Gao Wang, Deborah Kunkel,
