@@ -1,7 +1,6 @@
 # mr.mash.alpha
 
- [![R-CMD-check](https://github.com/stephenslab/mr.mash.alpha/workflows/R-CMD-check/badge.svg)](https://github.com/stephenslab/mr.mash.alpha/actions)
- [![CircleCI build status](https://circleci.com/gh/stephenslab/mr.mash.alpha.svg?style=svg)](https://circleci.com/gh/stephenslab/mr.mash.alpha)
+[![R-CMD-check](https://github.com/stephenslab/mr.mash.alpha/workflows/R-CMD-check/badge.svg)](https://github.com/stephenslab/mr.mash.alpha/actions)
 
 R package implementing methods for multivariate multiple regression
 with adaptive shrinkage priors (mr.mash).
