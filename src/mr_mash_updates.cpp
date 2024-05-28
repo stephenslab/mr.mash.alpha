@@ -57,7 +57,7 @@ void inner_loop_general_rss (unsigned int n, const mat& XtX, const mat& XtY, mat
                              cube& S1, mat& w1, double& var_part_tr_wERSS, 
                              double& neg_KL, mat& var_part_ERSS);
 
-// Inner loop rss
+// Inner loop rss sprse
 void inner_loop_general_rss_sparse (unsigned int n, const sp_mat& XtX, const mat& XtY, mat& XtRbar, 
                                     mat& mu1, const mat& V, const mat& Vinv, const vec& w0, 
                                     const cube& S0, const mr_mash_precomputed_quantities& precomp_quants,
@@ -397,9 +397,9 @@ List inner_loop_general_rss_sparse_rcpp (unsigned int n, const arma::sp_mat& XtX
    as<mat>(precomp_quants_list["d"]),
    as<cube>(precomp_quants_list["QtimesV_chol"]),
    as<vec>(precomp_quants_list["xtx"]));
-  inner_loop_general_rss(n, XtX, XtY, XtRbar, mu1_new, V, Vinv, w0, S0, precomp_quants,
-                         standardize, compute_ELBO, update_V, update_order, eps,
-                         nthreads, S1, w1, var_part_tr_wERSS, neg_KL, var_part_ERSS);
+  inner_loop_general_rss_sparse(n, XtX, XtY, XtRbar, mu1_new, V, Vinv, w0, S0, precomp_quants,
+                                standardize, compute_ELBO, update_V, update_order, eps,
+                                nthreads, S1, w1, var_part_tr_wERSS, neg_KL, var_part_ERSS);
   return List::create(Named("mu1")                = mu1_new,
                       Named("S1")                 = S1,
                       Named("w1")                 = w1,
