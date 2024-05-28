@@ -271,6 +271,9 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
   # PRE-PROCESSING STEPS
   # --------------------
   
+  ###Check if R is sparse
+  R_is_sparse <- inherits(R,"CsparseMatrix")
+  
   ###Compute Z scores
   if(missing(Z)){
     Z <- Bhat/Shat
@@ -490,7 +493,7 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
                                       standardize=standardize,
                                       update_V=update_V, version=version, 
                                       update_order=update_order, eps=eps,
-                                      nthreads=nthreads)
+                                      R_is_sparse=R_is_sparse, nthreads=nthreads)
     mu1_t <- ups$mu1_t
     S1_t  <- ups$S1_t
     w1_t  <- ups$w1_t

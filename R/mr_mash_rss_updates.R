@@ -77,11 +77,18 @@ inner_loop_general_rss_R <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, 
 #'
 inner_loop_general_rss_Rcpp <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants,
                                         standardize, compute_ELBO, update_V, update_order,
-                                        eps, nthreads){
+                                        eps, R_is_sparse, nthreads){
 
-  out <- inner_loop_general_rss_rcpp(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants,
-                                     standardize, compute_ELBO, update_V, update_order,
-                                     eps, nthreads)
+  if(R_is_sparse){
+    out <- inner_loop_general_rss_sparse_rcpp(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants,
+                                              standardize, compute_ELBO, update_V, update_order,
+                                              eps, nthreads)
+  } else {
+    out <- inner_loop_general_rss_rcpp(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants,
+                                       standardize, compute_ELBO, update_V, update_order,
+                                       eps, nthreads)
+  }
+  
 
   ###Return output
   if(compute_ELBO && update_V){
@@ -100,14 +107,14 @@ inner_loop_general_rss_Rcpp <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S
 ###Wrapper of the inner loop with R or Rcpp
 inner_loop_general_rss <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants, 
                                standardize, compute_ELBO, update_V, version,
-                               update_order, eps, nthreads){
+                               update_order, eps, R_is_sparse, nthreads){
   if(version=="R"){
     out <- inner_loop_general_rss_R(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants, 
                                 standardize, compute_ELBO, update_V, update_order, eps)
   } else if(version=="Rcpp"){
     update_order <- as.integer(update_order-1)
     out <- inner_loop_general_rss_Rcpp(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, simplify2array_custom(S0), precomp_quants, 
-                                       standardize, compute_ELBO, update_V, update_order, eps, nthreads)
+                                       standardize, compute_ELBO, update_V, update_order, eps, R_is_sparse, nthreads)
   }
   
   return(out)
@@ -118,7 +125,7 @@ inner_loop_general_rss <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, pr
 mr_mash_update_general_rss <- function(n, XtX, XtY, YtY, mu1_t, V, Vinv, ldetV, w0, S0,
                                       precomp_quants, compute_ELBO, standardize, 
                                       update_V, version, update_order, eps, 
-                                      nthreads){
+                                      R_is_sparse, nthreads){
   
   
 
@@ -129,7 +136,7 @@ mr_mash_update_general_rss <- function(n, XtX, XtY, YtY, mu1_t, V, Vinv, ldetV, 
   updates <- inner_loop_general_rss(n=n, XtX=XtX, XtY=XtY, XtRbar=XtRbar, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
                                 precomp_quants=precomp_quants, standardize=standardize,
                                 compute_ELBO=compute_ELBO, update_V=update_V, version=version,
-                                update_order=update_order, eps=eps, nthreads=nthreads)   
+                                update_order=update_order, eps=eps, R_is_sparse=R_is_sparse, nthreads=nthreads)   
   mu1_t   <- updates$mu1
   S1_t    <- updates$S1
   w1_t    <- updates$w1
