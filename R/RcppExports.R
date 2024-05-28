@@ -13,6 +13,10 @@ inner_loop_general_rss_rcpp <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S
     .Call('_mr_mash_alpha_inner_loop_general_rss_rcpp', PACKAGE = 'mr.mash.alpha', n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads)
 }
 
+inner_loop_general_rss_sparse_rcpp <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads) {
+    .Call('_mr_mash_alpha_inner_loop_general_rss_sparse_rcpp', PACKAGE = 'mr.mash.alpha', n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads)
+}
+
 scale_rcpp <- function(M, a, b) {
     .Call('_mr_mash_alpha_scale_rcpp', PACKAGE = 'mr.mash.alpha', M, a, b)
 }

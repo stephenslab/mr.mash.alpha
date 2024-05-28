@@ -13,7 +13,7 @@
 #' @param Z p x r matrix of Z-scores from univariate
 #'  simple linear regression.
 #'  
-#' @param R p x p correlation matrix among the variables.
+#' @param R p x p dense or sparse correlation matrix among the variables.
 #' 
 #' @param covY r x r covariance matrix across responses.
 #' 
