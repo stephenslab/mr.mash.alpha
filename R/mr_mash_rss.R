@@ -171,7 +171,7 @@
 #' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 #'
 #' @importFrom stats cov
-#' @importFrom Rfast is.symmetric
+#' @importFrom Matrix isSymmetric t diag crossprod
 #' @importFrom RcppParallel defaultNumThreads
 #' @importFrom RcppParallel setThreadOptions
 #'
@@ -242,14 +242,14 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
     if(any(is.na(Z)))
       stop("Z must not contain missing values.")
   }
-  if(!is.matrix(V) || !is.symmetric(V))
+  if(!is.matrix(V) || !isSymmetric(V))
     stop("V must be a symmetric matrix.")
   if(!missing(covY)){
-    if(!is.matrix(covY) || !is.symmetric(covY))
+    if(!is.matrix(covY) || !isSymmetric(covY))
       stop("covY must be a symmetric matrix.")
   }
-  if(!is.matrix(R) || !is.symmetric(R))
-    stop("R must be a symmetric matrix.")
+  if(!(is.matrix(R) || inherits(R,"CsparseMatrix")) || !isSymmetric(R))
+    stop("R must be a dense or sparse symmetric matrix.")
   if(!is.list(S0))
     stop("S0 must be a list.")
   if(!is.vector(w0))
@@ -304,6 +304,10 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
     XtX <- R*(n-1)
     XtY <- Z*sqrt(n-1)
     covY <- cov2cor(V)
+  }
+  
+  if(R_is_sparse){
+    XtX <- as(XtX, "symmetricMatrix")
   }
   
   YtY <- covY*(n-1)
