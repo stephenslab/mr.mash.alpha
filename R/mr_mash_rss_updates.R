@@ -131,6 +131,7 @@ mr_mash_update_general_rss <- function(n, XtX, XtY, YtY, mu1_t, V, Vinv, ldetV, 
 
   ##Compute expected residuals
   XtRbar <- XtY - XtX %*% mu1_t
+  XtRbar <- as.matrix(XtRbar)
   
   ##Update variational parameters, expected residuals, and ELBO components
   updates <- inner_loop_general_rss(n=n, XtX=XtX, XtY=XtY, XtRbar=XtRbar, mu1=mu1_t, V=V, Vinv=Vinv, w0=w0, S0=S0, 
@@ -145,6 +146,7 @@ mr_mash_update_general_rss <- function(n, XtX, XtY, YtY, mu1_t, V, Vinv, ldetV, 
   
   if(compute_ELBO || update_V){
     RbartRbar <- YtY - crossprod(mu1_t, XtY) - crossprod(XtY, mu1_t) + crossprod(mu1_t, XtX)%*%mu1_t
+    RbartRbar <- as.matrix(RbartRbar)
   }
   
   if(compute_ELBO && update_V){
