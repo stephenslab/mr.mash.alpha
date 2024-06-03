@@ -16,7 +16,7 @@ mr.mash.rss(
   w0 = rep(1/(length(S0)), length(S0)),
   V,
   mu1_init = NULL,
-  tol = 0.0001,
+  tol = 1e-04,
   convergence_criterion = c("mu1", "ELBO"),
   max_iter = 5000,
   update_w0 = TRUE,
@@ -47,7 +47,7 @@ from univariate simple linear regression.}
 \item{Z}{p x r matrix of Z-scores from univariate
 simple linear regression.}
 
-\item{R}{p x p correlation matrix among the variables.}
+\item{R}{p x p dense or sparse correlation matrix among the variables.}
 
 \item{covY}{r x r covariance matrix across responses.}
 
