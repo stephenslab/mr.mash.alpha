@@ -171,6 +171,7 @@
 #' abline(a = 0,b = 1,col = "magenta",lty = "dotted")
 #'
 #' @importFrom stats cov
+#' @importFrom methods as
 #' @importFrom Matrix isSymmetric t diag crossprod
 #' @importFrom RcppParallel defaultNumThreads
 #' @importFrom RcppParallel setThreadOptions
