@@ -31,6 +31,9 @@
 #' 
 #' @param update_w0_method Method to update prior weights. Only EM is
 #'   currently supported.
+#'   
+#' @param w0_penalty K-vector of penalty terms (>=1) for each 
+#'  mixture component. Default is all components are unpenalized.
 #' 
 #' @param w0_threshold Drop mixture components with weight less than this value.
 #'   Components are dropped at each iteration after 15 initial iterations.
@@ -163,7 +166,7 @@
 #' 
 mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL, 
                     mu1_init=matrix(0, nrow=ncol(X), ncol=ncol(Y)), tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
-                    max_iter=5000, update_w0=TRUE, update_w0_method="EM", 
+                    max_iter=5000, update_w0=TRUE, update_w0_method="EM", w0_penalty=rep(1, length(S0)), 
                     w0_threshold=0, compute_ELBO=TRUE, standardize=TRUE, verbose=TRUE,
                     update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
                     ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF", "random"),
@@ -430,13 +433,14 @@ mr.mash <- function(X, Y, S0, w0=rep(1/(length(S0)), length(S0)), V=NULL,
       
       ##Update w0 if requested
       if(update_w0){
-        w0 <- update_weights_em(w1_t)
+        w0 <- update_weights_em(w1_t, w0_penalty)
         
         #Drop components with mixture weight <= w0_threshold
         if(t>15 && any(w0 < w0_threshold)){
           to_keep <- which(w0 >= w0_threshold)
           w0 <- w0[to_keep]
           w0 <- w0/sum(w0)
+          w0_penalty <- w0_penalty[to_keep]
           S0 <- S0[to_keep]
           if(length(to_keep) > 1){
             comps <- filter_precomputed_quants(comps, to_keep, standardize, version)

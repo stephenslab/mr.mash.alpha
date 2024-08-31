@@ -202,12 +202,12 @@ update_V_fun <- function(Y, mu, var_part_ERSS, Y_cov){
 
 
 ###Update mixture weights
-update_weights_em <- function(x){
+update_weights_em <- function(x, lambda){
   w <- colSums(x)
+  w <- w + lambda - 1
   w <- w/sum(w)
   return(w)
 }
-
 
 ###Impute/update missing Y
 impute_missing_Y_R <- function(Y, mu, Vinv, miss, non_miss){
