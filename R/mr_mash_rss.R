@@ -469,7 +469,7 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
       }
       
       ##Update w0 if requested
-      if(update_w0 && t < update_w0_max_iter){
+      if(update_w0 && t <= update_w0_max_iter){
         w0 <- update_weights_em(w1_t, w0_penalty)
         
         #Drop components with mixture weight <= w0_threshold
