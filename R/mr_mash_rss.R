@@ -44,12 +44,15 @@
 #' @param update_w0_method Method to update prior weights. Only EM is
 #'   currently supported.
 #'   
+#' @param update_w0_max_iter Maximum number of iterations for the update
+#'   of w0.
+#'   
 #' @param w0_penalty K-vector of penalty terms (>=1) for each 
 #'  mixture component. Default is all components are unpenalized.
 #' 
 #' @param w0_threshold Drop mixture components with weight less than this value.
 #'   Components are dropped at each iteration after 15 initial iterations.
-#'   This is done to prevent from dropping some poetentially important 
+#'   This is done to prevent from dropping some potentially important 
 #'   components prematurely.
 #' 
 #' @param update_V if \code{TRUE}, residual covariance is updated.
@@ -184,7 +187,7 @@
 mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), length(S0)), V, 
                         mu1_init=NULL, tol=1e-4, convergence_criterion=c("mu1", "ELBO"),
                         max_iter=5000, update_w0=TRUE, update_w0_method="EM", w0_penalty=rep(1, length(S0)),
-                        w0_threshold=0, compute_ELBO=TRUE, standardize=FALSE, verbose=TRUE,
+                        update_w0_max_iter=Inf, w0_threshold=0, compute_ELBO=TRUE, standardize=FALSE, verbose=TRUE,
                         update_V=FALSE, update_V_method=c("full", "diagonal"), version=c("Rcpp", "R"), e=1e-8,
                         ca_update_order=c("consecutive", "decreasing_logBF", "increasing_logBF", "random"),
                         X_colmeans=NULL, Y_colmeans=NULL, check_R=TRUE, R_tol=1e-08,
@@ -466,8 +469,8 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
       }
       
       ##Update w0 if requested
-      if(update_w0){
-        w0 <- update_weights_em(w1_t, update_w0_penalty)
+      if(update_w0 && t < update_w0_max_iter){
+        w0 <- update_weights_em(w1_t, w0_penalty)
         
         #Drop components with mixture weight <= w0_threshold
         if(t>15 && any(w0 < w0_threshold)){
@@ -487,7 +490,7 @@ mr.mash.rss <- function(Bhat, Shat, Z, R, covY, n, S0, w0=rep(1/(length(S0)), le
           } else { #some other component is the only one left
             stop("Only one component (different from the null) left. Consider lowering w0_threshold.")
           }
-	}
+	      }
       }
     }
     
