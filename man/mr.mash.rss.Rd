@@ -16,11 +16,13 @@ mr.mash.rss(
   w0 = rep(1/(length(S0)), length(S0)),
   V,
   mu1_init = NULL,
-  tol = 0.0001,
+  tol = 1e-04,
   convergence_criterion = c("mu1", "ELBO"),
   max_iter = 5000,
   update_w0 = TRUE,
   update_w0_method = "EM",
+  w0_penalty = rep(1, length(S0)),
+  update_w0_max_iter = Inf,
   w0_threshold = 0,
   compute_ELBO = TRUE,
   standardize = FALSE,
@@ -78,9 +80,15 @@ algorithm.}
 \item{update_w0_method}{Method to update prior weights. Only EM is
 currently supported.}
 
+\item{w0_penalty}{K-vector of penalty terms (>=1) for each 
+mixture component. Default is all components are unpenalized.}
+
+\item{update_w0_max_iter}{Maximum number of iterations for the update
+of w0.}
+
 \item{w0_threshold}{Drop mixture components with weight less than this value.
 Components are dropped at each iteration after 15 initial iterations.
-This is done to prevent from dropping some poetentially important 
+This is done to prevent from dropping some potentially important 
 components prematurely.}
 
 \item{compute_ELBO}{If \code{TRUE}, ELBO is computed.}
