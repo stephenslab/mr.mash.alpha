@@ -238,16 +238,16 @@ void impute_missing_Y (mat& Y, const mat& mu, const mat& Vinv,
       Y_cov += Y_cov_i;
       
       // Compute mean
-      rowvec Y_i = Y.row(i);
-      rowvec mu_i_miss = mu.row(i);
+      vec Y_i = trans(Y.row(i));
+      vec mu_i_miss = trans(mu.row(i));
       mu_i_miss = mu_i_miss.elem(miss_i_idx);
-      rowvec mu_i_non_miss = mu.row(i);
-      mu_i_non_miss = trans(mu_i_non_miss.elem(non_miss_i_idx));
-      rowvec Y_i_non_miss = Y.row(i);
-      Y_i_non_miss = trans(Y_i_non_miss.elem(non_miss_i_idx));
-      Y_i.elem(miss_i_idx) = mu_i_miss - Y_cov_mm * Vinv_mo * trans(Y_i_non_miss - mu_i_non_miss);
+      vec mu_i_non_miss = trans(mu.row(i));
+      mu_i_non_miss = mu_i_non_miss.elem(non_miss_i_idx);
+      vec Y_i_non_miss = trans(Y.row(i));
+      Y_i_non_miss = Y_i_non_miss.elem(non_miss_i_idx);
+      Y_i.elem(miss_i_idx) = mu_i_miss - Y_cov_mm * Vinv_mo * (Y_i_non_miss - mu_i_non_miss);
       
-      Y.row(i) = Y_i;
+      Y.row(i) = trans(Y_i);
       
       sum_neg_ent_Y_miss += (0.5 * (s * log((1/(2*M_PI*exp(1)))) + chol2ldet(Vinv_mm_chol)));
     }
