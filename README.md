@@ -49,5 +49,5 @@ under the terms of the [MIT license][mit-license].
 
 [remotes]: https://github.com/r-lib/remotes
 [cran]: https://cran.r-project.org
-[mit-license]: https://opensource.org/licenses/mit-license.html
+[mit-license]: https://opensource.org/license/mit
 
