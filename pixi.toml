@@ -29,6 +29,9 @@ r44 = {features = ["r44"]}
 
 [target.linux-64.dependencies]
 "gcc" = "*"
+[target.osx-arm64.dependencies]
+"clangxx" = "19.*"
+"clang" = "19.*"
 
 [dependencies]
 "r-ebnm" = "*"
