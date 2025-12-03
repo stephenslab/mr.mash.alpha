@@ -4,8 +4,9 @@ Package: mr.mash.alpha
 Version: 0.3.36
 Date: 2025-12-02
 Title: Multiple Regression with Multivariate Adaptive Shrinkage
-Description: Provides an implementation of methods for multivariate 
-    multiple regression with adaptive shrinkage priors.
+Description: Provides an implementation of methods for multivariate
+    multiple regression with adaptive shrinkage priors as described in
+    Morgante et. al. 2023 <doi:10.1371/journal.pgen.1010539>.
 URL: https://github.com/stephenslab/mr.mash.alpha
 Authors@R: c(person("Fabio","Morgante",role=c("cre","aut"),
                    email="fabiom@clemson.edu"),
