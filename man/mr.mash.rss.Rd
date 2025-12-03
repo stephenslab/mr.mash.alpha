@@ -16,7 +16,7 @@ mr.mash.rss(
   w0 = rep(1/(length(S0)), length(S0)),
   V,
   mu1_init = NULL,
-  tol = 0.0001,
+  tol = 1e-04,
   convergence_criterion = c("mu1", "ELBO"),
   max_iter = 5000,
   update_w0 = TRUE,
