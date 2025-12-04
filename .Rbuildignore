@@ -5,3 +5,4 @@
 ^\.circleci$
 ^\.travis\.yml$
 ^appveyor\.yml$
+^pixi.toml

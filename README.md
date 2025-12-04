@@ -33,14 +33,14 @@ repository useful for your work, please cite:
 > *PLoS Genetics* 19(7): e1010539. https://doi.org/10.1371/journal.pgen.1010539
 
 If you use any of the summary data methods such as `mr.mash.rss`, please also cite:
-> Kunkel, D., Sørensen, P., Shankar, V. & Morgante, F. (2024).
+> Kunkel, D., Sørensen, P., Shankar, V. & Morgante, F. (2025).
 > Improving polygenic prediction from summary data by learning patterns of effect
-> sharing across multiple phenotypes. *bioRxiv* 2024.05.06.592745.
-> https://doi.org/10.1101/2024.05.06.592745
+> sharing across multiple phenotypes. *PLoS Genetics* 21(1): e1011519.
+> https://doi.org/10.1371/journal.pgen.1011519
 
 ## License
 
-Copyright (c) 2020-2024, Fabio Morgante, Jason Willwerscheid, Gao Wang, Deborah Kunkel,
+Copyright (c) 2020-2025, Fabio Morgante, Jason Willwerscheid, Gao Wang, Deborah Kunkel,
 Peter Carbonetto and Matthew Stephens.
 
 All source code and software in this repository are made available
@@ -49,5 +49,5 @@ under the terms of the [MIT license][mit-license].
 
 [remotes]: https://github.com/r-lib/remotes
 [cran]: https://cran.r-project.org
-[mit-license]: https://opensource.org/licenses/mit-license.html
+[mit-license]: https://opensource.org/license/mit
 

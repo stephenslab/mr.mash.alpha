@@ -38,5 +38,6 @@ LinkingTo:
     Rcpp,
     RcppArmadillo (>= 0.10.4.0.0),
     RcppParallel
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.3
 VignetteBuilder: knitr
+SystemRequirements: GNU make
