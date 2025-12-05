@@ -16,7 +16,7 @@ mr.mash.rss(
   w0 = rep(1/(length(S0)), length(S0)),
   V,
   mu1_init = NULL,
-  tol = 1e-04,
+  tol = 0.0001,
   convergence_criterion = c("mu1", "ELBO"),
   max_iter = 5000,
   update_w0 = TRUE,
@@ -204,12 +204,16 @@ S0 <- compute_canonical_covs(ncol(Ytrain), singletons=TRUE,
 S0 <- expand_covs(S0, grid, zeromat=TRUE)
 
 ###Fit mr.mash
+# Note that max_iter was set to 20 in this example to shorten
+# the running time. In practice, you should allow the model-fitting
+# algorithm to run for more iterations to obtain better estimates.
 covY <- cov(Ytrain)
 corX <- cor(Xtrain)
 n_train <- nrow(Ytrain)
-fit <- mr.mash.rss(Bhat=univ_sumstats$Bhat, Shat=univ_sumstats$Shat, S0=S0, 
-                   covY=covY, R=corX, n=n_train, V=covY, update_V=TRUE,
-                   X_colmeans=colMeans(Xtrain), Y_colmeans=colMeans(Ytrain))
+fit <- mr.mash.rss(Bhat=univ_sumstats$Bhat, Shat=univ_sumstats$Shat,
+                   S0=S0, covY=covY, R=corX, n=n_train, V=covY,
+                   update_V=TRUE, X_colmeans=colMeans(Xtrain),
+                   Y_colmeans=colMeans(Ytrain), max_iter = 20)
 
 # Predict the multivariate outcomes in the test set using the fitted model.
 Ytest_est <- predict(fit,Xtest)

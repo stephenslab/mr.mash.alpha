@@ -11,7 +11,7 @@ mr.mash(
   w0 = rep(1/(length(S0)), length(S0)),
   V = NULL,
   mu1_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)),
-  tol = 1e-04,
+  tol = 0.0001,
   convergence_criterion = c("mu1", "ELBO"),
   max_iter = 5000,
   update_w0 = TRUE,
@@ -181,7 +181,10 @@ S0 <- compute_canonical_covs(ncol(Ytrain), singletons=TRUE,
 S0 <- expand_covs(S0, grid, zeromat=TRUE)
 
 ###Fit mr.mash
-fit <- mr.mash(Xtrain, Ytrain, S0, update_V=TRUE)
+# Note that max_iter was set to 20 in this example to shorten
+# the running time. In practice, you should allow the model-fitting
+# algorithm to run for more iterations to obtain better estimates.
+fit <- mr.mash(Xtrain, Ytrain, S0, update_V=TRUE, max_iter = 20)
 
 # Compare the "fitted" values of Y against the true Y in the training set.
 plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",
