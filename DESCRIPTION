@@ -9,11 +9,12 @@ Description: Provides an implementation of methods for multivariate
     described in F. Morgante et al (2023) <doi:10.1371/journal.pgen.1010539>.
 URL: https://github.com/stephenslab/mr.mash.alpha
 Authors@R: c(person("Fabio","Morgante",role="aut",
-                   email="fabiom@clemson.edu"),
+                    email="fabiom@clemson.edu"),
              person("Jason","Willwerscheid",role="ctb"),
              person("Gao","Wang",role="ctb"),
              person("Deborah","Kunkel",role="aut"),
-             person("Peter","Carbonetto",role=c("cre","aut")),
+             person("Peter","Carbonetto",role=c("cre","aut"),
+                    email="peter.carbonetto@gmail.com"),
              person("Matthew","Stephens",role="aut"))
 License: MIT + file LICENSE
 Depends: R (>= 3.1.0)
