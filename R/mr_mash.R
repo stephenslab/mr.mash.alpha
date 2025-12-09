@@ -148,10 +148,10 @@
 #' S0 <- expand_covs(S0, grid, zeromat=TRUE)
 #'
 #' ###Fit mr.mash
-#' # Note that max_iter was set to 20 in this example to shorten
+#' # Note that max_iter was set to 4 in this example to shorten
 #' # the running time. In practice, you should allow the model-fitting
-#' # algorithm to run for more iterations to obtain better estimates.
-#' fit <- mr.mash(Xtrain, Ytrain, S0, update_V=TRUE, max_iter = 20)
+#' # algorithm to run for many more iterations to obtain better estimates.
+#' fit <- mr.mash(Xtrain, Ytrain, S0, update_V=TRUE, max_iter = 4)
 #'
 #' # Compare the "fitted" values of Y against the true Y in the training set.
 #' plot(fit$fitted,Ytrain,pch = 20,col = "darkblue",xlab = "true",
