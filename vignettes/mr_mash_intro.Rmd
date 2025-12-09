@@ -135,7 +135,8 @@ weight split equally across the remaining components.
 null_weight <- 0.99
 non_null_weight <- 1-null_weight
 w0_init <- c(null_weight, rep(non_null_weight/(length(S0)-1), (length(S0)-1)))
-fit <- mr.mash(X=Xtrain,Y=Ytrain,S0=S0, w0=w0_init, update_V = TRUE)
+fit <- mr.mash(X=Xtrain,Y=Ytrain,S0=S0, w0=w0_init, update_V = TRUE,
+               nthreads = 1)
 ```
 
 And for comparison we fit a second mr.mash model using the simpler and
@@ -143,7 +144,8 @@ less flexible prior:
 
 ```{r fit-mr-mash-2, results="hide"}
 w0_init <- c(null_weight, rep(non_null_weight/(length(S0_ind)-1), (length(S0_ind)-1)))
-fit_ind <- mr.mash(X=Xtrain,Y=Ytrain,S0=S0_ind,w0=w0_init,update_V = TRUE)
+fit_ind <- mr.mash(X=Xtrain,Y=Ytrain,S0=S0_ind,w0=w0_init,update_V = TRUE,
+                   nthreads = 1)
 ```
 
 (Notice that the less complex model also takes less time to fit.)

@@ -213,7 +213,8 @@ n_train <- nrow(Ytrain)
 fit <- mr.mash.rss(Bhat=univ_sumstats$Bhat, Shat=univ_sumstats$Shat,
                    S0=S0, covY=covY, R=corX, n=n_train, V=covY,
                    update_V=TRUE, X_colmeans=colMeans(Xtrain),
-                   Y_colmeans=colMeans(Ytrain), max_iter = 4)
+                   Y_colmeans=colMeans(Ytrain), max_iter = 4,
+                   nthreads = 1)
 
 # Predict the multivariate outcomes in the test set using the fitted model.
 Ytest_est <- predict(fit,Xtest)
