@@ -1,8 +1,8 @@
 Encoding: UTF-8
 Type: Package
 Package: mr.mash.alpha
-Version: 0.3.41
-Date: 2025-12-09
+Version: 0.3.42
+Date: 2025-12-10
 Title: Multiple Regression with Multivariate Adaptive Shrinkage
 Description: Provides an implementation of methods for multivariate 
     multiple regression with adaptive shrinkage priors as
@@ -13,6 +13,7 @@ Authors@R: c(person("Fabio","Morgante",role="aut",
              person("Jason","Willwerscheid",role="ctb"),
              person("Gao","Wang",role="ctb"),
              person("Deborah","Kunkel",role="aut"),
+             person("Daniel","Nachun",role="ctb"),
              person("Peter","Carbonetto",role=c("cre","aut"),
                     email="peter.carbonetto@gmail.com"),
              person("Matthew","Stephens",role="aut"))
