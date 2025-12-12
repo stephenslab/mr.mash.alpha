@@ -73,7 +73,7 @@ inner_loop_general_rss_R <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, 
 
 #' @importFrom Rcpp evalCpp
 #' @importFrom RcppParallel RcppParallelLibs
-#' @useDynLib mr.mash.alpha
+#' @useDynLib mr.mashr
 #'
 inner_loop_general_rss_Rcpp <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants,
                                         standardize, compute_ELBO, update_V, update_order,

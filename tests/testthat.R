@@ -1,4 +1,3 @@
 library(testthat)
-library(mr.mash.alpha)
-
-test_check("mr.mash.alpha")
+library(mr.mashr)
+test_check("mr.mashr")

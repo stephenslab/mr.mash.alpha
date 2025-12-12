@@ -77,7 +77,7 @@ inner_loop_general_R <- function(X, Rbar, mu1, V, Vinv, w0, S0, ###note: V is on
 #
 #' @importFrom Rcpp evalCpp
 #' @importFrom RcppParallel RcppParallelLibs
-#' @useDynLib mr.mash.alpha
+#' @useDynLib mr.mashr
 #' 
 inner_loop_general_Rcpp <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants, 
                                     standardize, compute_ELBO, update_V, update_order, 

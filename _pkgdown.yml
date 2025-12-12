@@ -8,4 +8,4 @@ navbar:
       href: reference/index.html
   right:
     - text: "Source"
-      href: https://github.com/stephenslab/mr.mash.alpha
+      href: https://github.com/stephenslab/mr.mashr

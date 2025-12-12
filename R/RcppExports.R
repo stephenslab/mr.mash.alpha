@@ -2,38 +2,38 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 inner_loop_general_rcpp <- function(X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads) {
-    .Call('_mr_mash_alpha_inner_loop_general_rcpp', PACKAGE = 'mr.mash.alpha', X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads)
+    .Call('_mr_mashr_inner_loop_general_rcpp', PACKAGE = 'mr.mashr', X, Rbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads)
 }
 
 impute_missing_Y_rcpp <- function(Y, mu, Vinv, miss, non_miss) {
-    .Call('_mr_mash_alpha_impute_missing_Y_rcpp', PACKAGE = 'mr.mash.alpha', Y, mu, Vinv, miss, non_miss)
+    .Call('_mr_mashr_impute_missing_Y_rcpp', PACKAGE = 'mr.mashr', Y, mu, Vinv, miss, non_miss)
 }
 
 inner_loop_general_rss_rcpp <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads) {
-    .Call('_mr_mash_alpha_inner_loop_general_rss_rcpp', PACKAGE = 'mr.mash.alpha', n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads)
+    .Call('_mr_mashr_inner_loop_general_rss_rcpp', PACKAGE = 'mr.mashr', n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads)
 }
 
 inner_loop_general_rss_sparse_rcpp <- function(n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads) {
-    .Call('_mr_mash_alpha_inner_loop_general_rss_sparse_rcpp', PACKAGE = 'mr.mash.alpha', n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads)
+    .Call('_mr_mashr_inner_loop_general_rss_sparse_rcpp', PACKAGE = 'mr.mashr', n, XtX, XtY, XtRbar, mu1, V, Vinv, w0, S0, precomp_quants_list, standardize, compute_ELBO, update_V, update_order, eps, nthreads)
 }
 
 scale_rcpp <- function(M, a, b) {
-    .Call('_mr_mash_alpha_scale_rcpp', PACKAGE = 'mr.mash.alpha', M, a, b)
+    .Call('_mr_mashr_scale_rcpp', PACKAGE = 'mr.mashr', M, a, b)
 }
 
 scale2_rcpp <- function(M, scale, na_rm) {
-    .Call('_mr_mash_alpha_scale2_rcpp', PACKAGE = 'mr.mash.alpha', M, scale, na_rm)
+    .Call('_mr_mashr_scale2_rcpp', PACKAGE = 'mr.mashr', M, scale, na_rm)
 }
 
 rescale_post_mean_covar_rcpp <- function(mu1, S1, sx) {
-    .Call('_mr_mash_alpha_rescale_post_mean_covar_rcpp', PACKAGE = 'mr.mash.alpha', mu1, S1, sx)
+    .Call('_mr_mashr_rescale_post_mean_covar_rcpp', PACKAGE = 'mr.mashr', mu1, S1, sx)
 }
 
 compute_logbf_rcpp <- function(X, Y, V, Vinv, w0, S0, precomp_quants_list, standardize, eps, nthreads) {
-    .Call('_mr_mash_alpha_compute_logbf_rcpp', PACKAGE = 'mr.mash.alpha', X, Y, V, Vinv, w0, S0, precomp_quants_list, standardize, eps, nthreads)
+    .Call('_mr_mashr_compute_logbf_rcpp', PACKAGE = 'mr.mashr', X, Y, V, Vinv, w0, S0, precomp_quants_list, standardize, eps, nthreads)
 }
 
 compute_logbf_rss_rcpp <- function(n, XtY, V, Vinv, w0, S0, precomp_quants_list, standardize, eps, nthreads) {
-    .Call('_mr_mash_alpha_compute_logbf_rss_rcpp', PACKAGE = 'mr.mash.alpha', n, XtY, V, Vinv, w0, S0, precomp_quants_list, standardize, eps, nthreads)
+    .Call('_mr_mashr_compute_logbf_rss_rcpp', PACKAGE = 'mr.mashr', n, XtY, V, Vinv, w0, S0, precomp_quants_list, standardize, eps, nthreads)
 }
 

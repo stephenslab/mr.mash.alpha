@@ -24,10 +24,10 @@ knitr::opts_chunk$set(comment = "#",collapse = TRUE,
 ```
 
 First, we set the seed to make the results more easily reproducible,
-and we load the "mr.mash.alpha" package.
+and we load the "mr.mashr" package.
 
 ```{r load-pkgs}
-library(mr.mash.alpha)
+library(mr.mashr)
 set.seed(12)
 ```
 

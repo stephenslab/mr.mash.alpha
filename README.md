@@ -1,6 +1,6 @@
-# mr.mash.alpha
+# mr.mashr
 
-[![Continuous Integration](https://github.com/stephenslab/mr.mash.alpha/actions/workflows/ci.yml/badge.svg)](https://github.com/stephenslab/mr.mash.alpha/actions/workflows/ci.yml)
+[![Continuous Integration](https://github.com/stephenslab/mr.mashr/actions/workflows/ci.yml/badge.svg)](https://github.com/stephenslab/mr.mashr/actions/workflows/ci.yml)
 
 R package implementing methods for multivariate multiple regression
 with adaptive shrinkage priors (mr.mash).
@@ -10,8 +10,8 @@ with adaptive shrinkage priors (mr.mash).
 Install and load the package using [remotes][remotes]:
 
 ```R
-remotes::install_github("stephenslab/mr.mash.alpha")
-library(mr.mash.alpha)
+remotes::install_github("stephenslab/mr.mashr")
+library(mr.mashr)
 ```
 
 Note that installing the package will require a C++ compiler setup
@@ -24,7 +24,7 @@ they are not installed already.
 
 ## Citing this work
 
-If you find the `mr.mash.alpha` package or any of the source code in this
+If you find the `mr.mashr` package or any of the source code in this
 repository useful for your work, please cite:
 > Morgante, F., Carbonetto, P., Wang, G., Zou, Y., Sarkar, A. &
 > Stephens, M. (2023). A flexible empirical Bayes approach to 
