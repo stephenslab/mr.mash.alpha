@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: ["r43", "r44"]
+        environment: r44
 
     steps:
       - name: Checkout pull request branch
