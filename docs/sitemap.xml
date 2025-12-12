@@ -1,63 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>/404.html</loc>
-  </url>
-  <url>
-    <loc>/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>/articles/mr_mash_intro.html</loc>
-  </url>
-  <url>
-    <loc>/authors.html</loc>
-  </url>
-  <url>
-    <loc>/index.html</loc>
-  </url>
-  <url>
-    <loc>/reference/autoselect.mixsd.html</loc>
-  </url>
-  <url>
-    <loc>/reference/coef.mr.mash.html</loc>
-  </url>
-  <url>
-    <loc>/reference/coef.mr.mash.rss.html</loc>
-  </url>
-  <url>
-    <loc>/reference/compute_canonical_covs.html</loc>
-  </url>
-  <url>
-    <loc>/reference/compute_data_driven_covs.html</loc>
-  </url>
-  <url>
-    <loc>/reference/compute_univariate_sumstats.html</loc>
-  </url>
-  <url>
-    <loc>/reference/expand_covs.html</loc>
-  </url>
-  <url>
-    <loc>/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>/reference/mr.mash.html</loc>
-  </url>
-  <url>
-    <loc>/reference/mr.mash.rss.html</loc>
-  </url>
-  <url>
-    <loc>/reference/predict.mr.mash.html</loc>
-  </url>
-  <url>
-    <loc>/reference/predict.mr.mash.rss.html</loc>
-  </url>
-  <url>
-    <loc>/reference/simulate_mr_mash_data.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/LICENSE-text.html</loc></url>
+<url><loc>/LICENSE.html</loc></url>
+<url><loc>/articles/index.html</loc></url>
+<url><loc>/articles/mr_mash_intro.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/reference/autoselect.mixsd.html</loc></url>
+<url><loc>/reference/coef.mr.mash.html</loc></url>
+<url><loc>/reference/coef.mr.mash.rss.html</loc></url>
+<url><loc>/reference/compute_canonical_covs.html</loc></url>
+<url><loc>/reference/compute_data_driven_covs.html</loc></url>
+<url><loc>/reference/compute_univariate_sumstats.html</loc></url>
+<url><loc>/reference/expand_covs.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/mr.mash.html</loc></url>
+<url><loc>/reference/mr.mash.rss.html</loc></url>
+<url><loc>/reference/predict.mr.mash.html</loc></url>
+<url><loc>/reference/predict.mr.mash.rss.html</loc></url>
+<url><loc>/reference/simulate_mr_mash_data.html</loc></url>
 </urlset>
+
