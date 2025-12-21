@@ -155,7 +155,7 @@ regression coefficients, stored in the "mu1" output. Let's compare the
 estimates to the ground truth:
 
 ```{r plot-coefs, fig.height=3.5, fig.width=6}
-par(mfrow = c(1,2))
+oldpar <- par(mfrow = c(1,2))
 plot(dat$B,fit_ind$mu1,pch = 20,xlab = "true",ylab = "estimated",
      main = sprintf("cor = %0.3f",
 	                cor(as.vector(dat$B),as.vector(fit_ind$mu1))))
@@ -164,6 +164,7 @@ plot(dat$B,fit$mu1,pch = 20,xlab = "true",ylab = "estimated",
      main = sprintf("cor = %0.3f",
 	                cor(as.vector(dat$B),as.vector(fit$mu1))))
 abline(a = 0,b = 1,col = "royalblue",lty = "dotted")
+par(oldpar)
 ```
 
 As expected, the coefficients on the left-hand side obtained using an
@@ -200,7 +201,7 @@ set. This is implemented by the "predict" method. Let's compare the
 predictions from the two mr.mash models:
 
 ```{r plot-pred-test, fig.height=3.5, fig.width=6}
-par(mfrow = c(1,2))
+oldpar <- par(mfrow = c(1,2))
 Ypred <- predict(fit,Xtest)
 Ypred_ind <- predict(fit_ind,Xtest)
 plot(Ytest,Ypred_ind,pch = 20,col = "darkblue",xlab = "true",
@@ -211,6 +212,7 @@ plot(Ytest,Ypred,pch = 20,col = "darkblue",xlab = "true",
      ylab = "predicted",
      main = sprintf("cor = %0.3f",cor(as.vector(Ytest),as.vector(Ypred))))
 abline(a = 0,b = 1,col = "magenta",lty = "dotted")
+par(oldpar)
 ```
 
 Indeed, mr.mash with the more flexible prior (right-hand plot)
